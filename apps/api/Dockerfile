@@ -29,4 +29,5 @@ USER node
 WORKDIR /app/apps/api
 EXPOSE 3000
 # Migrations are backward compatible (docs §9), so they run before the new version starts.
-CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/main.js"]
+COPY apps/api/docker-start.sh ./
+CMD ["./docker-start.sh"]
