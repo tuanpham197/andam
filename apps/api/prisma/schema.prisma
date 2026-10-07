@@ -1,0 +1,550 @@
+// Schema v1 — docs/01-phan-tich-he-thong.md §7.5.
+// Partial unique index on paused_ingredients and trigram indexes live in SQL migrations
+// because Prisma schema cannot express them.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────── Enums ─────────────
+
+enum Allergen {
+  egg
+  cow_milk
+  peanut
+  shellfish
+  fish
+  wheat
+  soy
+  sesame
+  tree_nut
+
+  @@map("allergen")
+}
+
+enum FoodGroup {
+  carb
+  protein
+  fat
+  veg
+  fruit
+  /// Salt, sugar, fish sauce, honey: never counts towards the 4 food groups.
+  seasoning
+
+  @@map("food_group")
+}
+
+enum ProteinSource {
+  fish
+  chicken
+  beef
+  pork
+  legume
+  egg
+
+  @@map("protein_source")
+}
+
+enum Texture {
+  puree_smooth
+  mashed
+  lumpy
+  minced_soft
+  family
+
+  @@map("texture")
+}
+
+enum MealType {
+  main
+  snack
+
+  @@map("meal_type")
+}
+
+enum MealSlot {
+  breakfast
+  morning_snack
+  lunch
+  afternoon_snack
+  dinner
+  extra_snack
+
+  @@map("meal_slot")
+}
+
+enum MealStatus {
+  planned
+  prepared
+  eaten
+  refused
+  skipped
+
+  @@map("meal_status")
+}
+
+enum PlanSource {
+  auto
+  swap
+  manual
+
+  @@map("plan_source")
+}
+
+enum SwapReason {
+  missing_ingredient
+  disliked
+  faster
+  other
+
+  @@map("swap_reason")
+}
+
+enum EatAmount {
+  none
+  few_spoons
+  quarter
+  half
+  almost_all
+  all
+
+  @@map("eat_amount")
+}
+
+enum Symptom {
+  rash
+  vomit
+  diarrhea
+  swelling
+  breathing
+  fussy
+
+  @@map("symptom")
+}
+
+enum Severity {
+  unknown
+  mild
+  moderate
+  severe
+
+  @@map("severity")
+}
+
+enum HealthStatus {
+  normal
+  sick
+  recovering
+
+  @@map("health_status")
+}
+
+enum HealthSymptom {
+  fever
+  poor_appetite
+  cough
+  diarrhea
+  vomit
+  teething
+
+  @@map("health_symptom")
+}
+
+enum AvoidReason {
+  not_eat
+  dislike
+
+  @@map("avoid_reason")
+}
+
+enum PriorReaction {
+  never
+  yes
+  unsure
+
+  @@map("prior_reaction")
+}
+
+enum ExposureStatus {
+  new
+  tried
+  paused
+
+  @@map("exposure_status")
+}
+
+enum PauseReason {
+  reaction
+  urgent
+
+  @@map("pause_reason")
+}
+
+enum ContentStatus {
+  draft
+  published
+
+  @@map("content_status")
+}
+
+// ───────────── Identity ─────────────
+
+model User {
+  id           String    @id @db.Uuid
+  // Unique on lower(email) — see migration SQL (TC-AUTH-002).
+  email        String
+  passwordHash String    @map("password_hash")
+  timezone     String    @default("Asia/Ho_Chi_Minh")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  consents            Consent[]
+  children            Child[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  familyId  String    @map("family_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz
+  /// Set when replaced by rotation; enables the 10 s multi-tab grace (TC-AUTH-029).
+  rotatedAt DateTime? @map("rotated_at") @db.Timestamptz
+  userAgent String?   @map("user_agent")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Consent {
+  id         String   @id @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  version    String
+  acceptedAt DateTime @map("accepted_at") @db.Timestamptz
+  ip         String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("consents")
+}
+
+model LoginAttempt {
+  id          String   @id @db.Uuid
+  email       String
+  succeeded   Boolean
+  attemptedAt DateTime @map("attempted_at") @db.Timestamptz
+
+  @@index([email, attemptedAt])
+  @@map("login_attempts")
+}
+
+// ───────────── Catalog (seeded, read-only through the API) ─────────────
+
+model Stage {
+  id              Int     @id @db.SmallInt
+  name            String
+  ageFromMonths   Int     @map("age_from_months") @db.SmallInt
+  ageToMonths     Int     @map("age_to_months") @db.SmallInt
+  texture         Texture
+  portionText     String  @map("portion_text")
+  mainMeals       Int     @map("main_meals") @db.SmallInt
+  snacksMin       Int     @map("snacks_min") @db.SmallInt
+  snacksMax       Int     @map("snacks_max") @db.SmallInt
+  defaultSchedule Json    @map("default_schedule")
+
+  variants DishStageVariant[]
+
+  @@map("stages")
+}
+
+model Ingredient {
+  id            String         @id
+  name          String
+  aliases       String[]
+  searchText    String         @map("search_text")
+  foodGroup     FoodGroup      @map("food_group")
+  proteinSource ProteinSource? @map("protein_source")
+  allergenTags  Allergen[]     @map("allergen_tags")
+  minAgeMonths  Int            @map("min_age_months") @db.SmallInt
+  chokingRisk   Boolean        @default(false) @map("choking_risk")
+
+  dishes      DishIngredient[]
+  avoidedBy   ChildAvoidIngredient[]
+  exposures   IngredientExposure[]
+  pausedFor   PausedIngredient[]
+
+  @@map("ingredients")
+}
+
+model Dish {
+  id             String         @id
+  name           String
+  description    String
+  imageUrl       String?        @map("image_url")
+  mealType       MealType       @map("meal_type")
+  prepMin        Int            @map("prep_min") @db.SmallInt
+  cookMin        Int            @map("cook_min") @db.SmallInt
+  tool           String
+  mainProtein    ProteinSource? @map("main_protein")
+  steps          Json
+  safetyNotes    String[]       @map("safety_notes")
+  contentVersion Int            @map("content_version")
+  reviewedBy     String?        @map("reviewed_by")
+  reviewedAt     DateTime?      @map("reviewed_at") @db.Timestamptz
+  status         ContentStatus
+  searchText     String         @map("search_text")
+
+  ingredients  DishIngredient[]
+  variants     DishStageVariant[]
+  plannedMeals PlannedMeal[]
+
+  @@map("dishes")
+}
+
+model DishIngredient {
+  dishId       String  @map("dish_id")
+  ingredientId String  @map("ingredient_id")
+  qty          Decimal @db.Decimal(6, 1)
+  unit         String
+  isMain       Boolean @default(false) @map("is_main")
+
+  dish       Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@id([dishId, ingredientId])
+  @@map("dish_ingredients")
+}
+
+model DishStageVariant {
+  dishId      String  @map("dish_id")
+  stageId     Int     @map("stage_id") @db.SmallInt
+  texture     Texture
+  portionText String  @map("portion_text")
+  portionMl   Int?    @map("portion_ml") @db.SmallInt
+
+  dish  Dish  @relation(fields: [dishId], references: [id], onDelete: Cascade)
+  stage Stage @relation(fields: [stageId], references: [id])
+
+  @@id([dishId, stageId])
+  @@map("dish_stage_variants")
+}
+
+// ───────────── Child profile & health ─────────────
+
+model Child {
+  id                String        @id @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  name              String        @db.VarChar(30)
+  birthDate         DateTime      @map("birth_date") @db.Date
+  isPremature       Boolean       @default(false) @map("is_premature")
+  weeksEarly        Int           @default(0) @map("weeks_early") @db.SmallInt
+  stageOverride     Int?          @map("stage_override") @db.SmallInt
+  priorReaction     PriorReaction @map("prior_reaction")
+  priorReactionNote String?       @map("prior_reaction_note")
+  createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avoidAllergens     ChildAvoidAllergen[]
+  avoidIngredients   ChildAvoidIngredient[]
+  healthEpisodes     HealthEpisode[]
+  plannedMeals       PlannedMeal[]
+  mealLogs           MealLog[]
+  exposures          IngredientExposure[]
+  pausedIngredients  PausedIngredient[]
+  urgentEvents       UrgentEvent[]
+
+  @@index([userId])
+  @@map("children")
+}
+
+model ChildAvoidAllergen {
+  childId  String   @map("child_id") @db.Uuid
+  allergen Allergen
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@id([childId, allergen])
+  @@map("child_avoid_allergens")
+}
+
+model ChildAvoidIngredient {
+  childId      String      @map("child_id") @db.Uuid
+  ingredientId String      @map("ingredient_id")
+  reason       AvoidReason
+
+  child      Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@id([childId, ingredientId])
+  @@map("child_avoid_ingredients")
+}
+
+model HealthEpisode {
+  id              String          @id @db.Uuid
+  childId         String          @map("child_id") @db.Uuid
+  status          HealthStatus
+  symptoms        HealthSymptom[]
+  startDate       DateTime        @map("start_date") @db.Date
+  expectedEndDate DateTime?       @map("expected_end_date") @db.Date
+  endedAt         DateTime?       @map("ended_at") @db.Timestamptz
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId, startDate(sort: Desc)])
+  @@map("health_episodes")
+}
+
+// ───────────── Meal planning, logs & safety ─────────────
+
+model PlannedMeal {
+  id               String     @id @db.Uuid
+  childId          String     @map("child_id") @db.Uuid
+  date             DateTime   @db.Date
+  slot             MealSlot
+  time             String     @db.VarChar(5)
+  dishId           String     @map("dish_id")
+  stageId          Int        @map("stage_id") @db.SmallInt
+  texture          Texture
+  portionText      String     @map("portion_text")
+  status           MealStatus @default(planned)
+  newIngredientIds String[]   @map("new_ingredient_ids")
+  source           PlanSource
+  generatedAt      DateTime   @map("generated_at") @db.Timestamptz
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  child      Child       @relation(fields: [childId], references: [id], onDelete: Cascade)
+  dish       Dish        @relation(fields: [dishId], references: [id])
+  log        MealLog?
+  swapEvents SwapEvent[]
+  urgentEvents UrgentEvent[]
+
+  @@unique([childId, date, slot])
+  @@index([childId, date])
+  @@map("planned_meals")
+}
+
+model SwapEvent {
+  id         String     @id @db.Uuid
+  mealId     String     @map("meal_id") @db.Uuid
+  fromDishId String     @map("from_dish_id")
+  toDishId   String     @map("to_dish_id")
+  reason     SwapReason
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  meal PlannedMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@index([mealId])
+  @@map("swap_events")
+}
+
+model MealLog {
+  id       String    @id @db.Uuid
+  mealId   String    @unique @map("meal_id") @db.Uuid
+  childId  String    @map("child_id") @db.Uuid
+  dishId   String    @map("dish_id")
+  loggedAt DateTime  @map("logged_at") @db.Timestamptz
+  amount   EatAmount
+  liking   Int       @db.SmallInt
+
+  meal     PlannedMeal       @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  child    Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
+  reaction Reaction?
+  paused   PausedIngredient[]
+
+  @@index([childId, loggedAt(sort: Desc)])
+  @@map("meal_logs")
+}
+
+model Reaction {
+  id       String    @id @db.Uuid
+  logId    String    @unique @map("log_id") @db.Uuid
+  symptoms Symptom[]
+  severity Severity
+  note     String?   @db.VarChar(500)
+
+  log MealLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+
+  @@map("reactions")
+}
+
+model IngredientExposure {
+  childId      String         @map("child_id") @db.Uuid
+  ingredientId String         @map("ingredient_id")
+  firstTriedAt DateTime?      @map("first_tried_at") @db.Timestamptz
+  lastEatenAt  DateTime?      @map("last_eaten_at") @db.Timestamptz
+  status       ExposureStatus
+
+  child      Child      @relation(fields: [childId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@id([childId, ingredientId])
+  @@map("ingredient_exposures")
+}
+
+model PausedIngredient {
+  id             String      @id @db.Uuid
+  childId        String      @map("child_id") @db.Uuid
+  ingredientId   String      @map("ingredient_id")
+  reason         PauseReason
+  sourceLogId    String?     @map("source_log_id") @db.Uuid
+  sourceUrgentId String?     @map("source_urgent_id") @db.Uuid
+  pausedAt       DateTime    @map("paused_at") @db.Timestamptz
+  resumedAt      DateTime?   @map("resumed_at") @db.Timestamptz
+
+  child      Child        @relation(fields: [childId], references: [id], onDelete: Cascade)
+  ingredient Ingredient   @relation(fields: [ingredientId], references: [id])
+  sourceLog  MealLog?     @relation(fields: [sourceLogId], references: [id], onDelete: SetNull)
+  sourceUrgent UrgentEvent? @relation(fields: [sourceUrgentId], references: [id], onDelete: SetNull)
+
+  @@index([childId])
+  @@map("paused_ingredients")
+}
+
+model UrgentEvent {
+  id                 String    @id @db.Uuid
+  childId            String    @map("child_id") @db.Uuid
+  mealId             String?   @map("meal_id") @db.Uuid
+  openedAt           DateTime  @map("opened_at") @db.Timestamptz
+  contactedMedicalAt DateTime? @map("contacted_medical_at") @db.Timestamptz
+
+  child  Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+  meal   PlannedMeal?       @relation(fields: [mealId], references: [id], onDelete: SetNull)
+  paused PausedIngredient[]
+
+  @@index([childId])
+  @@map("urgent_events")
+}

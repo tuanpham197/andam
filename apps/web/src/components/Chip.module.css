@@ -1,0 +1,40 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+.neutral {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.primary {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-weight: 600;
+}
+.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 600;
+}
+.warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-weight: 600;
+}
+.link {
+  position: relative;
+  text-decoration: none;
+}
+/* Keeps the design's compact chip while the touch target stays ≥ 44px (TC-UI-002). */
+.link::after {
+  content: '';
+  position: absolute;
+  inset: -6px 0;
+  min-height: var(--touch);
+}

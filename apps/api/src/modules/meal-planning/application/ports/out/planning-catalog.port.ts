@@ -1,0 +1,39 @@
+import type { StageSchedule } from '../../../domain/menu-engine.js';
+import type {
+  Allergen,
+  FoodGroup,
+  PlanDish,
+  PlanIngredient,
+  StageId,
+  Texture,
+} from '../../../domain/model.js';
+
+export const PLANNING_CATALOG = Symbol('PLANNING_CATALOG');
+
+export interface Recipe {
+  dish: PlanDish;
+  description: string;
+  imageUrl: string | null;
+  tool: string;
+  contentVersion: number;
+  reviewedBy: string | null;
+  variants: { stage: StageId; texture: Texture; portionText: string; portionMl: number | null }[];
+  lines: {
+    ingredientId: string;
+    name: string;
+    qty: number;
+    unit: string;
+    isMain: boolean;
+    foodGroup: FoodGroup;
+    allergenTags: Allergen[];
+  }[];
+  steps: string[];
+  safetyNotes: string[];
+}
+
+export interface PlanningCatalog {
+  dishes(): Promise<PlanDish[]>;
+  ingredients(): Promise<PlanIngredient[]>;
+  schedule(stage: StageId): Promise<StageSchedule>;
+  recipe(dishId: string): Promise<Recipe | null>;
+}

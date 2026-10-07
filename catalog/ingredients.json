@@ -1,0 +1,387 @@
+[
+  {
+    "id": "ing_gao_te",
+    "name": "Gạo tẻ",
+    "aliases": ["gạo"],
+    "foodGroup": "carb",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_yen_mach",
+    "name": "Yến mạch",
+    "aliases": ["bột yến mạch", "oat"],
+    "foodGroup": "carb",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_banh_mi",
+    "name": "Bánh mì",
+    "aliases": [],
+    "foodGroup": "carb",
+    "allergenTags": ["wheat"],
+    "minAgeMonths": 8
+  },
+  {
+    "id": "ing_mi_soi",
+    "name": "Mì sợi",
+    "aliases": ["mì", "nui"],
+    "foodGroup": "carb",
+    "allergenTags": ["wheat"],
+    "minAgeMonths": 8
+  },
+  {
+    "id": "ing_khoai_tay",
+    "name": "Khoai tây",
+    "aliases": [],
+    "foodGroup": "carb",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_khoai_lang",
+    "name": "Khoai lang",
+    "aliases": [],
+    "foodGroup": "carb",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+
+  {
+    "id": "ing_ca_hoi",
+    "name": "Cá hồi",
+    "aliases": ["cá hồi phi lê", "salmon"],
+    "foodGroup": "protein",
+    "proteinSource": "fish",
+    "allergenTags": ["fish"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_ca_loc",
+    "name": "Cá lóc",
+    "aliases": ["cá quả"],
+    "foodGroup": "protein",
+    "proteinSource": "fish",
+    "allergenTags": ["fish"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_ca_thu",
+    "name": "Cá thu",
+    "aliases": [],
+    "foodGroup": "protein",
+    "proteinSource": "fish",
+    "allergenTags": ["fish"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_thit_ga",
+    "name": "Thịt gà",
+    "aliases": ["ức gà", "gà"],
+    "foodGroup": "protein",
+    "proteinSource": "chicken",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_thit_bo",
+    "name": "Thịt bò",
+    "aliases": ["bò"],
+    "foodGroup": "protein",
+    "proteinSource": "beef",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_thit_heo",
+    "name": "Thịt heo",
+    "aliases": ["thịt lợn", "heo nạc"],
+    "foodGroup": "protein",
+    "proteinSource": "pork",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_dau_phu",
+    "name": "Đậu phụ",
+    "aliases": ["đậu hũ", "tàu hũ"],
+    "foodGroup": "protein",
+    "proteinSource": "legume",
+    "allergenTags": ["soy"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_dau_ha_lan",
+    "name": "Đậu Hà Lan",
+    "aliases": ["đậu xanh hạt"],
+    "foodGroup": "protein",
+    "proteinSource": "legume",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_trung_ga",
+    "name": "Trứng gà",
+    "aliases": ["trứng", "lòng đỏ trứng"],
+    "foodGroup": "protein",
+    "proteinSource": "egg",
+    "allergenTags": ["egg"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_tom",
+    "name": "Tôm",
+    "aliases": [],
+    "foodGroup": "protein",
+    "allergenTags": ["shellfish"],
+    "minAgeMonths": 8
+  },
+  {
+    "id": "ing_cua",
+    "name": "Cua",
+    "aliases": ["cua đồng"],
+    "foodGroup": "protein",
+    "allergenTags": ["shellfish"],
+    "minAgeMonths": 8
+  },
+
+  {
+    "id": "ing_sua_bo",
+    "name": "Sữa bò",
+    "aliases": ["sữa tươi"],
+    "foodGroup": "protein",
+    "allergenTags": ["cow_milk"],
+    "minAgeMonths": 12
+  },
+  {
+    "id": "ing_sua_chua",
+    "name": "Sữa chua",
+    "aliases": ["yaourt"],
+    "foodGroup": "protein",
+    "allergenTags": ["cow_milk"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_pho_mai",
+    "name": "Phô mai",
+    "aliases": ["phô mát"],
+    "foodGroup": "fat",
+    "allergenTags": ["cow_milk"],
+    "minAgeMonths": 8
+  },
+  {
+    "id": "ing_bo_lat",
+    "name": "Bơ lạt",
+    "aliases": ["bơ động vật"],
+    "foodGroup": "fat",
+    "allergenTags": ["cow_milk"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_dau_phong",
+    "name": "Đậu phộng",
+    "aliases": ["lạc", "bơ đậu phộng"],
+    "foodGroup": "fat",
+    "allergenTags": ["peanut"],
+    "minAgeMonths": 6,
+    "chokingRisk": true
+  },
+  {
+    "id": "ing_me",
+    "name": "Mè",
+    "aliases": ["vừng"],
+    "foodGroup": "fat",
+    "allergenTags": ["sesame"],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_hat_dieu",
+    "name": "Hạt điều",
+    "aliases": [],
+    "foodGroup": "fat",
+    "allergenTags": ["tree_nut"],
+    "minAgeMonths": 6,
+    "chokingRisk": true
+  },
+  {
+    "id": "ing_oc_cho",
+    "name": "Óc chó",
+    "aliases": ["hạt óc chó"],
+    "foodGroup": "fat",
+    "allergenTags": ["tree_nut"],
+    "minAgeMonths": 6,
+    "chokingRisk": true
+  },
+  {
+    "id": "ing_dau_an_dam",
+    "name": "Dầu ăn dặm",
+    "aliases": ["dầu"],
+    "foodGroup": "fat",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_dau_o_liu",
+    "name": "Dầu ô liu",
+    "aliases": ["olive"],
+    "foodGroup": "fat",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+
+  {
+    "id": "ing_rau_ngot",
+    "name": "Rau ngót",
+    "aliases": [],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_cai_bo_xoi",
+    "name": "Cải bó xôi",
+    "aliases": ["rau chân vịt", "rau bina"],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_bi_do",
+    "name": "Bí đỏ",
+    "aliases": ["bí ngô"],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_bi_xanh",
+    "name": "Bí xanh",
+    "aliases": ["bí đao"],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_ca_rot",
+    "name": "Cà rốt",
+    "aliases": [],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_rau_den",
+    "name": "Rau dền",
+    "aliases": [],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_bong_cai_xanh",
+    "name": "Bông cải xanh",
+    "aliases": ["súp lơ xanh", "broccoli"],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_ca_chua",
+    "name": "Cà chua",
+    "aliases": [],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 8
+  },
+  {
+    "id": "ing_muop_dang",
+    "name": "Mướp đắng",
+    "aliases": ["khổ qua"],
+    "foodGroup": "veg",
+    "allergenTags": [],
+    "minAgeMonths": 8
+  },
+
+  {
+    "id": "ing_chuoi",
+    "name": "Chuối",
+    "aliases": [],
+    "foodGroup": "fruit",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_le",
+    "name": "Lê",
+    "aliases": [],
+    "foodGroup": "fruit",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_tao",
+    "name": "Táo",
+    "aliases": [],
+    "foodGroup": "fruit",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_bo",
+    "name": "Bơ",
+    "aliases": ["quả bơ", "avocado"],
+    "foodGroup": "fat",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_du_du",
+    "name": "Đu đủ",
+    "aliases": [],
+    "foodGroup": "fruit",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+  {
+    "id": "ing_xoai",
+    "name": "Xoài",
+    "aliases": [],
+    "foodGroup": "fruit",
+    "allergenTags": [],
+    "minAgeMonths": 6
+  },
+
+  {
+    "id": "ing_mat_ong",
+    "name": "Mật ong",
+    "aliases": [],
+    "foodGroup": "seasoning",
+    "allergenTags": [],
+    "minAgeMonths": 12
+  },
+  {
+    "id": "ing_muoi",
+    "name": "Muối",
+    "aliases": ["hạt nêm", "bột nêm"],
+    "foodGroup": "seasoning",
+    "allergenTags": [],
+    "minAgeMonths": 12
+  },
+  {
+    "id": "ing_duong",
+    "name": "Đường",
+    "aliases": [],
+    "foodGroup": "seasoning",
+    "allergenTags": [],
+    "minAgeMonths": 12
+  },
+  {
+    "id": "ing_nuoc_mam",
+    "name": "Nước mắm",
+    "aliases": [],
+    "foodGroup": "seasoning",
+    "allergenTags": ["fish"],
+    "minAgeMonths": 12
+  }
+]

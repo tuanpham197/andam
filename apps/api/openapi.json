@@ -1,0 +1,2484 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database is not reachable"
+          }
+        },
+        "summary": "Liveness + database connectivity",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Đăng ký tài khoản (UC-18)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Đăng nhập",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshSession",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Xoay vòng refresh token (cookie)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Đăng xuất thiết bị hiện tại",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "summary": "Gửi e-mail đặt lại mật khẩu",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Đặt mật khẩu mới bằng liên kết e-mail",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tài khoản đang đăng nhập",
+        "tags": [
+          "account"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa tài khoản và toàn bộ dữ liệu (UC-19)",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/api/v1/stages": {
+      "get": {
+        "operationId": "listStages",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Các giai đoạn ăn dặm (BR-13)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/ingredients": {
+      "get": {
+        "operationId": "searchIngredients",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Tên hoặc tên gọi khác, không cần dấu",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngredientDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tìm nguyên liệu (không dấu)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/children": {
+      "get": {
+        "operationId": "listChildren",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChildDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hồ sơ các bé của tài khoản",
+        "tags": [
+          "children"
+        ]
+      },
+      "post": {
+        "operationId": "createChild",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateChildDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tạo hồ sơ bé (UC-01)",
+        "tags": [
+          "children"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}": {
+      "get": {
+        "operationId": "getChild",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hồ sơ bé kèm tuổi và giai đoạn",
+        "tags": [
+          "children"
+        ]
+      },
+      "patch": {
+        "operationId": "updateChild",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateChildDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa hồ sơ, ngày sinh, giai đoạn (UC-03)",
+        "tags": [
+          "children"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteChild",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa toàn bộ dữ liệu của bé",
+        "tags": [
+          "children"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/avoid-list": {
+      "put": {
+        "operationId": "replaceAvoidList",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvoidListDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thực phẩm cần tránh (UC-02)",
+        "tags": [
+          "children"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/stage-preview": {
+      "get": {
+        "operationId": "previewStage",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "birthDate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "name": "isPremature",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "weeksEarly",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "stage",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChildProfileDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xem trước tuổi/giai đoạn trước khi lưu (S10)",
+        "tags": [
+          "children"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/days/{date}": {
+      "get": {
+        "operationId": "getDayPlan",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayPlanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thực đơn một ngày, tự lập nếu chưa có (UC-04)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/meals/{mealId}": {
+      "patch": {
+        "operationId": "updateMeal",
+        "parameters": [
+          {
+            "name": "mealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealStatusDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Đánh dấu đã chuẩn bị (FR-025)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/meals/{mealId}/swap-suggestions": {
+      "get": {
+        "operationId": "getSwapSuggestions",
+        "parameters": [
+          {
+            "name": "mealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "missing_ingredient",
+              "type": "string",
+              "enum": [
+                "missing_ingredient",
+                "disliked",
+                "faster",
+                "other"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwapSuggestionsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Gợi ý đổi món cho một bữa (UC-06)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/meals/{mealId}/swap": {
+      "post": {
+        "operationId": "swapMeal",
+        "parameters": [
+          {
+            "name": "mealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwapDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Đổi món cho bữa, kiểm tra lại bộ lọc an toàn (FR-045)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/dishes": {
+      "get": {
+        "operationId": "listDishes",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Tên món hoặc nguyên liệu, không cần dấu",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "chip",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "chicken",
+                "fish",
+                "beef",
+                "pork",
+                "legume",
+                "snack"
+              ]
+            }
+          },
+          {
+            "name": "fresh",
+            "required": false,
+            "in": "query",
+            "description": "Chỉ món chưa ăn trong 7 ngày",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thư viện món đã lọc cho bé (UC-07)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/dishes/{dishId}": {
+      "get": {
+        "operationId": "getRecipe",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dishId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "stage",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Công thức món theo bé và giai đoạn (UC-05)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "App thực đơn ăn dặm API",
+    "description": "",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "HealthChecksDto": {
+        "type": "object",
+        "properties": {
+          "database": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down"
+            ]
+          }
+        },
+        "required": [
+          "database"
+        ]
+      },
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ]
+          },
+          "checks": {
+            "$ref": "#/components/schemas/HealthChecksDto"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "me.na@example.vn",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          },
+          "consentVersion": {
+            "type": "string",
+            "description": "Phiên bản chính sách xử lý dữ liệu người dùng đồng ý"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "SessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessToken": {
+            "type": "string",
+            "description": "JWT, gửi trong header Authorization: Bearer"
+          },
+          "accessTokenExpiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "accessToken",
+          "accessTokenExpiresAt"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token",
+          "newPassword"
+        ]
+      },
+      "AccountResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string",
+            "example": "Asia/Ho_Chi_Minh"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "timezone",
+          "createdAt"
+        ]
+      },
+      "DeleteAccountDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "StageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ageFromMonths": {
+            "type": "number"
+          },
+          "ageToMonths": {
+            "type": "number"
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "portionText": {
+            "type": "string"
+          },
+          "mainMeals": {
+            "type": "number"
+          },
+          "snacksMin": {
+            "type": "number"
+          },
+          "snacksMax": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ageFromMonths",
+          "ageToMonths",
+          "texture",
+          "portionText",
+          "mainMeals",
+          "snacksMin",
+          "snacksMax"
+        ]
+      },
+      "IngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "foodGroup": {
+            "type": "string",
+            "enum": [
+              "carb",
+              "protein",
+              "fat",
+              "veg",
+              "fruit",
+              "seasoning"
+            ]
+          },
+          "proteinSource": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ],
+            "nullable": true
+          },
+          "allergenTags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "foodGroup",
+          "allergenTags"
+        ]
+      },
+      "AgeDto": {
+        "type": "object",
+        "properties": {
+          "months": {
+            "type": "number"
+          },
+          "days": {
+            "type": "number"
+          },
+          "corrected": {
+            "type": "boolean",
+            "description": "Tuổi hiệu chỉnh (sinh non)"
+          }
+        },
+        "required": [
+          "months",
+          "days",
+          "corrected"
+        ]
+      },
+      "StageStateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "selected",
+              "open",
+              "locked"
+            ]
+          },
+          "unlockAtMonths": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "unlockAtMonths"
+        ]
+      },
+      "AvoidIngredientViewDto": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "ing_muop_dang"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_eat",
+              "dislike"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "ingredientId",
+          "reason",
+          "name"
+        ]
+      },
+      "ChildDto": {
+        "type": "object",
+        "properties": {
+          "age": {
+            "$ref": "#/components/schemas/AgeDto"
+          },
+          "autoStage": {
+            "type": "number",
+            "nullable": true
+          },
+          "effectiveStage": {
+            "type": "number",
+            "nullable": true
+          },
+          "isOverride": {
+            "type": "boolean"
+          },
+          "plannable": {
+            "type": "boolean"
+          },
+          "notPlannableReason": {
+            "type": "string",
+            "enum": [
+              "too_young",
+              "too_old"
+            ],
+            "nullable": true
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageStateDto"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "initials": {
+            "type": "string",
+            "example": "Na"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "isPremature": {
+            "type": "boolean"
+          },
+          "weeksEarly": {
+            "type": "number"
+          },
+          "priorReaction": {
+            "type": "string",
+            "enum": [
+              "never",
+              "yes",
+              "unsure"
+            ]
+          },
+          "priorReactionNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "avoidAllergens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          },
+          "avoidIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvoidIngredientViewDto"
+            }
+          },
+          "stageOverride": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "age",
+          "autoStage",
+          "effectiveStage",
+          "isOverride",
+          "plannable",
+          "notPlannableReason",
+          "stages",
+          "id",
+          "name",
+          "initials",
+          "birthDate",
+          "isPremature",
+          "weeksEarly",
+          "priorReaction",
+          "priorReactionNote",
+          "avoidAllergens",
+          "avoidIngredients",
+          "stageOverride"
+        ]
+      },
+      "AvoidIngredientDto": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string",
+            "example": "ing_muop_dang"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_eat",
+              "dislike"
+            ]
+          }
+        },
+        "required": [
+          "ingredientId",
+          "reason"
+        ]
+      },
+      "CreateChildDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 30,
+            "example": "Na"
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-01-12"
+          },
+          "isPremature": {
+            "type": "boolean"
+          },
+          "weeksEarly": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 16,
+            "description": "Chỉ khi isPremature = true"
+          },
+          "priorReaction": {
+            "type": "string",
+            "enum": [
+              "never",
+              "yes",
+              "unsure"
+            ]
+          },
+          "priorReactionNote": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "avoidAllergens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          },
+          "avoidIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvoidIngredientDto"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "birthDate",
+          "isPremature",
+          "priorReaction",
+          "avoidAllergens",
+          "avoidIngredients"
+        ]
+      },
+      "UpdateChildDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 30
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "isPremature": {
+            "type": "boolean"
+          },
+          "weeksEarly": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 16
+          },
+          "stageOverride": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 4,
+            "nullable": true,
+            "description": "Giữ giai đoạn thấp hơn tuổi; null = về theo tuổi"
+          },
+          "priorReaction": {
+            "type": "string",
+            "enum": [
+              "never",
+              "yes",
+              "unsure"
+            ]
+          },
+          "priorReactionNote": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "AvoidListDto": {
+        "type": "object",
+        "properties": {
+          "allergens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvoidIngredientDto"
+            }
+          }
+        },
+        "required": [
+          "allergens",
+          "ingredients"
+        ]
+      },
+      "ChildProfileDto": {
+        "type": "object",
+        "properties": {
+          "age": {
+            "$ref": "#/components/schemas/AgeDto"
+          },
+          "autoStage": {
+            "type": "number",
+            "nullable": true
+          },
+          "effectiveStage": {
+            "type": "number",
+            "nullable": true
+          },
+          "isOverride": {
+            "type": "boolean"
+          },
+          "plannable": {
+            "type": "boolean"
+          },
+          "notPlannableReason": {
+            "type": "string",
+            "enum": [
+              "too_young",
+              "too_old"
+            ],
+            "nullable": true
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StageStateDto"
+            }
+          }
+        },
+        "required": [
+          "age",
+          "autoStage",
+          "effectiveStage",
+          "isOverride",
+          "plannable",
+          "notPlannableReason",
+          "stages"
+        ]
+      },
+      "MealDishDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prepMin": {
+            "type": "number"
+          },
+          "cookMin": {
+            "type": "number"
+          },
+          "mainProtein": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ],
+            "nullable": true
+          },
+          "foodGroups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "carb",
+                "protein",
+                "fat",
+                "veg"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prepMin",
+          "cookMin",
+          "mainProtein",
+          "foodGroups"
+        ]
+      },
+      "NamedIngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "MealDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          },
+          "time": {
+            "type": "string",
+            "example": "11:00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "prepared",
+              "eaten",
+              "refused",
+              "skipped"
+            ]
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "portionText": {
+            "type": "string"
+          },
+          "dish": {
+            "$ref": "#/components/schemas/MealDishDto"
+          },
+          "newIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slot",
+          "time",
+          "status",
+          "texture",
+          "portionText",
+          "dish",
+          "newIngredients"
+        ]
+      },
+      "SlotDto": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          },
+          "time": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot",
+          "time"
+        ]
+      },
+      "DayPlanDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannable": {
+            "type": "boolean"
+          },
+          "meals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealDto"
+            }
+          },
+          "unfilledSlots": {
+            "description": "Bữa chưa tìm được món an toàn",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SlotDto"
+            }
+          },
+          "nextMealId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "date",
+          "plannable",
+          "meals",
+          "unfilledSlots",
+          "nextMealId"
+        ]
+      },
+      "UpdateMealDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "prepared"
+            ],
+            "description": "Chỉ cho phép đánh dấu đã chuẩn bị (FR-025)"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "MealStatusDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "prepared",
+              "eaten",
+              "refused",
+              "skipped"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "SwapMealDishDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "SwapMealDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          },
+          "time": {
+            "type": "string"
+          },
+          "dish": {
+            "$ref": "#/components/schemas/SwapMealDishDto"
+          }
+        },
+        "required": [
+          "id",
+          "slot",
+          "time",
+          "dish"
+        ]
+      },
+      "SwapCandidateDto": {
+        "type": "object",
+        "properties": {
+          "dish": {
+            "$ref": "#/components/schemas/MealDishDto"
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "portionText": {
+            "type": "string"
+          },
+          "newIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          },
+          "reasons": {
+            "type": "array",
+            "description": "Tối đa 3, theo thứ tự hiển thị",
+            "items": {
+              "type": "string",
+              "enum": [
+                "FASTER",
+                "NOT_USED_7D",
+                "DIFFERENT_PROTEIN",
+                "LIKED",
+                "FOUR_GROUPS",
+                "LEAST_USED_PROTEIN",
+                "NEW_INGREDIENT"
+              ]
+            }
+          },
+          "fasterByMin": {
+            "type": "number",
+            "description": "Số phút nhanh hơn món hiện tại (0 nếu không nhanh hơn)"
+          },
+          "repeatInDays": {
+            "type": "number",
+            "nullable": true,
+            "description": "Lần dùng gần nhất trong 7 ngày: âm = N ngày trước, dương = N ngày tới"
+          }
+        },
+        "required": [
+          "dish",
+          "texture",
+          "portionText",
+          "newIngredients",
+          "reasons",
+          "fasterByMin",
+          "repeatInDays"
+        ]
+      },
+      "DayProteinDto": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          },
+          "protein": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ]
+          }
+        },
+        "required": [
+          "slot",
+          "protein"
+        ]
+      },
+      "ExclusionCountsDto": {
+        "type": "object",
+        "properties": {
+          "allergen": {
+            "type": "number"
+          },
+          "avoid": {
+            "type": "number"
+          },
+          "paused": {
+            "type": "number"
+          },
+          "age": {
+            "type": "number"
+          },
+          "refused": {
+            "type": "number"
+          },
+          "sick_new": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "allergen",
+          "avoid",
+          "paused",
+          "age",
+          "refused",
+          "sick_new"
+        ]
+      },
+      "ExclusionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "byReason": {
+            "$ref": "#/components/schemas/ExclusionCountsDto"
+          }
+        },
+        "required": [
+          "total",
+          "byReason"
+        ]
+      },
+      "SwapSuggestionsDto": {
+        "type": "object",
+        "properties": {
+          "meal": {
+            "$ref": "#/components/schemas/SwapMealDto"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "missing_ingredient",
+              "disliked",
+              "faster",
+              "other"
+            ]
+          },
+          "ranked": {
+            "description": "Món đầu tiên là “Phù hợp nhất”",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SwapCandidateDto"
+            }
+          },
+          "otherMains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DayProteinDto"
+            }
+          },
+          "excluded": {
+            "$ref": "#/components/schemas/ExclusionSummaryDto"
+          },
+          "relaxedWindowDays": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              3
+            ]
+          }
+        },
+        "required": [
+          "meal",
+          "reason",
+          "ranked",
+          "otherMains",
+          "excluded",
+          "relaxedWindowDays"
+        ]
+      },
+      "SwapDto": {
+        "type": "object",
+        "properties": {
+          "dishId": {
+            "type": "string",
+            "example": "dish_chao_bo_cai_bo_xoi"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "missing_ingredient",
+              "disliked",
+              "faster",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "dishId",
+          "reason"
+        ]
+      },
+      "LastEatenDto": {
+        "type": "object",
+        "properties": {
+          "daysAgo": {
+            "type": "number"
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          }
+        },
+        "required": [
+          "daysAgo",
+          "slot"
+        ]
+      },
+      "LibraryDishDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "prepMin": {
+            "type": "number"
+          },
+          "cookMin": {
+            "type": "number"
+          },
+          "mainProtein": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ],
+            "nullable": true
+          },
+          "foodGroups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "carb",
+                "protein",
+                "fat",
+                "veg"
+              ]
+            }
+          },
+          "mealType": {
+            "type": "string",
+            "enum": [
+              "main",
+              "snack"
+            ]
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "newIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          },
+          "liked": {
+            "type": "boolean"
+          },
+          "lastEaten": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LastEatenDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prepMin",
+          "cookMin",
+          "mainProtein",
+          "foodGroups",
+          "mealType",
+          "texture",
+          "newIngredients",
+          "liked",
+          "lastEaten"
+        ]
+      },
+      "HiddenDishDto": {
+        "type": "object",
+        "properties": {
+          "dishId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "allergen",
+              "avoid",
+              "paused",
+              "age",
+              "refused",
+              "sick_new"
+            ]
+          }
+        },
+        "required": [
+          "dishId",
+          "name",
+          "reason"
+        ]
+      },
+      "HiddenDishesDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "byReason": {
+            "$ref": "#/components/schemas/ExclusionCountsDto"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HiddenDishDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "byReason",
+          "items"
+        ]
+      },
+      "LibraryDto": {
+        "type": "object",
+        "properties": {
+          "dishes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibraryDishDto"
+            }
+          },
+          "hidden": {
+            "description": "Món khớp bộ lọc nhưng không an toàn cho bé",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HiddenDishesDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "dishes",
+          "hidden"
+        ]
+      },
+      "RecipeVariantDto": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "number"
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "portionText": {
+            "type": "string"
+          },
+          "portionMl": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "stage",
+          "texture",
+          "portionText",
+          "portionMl"
+        ]
+      },
+      "RecipeIngredientDto": {
+        "type": "object",
+        "properties": {
+          "ingredientId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "isMain": {
+            "type": "boolean"
+          },
+          "foodGroup": {
+            "type": "string",
+            "enum": [
+              "carb",
+              "protein",
+              "fat",
+              "veg",
+              "fruit",
+              "seasoning"
+            ]
+          },
+          "allergenTags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          },
+          "isNew": {
+            "type": "boolean",
+            "description": "Bé chưa từng ăn"
+          }
+        },
+        "required": [
+          "ingredientId",
+          "name",
+          "qty",
+          "unit",
+          "isMain",
+          "foodGroup",
+          "allergenTags",
+          "isNew"
+        ]
+      },
+      "RecipeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "mealType": {
+            "type": "string",
+            "enum": [
+              "main",
+              "snack"
+            ]
+          },
+          "prepMin": {
+            "type": "number"
+          },
+          "cookMin": {
+            "type": "number"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "contentVersion": {
+            "type": "number"
+          },
+          "reviewedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "selectedStage": {
+            "type": "number"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeVariantDto"
+            }
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeIngredientDto"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "safetyNotes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allergens": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          },
+          "foodGroups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "carb",
+                "protein",
+                "fat",
+                "veg"
+              ]
+            }
+          },
+          "exclusion": {
+            "type": "string",
+            "enum": [
+              "allergen",
+              "avoid",
+              "paused",
+              "age",
+              "refused",
+              "sick_new"
+            ],
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "imageUrl",
+          "mealType",
+          "prepMin",
+          "cookMin",
+          "tool",
+          "contentVersion",
+          "reviewedBy",
+          "stages",
+          "selectedStage",
+          "variants",
+          "ingredients",
+          "steps",
+          "safetyNotes",
+          "allergens",
+          "foodGroups",
+          "exclusion"
+        ]
+      }
+    }
+  }
+}

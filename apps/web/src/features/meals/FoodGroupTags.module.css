@@ -1,0 +1,34 @@
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.tag {
+  padding: 4px 10px;
+  border-radius: var(--radius-tag);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.carb {
+  background: var(--group-carb-bg);
+  color: var(--group-carb-text);
+}
+.protein {
+  background: var(--group-protein-bg);
+  color: var(--group-protein-text);
+}
+.fat {
+  background: var(--group-fat-bg);
+  color: var(--group-fat-text);
+}
+.veg {
+  background: var(--group-veg-bg);
+  color: var(--group-veg-text);
+}
+.score {
+  margin-left: 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary);
+}

@@ -1,0 +1,22 @@
+{
+  "name": "@appandam/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "orval --config orval.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.104.0"
+  },
+  "devDependencies": {
+    "orval": "^8.38.0",
+    "msw": "^2.15.0"
+  }
+}

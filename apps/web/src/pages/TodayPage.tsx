@@ -1,0 +1,195 @@
+import {
+  useGetDayPlan,
+  useListStages,
+  type ChildDto,
+  type DayPlanDto,
+  type MealDto,
+  type MealDtoSlot,
+} from '@appandam/api-client';
+import { Link } from 'react-router';
+import { AlertBox } from '../components/AlertBox';
+import { Chip } from '../components/Chip';
+import { Disclaimer } from '../components/Disclaimer';
+import { Icon } from '../components/Icon';
+import { LoadError } from '../components/LoadError';
+import { formatAge, textureLabel } from '../features/child/format';
+import { useActiveChild } from '../features/child/guards';
+import {
+  avoidSummary,
+  dayHeading,
+  daySummary,
+  isSnackSlot,
+  todayInVietnam,
+} from '../features/meals/format';
+import { MealRow, type MealRowState } from '../features/meals/MealRow';
+import { NextMealCard } from '../features/meals/NextMealCard';
+import { useNow } from '../features/meals/use-now';
+import { usePrepareMeal } from '../features/meals/use-prepare-meal';
+import { vi } from '../strings/vi';
+import styles from './TodayPage.module.css';
+
+const t = vi.today;
+
+function Header({ child, date }: { child: ChildDto; date: string }) {
+  const stage = useListStages().data?.find((s) => s.id === child.effectiveStage);
+  const avoided = [
+    ...child.avoidAllergens.map((a) => vi.allergens[a]),
+    ...child.avoidIngredients.map((i) => i.name ?? i.ingredientId),
+  ];
+  const summary = [formatAge(child.age), child.effectiveStage && t.stage(child.effectiveStage)]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <div className={styles.header}>
+      <div className={styles.identity}>
+        <div className={styles.avatar} aria-hidden="true">
+          {child.initials}
+        </div>
+        <div className={styles.who}>
+          <div className={styles.date}>{dayHeading(date)}</div>
+          <h1 className={styles.title}>{t.childName(child.name)}</h1>
+          <div className={styles.summary}>{summary}</div>
+        </div>
+      </div>
+      {child.plannable && (
+        <div className={styles.chips}>
+          {stage && <Chip to="/settings/age">{t.texture(textureLabel(stage.texture))}</Chip>}
+          <Chip tone="primary" to="/health">
+            <Icon name="pulse" size={14} />
+            {t.health}
+          </Chip>
+          {avoided.length > 0 && <Chip tone="danger">{t.avoid(avoidSummary(avoided))}</Chip>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NotPlannable({ reason }: { reason: ChildDto['notPlannableReason'] }) {
+  return (
+    <div className={styles.stack}>
+      <AlertBox tone="info">{reason === 'too_old' ? t.tooOld : t.tooYoung}</AlertBox>
+      <Link to="/settings/age" className={styles.textLink}>
+        {t.checkAge}
+      </Link>
+    </div>
+  );
+}
+
+interface Row {
+  time: string;
+  slot: MealDtoSlot;
+  meal?: MealDto;
+}
+
+function rowFor(meal: MealDto, nextMealId: string | null): { note: string; state: MealRowState } {
+  if (meal.id === nextMealId) return { note: t.status.next, state: 'next' };
+  if (meal.status === 'eaten') return { note: t.status.eaten, state: 'eaten' };
+  if (meal.status === 'refused' || meal.status === 'skipped')
+    return { note: t.status[meal.status], state: 'closed' };
+  if (meal.status === 'prepared') return { note: t.status.prepared, state: 'pending' };
+  const minutes = vi.minutes(meal.dish.prepMin + meal.dish.cookMin);
+  const protein = meal.dish.mainProtein;
+  const lead = isSnackSlot(meal.slot)
+    ? t.snack
+    : protein && `${vi.foodGroups.protein} · ${vi.proteins[protein]}`;
+  return { note: [lead, minutes].filter(Boolean).join(' · '), state: 'pending' };
+}
+
+function MealList({ day }: { day: DayPlanDto }) {
+  const rows: Row[] = [
+    ...day.meals.map((meal) => ({ time: meal.time, slot: meal.slot, meal })),
+    ...day.unfilledSlots,
+  ].sort((a, b) => a.time.localeCompare(b.time));
+
+  return (
+    <section aria-label={t.listLabel} className={styles.stack}>
+      <div className={styles.listHead}>
+        <h2 className={styles.listTitle}>{t.listTitle}</h2>
+        <span className={styles.muted}>{daySummary(rows.map((r) => r.slot))}</span>
+      </div>
+      <div className={styles.list}>
+        {rows.map(({ time, slot, meal }) =>
+          meal ? (
+            <MealRow
+              key={slot}
+              time={time}
+              slot={slot}
+              name={meal.dish.name}
+              to={`/dishes/${meal.dish.id}?meal=${meal.id}`}
+              {...rowFor(meal, day.nextMealId)}
+            />
+          ) : (
+            <MealRow key={slot} time={time} slot={slot} name={t.unfilled} note="" state="empty" />
+          ),
+        )}
+      </div>
+      <Disclaimer>{t.disclaimer}</Disclaimer>
+    </section>
+  );
+}
+
+function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Date }) {
+  const day = useGetDayPlan(child.id, date);
+  const preparing = usePrepareMeal(child.id, date);
+
+  if (day.isPending)
+    return (
+      <p role="status" className={styles.muted}>
+        {t.loading}
+      </p>
+    );
+  if (day.isError) return <LoadError error={day.error} retry={() => day.refetch()} />;
+  if (!day.data.plannable) return <NotPlannable reason={child.notPlannableReason} />;
+
+  const { meals, nextMealId, unfilledSlots } = day.data;
+  const next = meals.find((m) => m.id === nextMealId);
+  return (
+    <>
+      {unfilledSlots.length > 0 && (
+        <AlertBox tone="warn">
+          <span>{t.unfilledAlert}</span>{' '}
+          <Link to="/profile" className={styles.inlineLink}>
+            {t.reviewAvoid}
+          </Link>
+        </AlertBox>
+      )}
+      {next ? (
+        <NextMealCard
+          meal={next}
+          date={date}
+          now={now}
+          onPrepare={() => preparing.prepare(next.id)}
+          preparing={preparing.isPending}
+          error={preparing.error}
+        />
+      ) : (
+        meals.length > 0 && (
+          <section className={styles.done}>
+            <h2 className={styles.listTitle}>{t.doneTitle}</h2>
+            <p className={styles.muted}>{t.doneBody}</p>
+          </section>
+        )
+      )}
+      <MealList day={day.data} />
+    </>
+  );
+}
+
+/** S01: the next meal first, then the rest of the day (UC-04). */
+export function TodayPage() {
+  const child = useActiveChild();
+  const now = useNow();
+  const date = todayInVietnam(now);
+  return (
+    <>
+      <Header child={child} date={date} />
+      {child.plannable ? (
+        <DayPlan child={child} date={date} now={now} />
+      ) : (
+        <NotPlannable reason={child.notPlannableReason} />
+      )}
+    </>
+  );
+}

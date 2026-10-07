@@ -1,0 +1,76 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: var(--touch);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider);
+  color: var(--text);
+  text-decoration: none;
+}
+.when {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.time {
+  font-weight: 600;
+  color: var(--text);
+}
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.next {
+  background: var(--primary-faint);
+}
+.next .name {
+  font-weight: 600;
+}
+.next .note,
+.eaten .note {
+  color: var(--primary);
+  font-weight: 600;
+}
+.closed .name {
+  color: var(--text-muted);
+}
+.empty .name {
+  color: var(--warn-text);
+}
+.badge {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Rows sit in a rounded card: the highlighted row must not square its corners. */
+.row:first-child {
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.row:last-child {
+  border-bottom: none;
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}

@@ -1,0 +1,36 @@
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: var(--touch);
+}
+.track {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 32px;
+  padding: 3px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: #c9bfb0;
+  display: flex;
+  cursor: pointer;
+}
+/* The 32px track keeps the design's look; the touch target is 44px tall (TC-UI-002). */
+.track::after {
+  content: '';
+  position: absolute;
+  inset: -6px -4px;
+}
+.track[aria-checked='true'] {
+  background: var(--primary);
+  justify-content: flex-end;
+}
+.thumb {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,29 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.label {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.input {
+  min-height: 48px;
+  width: 100%;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.hint {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.error {
+  font-size: 0.8125rem;
+  color: var(--danger);
+  font-weight: 600;
+}

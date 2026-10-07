@@ -1,0 +1,36 @@
+# Render Blueprint — staging API (Docker, Singapore). Database: Supabase (DATABASE_URL).
+services:
+  - type: web
+    name: appandam-api
+    runtime: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - apps/api/**
+        - catalog/**
+        - package.json
+        - package-lock.json
+    envVars:
+      # Supabase session pooler (IPv4, port 5432) — set in the dashboard, never committed.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      # The Vercel URL of the web app, e.g. https://appandam.vercel.app
+      - key: WEB_BASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      # No mail server on staging: password-reset e-mails are not sent.
+      - key: SMTP_URL
+        value: disabled
+      # Vercel rewrite → Render → app.
+      - key: TRUST_PROXY
+        value: '2'
+      - key: LOG_LEVEL
+        value: info

@@ -1,0 +1,24 @@
+.box {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+.warn {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+.info {
+  background: var(--primary-faint);
+  color: var(--primary-deep);
+}
+.title {
+  font-weight: 700;
+}

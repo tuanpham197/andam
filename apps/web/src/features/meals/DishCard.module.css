@@ -1,0 +1,81 @@
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  color: var(--text);
+  text-decoration: none;
+  min-width: 0;
+}
+.photo {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+/* Tints from the design, one per protein (docs Q10). */
+.chicken {
+  background: #f1e3c8;
+}
+.fish {
+  background: #dde6e4;
+}
+.beef {
+  background: #ead6cc;
+}
+.pork {
+  background: #f0ddd5;
+}
+.legume {
+  background: #e2e8d2;
+}
+.egg,
+.snack {
+  background: #f2eacb;
+}
+.body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.meta {
+  font-size: 0.75rem;
+  color: var(--text-2);
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.tag {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.group {
+  background: var(--group-protein-bg);
+  color: var(--group-protein-text);
+}
+.new {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}
+.liked {
+  background: var(--group-veg-bg);
+  color: var(--primary-deep);
+}
+.recent {
+  background: #eae2d5;
+  color: var(--text-2);
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "id": 1,
+    "name": "Giai đoạn 1",
+    "ageFromMonths": 6,
+    "ageToMonths": 8,
+    "texture": "puree_smooth",
+    "portionText": "2–3 thìa, tăng dần",
+    "mainMeals": 2,
+    "snacksMin": 0,
+    "snacksMax": 0,
+    "defaultSchedule": [
+      { "slot": "breakfast", "time": "08:00" },
+      { "slot": "lunch", "time": "11:00" }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Giai đoạn 2",
+    "ageFromMonths": 8,
+    "ageToMonths": 10,
+    "texture": "lumpy",
+    "portionText": "Khoảng 125 ml",
+    "mainMeals": 3,
+    "snacksMin": 1,
+    "snacksMax": 1,
+    "defaultSchedule": [
+      { "slot": "breakfast", "time": "07:30" },
+      { "slot": "lunch", "time": "11:00" },
+      { "slot": "afternoon_snack", "time": "15:00" },
+      { "slot": "dinner", "time": "18:00" }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Giai đoạn 3",
+    "ageFromMonths": 10,
+    "ageToMonths": 12,
+    "texture": "minced_soft",
+    "portionText": "Khoảng 125 ml",
+    "mainMeals": 3,
+    "snacksMin": 1,
+    "snacksMax": 2,
+    "defaultSchedule": [
+      { "slot": "breakfast", "time": "07:30" },
+      { "slot": "morning_snack", "time": "09:30" },
+      { "slot": "lunch", "time": "11:00" },
+      { "slot": "afternoon_snack", "time": "15:00" },
+      { "slot": "dinner", "time": "18:00" }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Giai đoạn 4",
+    "ageFromMonths": 12,
+    "ageToMonths": 24,
+    "texture": "family",
+    "portionText": "175–250 ml",
+    "mainMeals": 3,
+    "snacksMin": 1,
+    "snacksMax": 2,
+    "defaultSchedule": [
+      { "slot": "breakfast", "time": "07:30" },
+      { "slot": "morning_snack", "time": "09:30" },
+      { "slot": "lunch", "time": "11:30" },
+      { "slot": "afternoon_snack", "time": "15:00" },
+      { "slot": "dinner", "time": "18:30" }
+    ]
+  }
+]

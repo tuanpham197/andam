@@ -1,0 +1,728 @@
+[
+  {
+    "id": "dish_chao_ca_hoi_rau_ngot",
+    "name": "Cháo cá hồi rau ngót",
+    "description": "Cháo gạo tẻ nấu nhừ với cá hồi hấp tách xương và rau ngót băm nhỏ.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "fish",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_ca_hoi",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_rau_ngot",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Hấp chín cá hồi, gỡ xương, dầm nhỏ.",
+      "Cho cá và rau ngót băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": [
+      "Gỡ và kiểm tra kỹ xương cá trước khi nghiền.",
+      "Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."
+    ],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_ga_bi_do",
+    "name": "Cháo thịt gà bí đỏ",
+    "description": "Cháo gà xé nhỏ nấu cùng bí đỏ hấp nghiền, vị ngọt tự nhiên.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 20,
+    "tool": "Nồi",
+    "mainProtein": "chicken",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_thit_ga",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_bi_do",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_bo_cai_bo_xoi",
+    "name": "Cháo thịt bò cải bó xôi",
+    "description": "Cháo thịt bò băm nhuyễn với cải bó xôi, giàu sắt.",
+    "mealType": "main",
+    "prepMin": 5,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "beef",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_thit_bo",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_cai_bo_xoi",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_ca_loc_bi_xanh",
+    "name": "Cháo cá lóc bí xanh",
+    "description": "Cháo cá lóc hấp gỡ xương nấu cùng bí xanh mềm.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "fish",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_ca_loc",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_bi_xanh",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": [
+      "Gỡ và kiểm tra kỹ xương cá trước khi nghiền.",
+      "Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."
+    ],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_heo_ca_rot",
+    "name": "Cháo thịt heo cà rốt",
+    "description": "Cháo thịt heo nạc băm với cà rốt hấp nghiền.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "pork",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_thit_heo",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_ca_rot",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_ga_khoai_tay",
+    "name": "Cháo gà khoai tây",
+    "description": "Cháo gà nấu cùng khoai tây nghiền mịn.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 20,
+    "tool": "Nồi",
+    "mainProtein": "chicken",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_thit_ga",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_khoai_tay",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_dau_phu_rau_den",
+    "name": "Cháo đậu phụ rau dền",
+    "description": "Cháo đậu phụ non dầm nhuyễn với rau dền.",
+    "mealType": "main",
+    "prepMin": 5,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "legume",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_phu",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_rau_den",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_chao_bo_bi_do",
+    "name": "Cháo bò bí đỏ",
+    "description": "Cháo thịt bò băm nấu cùng bí đỏ.",
+    "mealType": "main",
+    "prepMin": 10,
+    "cookMin": 15,
+    "tool": "Nồi",
+    "mainProtein": "beef",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_gao_te",
+        "qty": 20,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_thit_bo",
+        "qty": 25,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_bi_do",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Vo gạo, nấu cháo với nước đến khi hạt gạo nở nhừ.",
+      "Làm chín và băm hoặc nghiền nguyên liệu đạm theo kết cấu của giai đoạn.",
+      "Cho rau củ đã băm vào cháo, nấu thêm 3–5 phút, thêm dầu khi tắt bếp."
+    ],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_sup_khoai_lang_dau_ha_lan",
+    "name": "Súp khoai lang đậu Hà Lan",
+    "description": "Súp khoai lang và đậu Hà Lan hấp chín, nghiền với chút dầu.",
+    "mealType": "main",
+    "prepMin": 5,
+    "cookMin": 10,
+    "tool": "Nồi hấp",
+    "mainProtein": "legume",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "2–3 thìa, tăng dần"
+      },
+      {
+        "stage": 2,
+        "texture": "lumpy",
+        "portionText": "120–150 ml tham khảo",
+        "portionMl": 135
+      },
+      {
+        "stage": 3,
+        "texture": "minced_soft",
+        "portionText": "Khoảng 125 ml",
+        "portionMl": 125
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_khoai_lang",
+        "qty": 40,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_ha_lan",
+        "qty": 20,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_bi_do",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_dau_an_dam",
+        "qty": 5,
+        "unit": "ml",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Hấp chín khoai lang, đậu Hà Lan và bí đỏ.",
+      "Nghiền hoặc xay theo kết cấu của giai đoạn, thêm nước hấp cho vừa độ sệt.",
+      "Trộn dầu khi còn ấm."
+    ],
+    "safetyNotes": [
+      "Bóc vỏ đậu Hà Lan kỹ cho bé dưới 10 tháng để tránh hóc.",
+      "Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."
+    ],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_bot_yen_mach_chuoi",
+    "name": "Bột yến mạch chuối",
+    "description": "Bột yến mạch nấu sệt trộn chuối chín nghiền.",
+    "mealType": "snack",
+    "prepMin": 2,
+    "cookMin": 8,
+    "tool": "Nồi",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "1–2 thìa"
+      },
+      {
+        "stage": 2,
+        "texture": "mashed",
+        "portionText": "60–80 ml",
+        "portionMl": 70
+      },
+      {
+        "stage": 3,
+        "texture": "mashed",
+        "portionText": "Khoảng 80 ml",
+        "portionMl": 80
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_yen_mach",
+        "qty": 15,
+        "unit": "g",
+        "isMain": false
+      },
+      {
+        "ingredientId": "ing_chuoi",
+        "qty": 40,
+        "unit": "g",
+        "isMain": true
+      }
+    ],
+    "steps": ["Nấu yến mạch với nước đến khi sệt.", "Nghiền chuối chín, trộn đều khi bột còn ấm."],
+    "safetyNotes": ["Không thêm muối, nước mắm hay đường cho bé dưới 1 tuổi."],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_le_hap_nghien",
+    "name": "Lê hấp nghiền",
+    "description": "Lê gọt vỏ hấp mềm, nghiền mịn.",
+    "mealType": "snack",
+    "prepMin": 3,
+    "cookMin": 7,
+    "tool": "Nồi hấp",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "1–2 thìa"
+      },
+      {
+        "stage": 2,
+        "texture": "mashed",
+        "portionText": "60–80 ml",
+        "portionMl": 70
+      },
+      {
+        "stage": 3,
+        "texture": "mashed",
+        "portionText": "Khoảng 80 ml",
+        "portionMl": 80
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_le",
+        "qty": 60,
+        "unit": "g",
+        "isMain": true
+      }
+    ],
+    "steps": [
+      "Gọt vỏ, bỏ lõi lê, cắt miếng.",
+      "Hấp 7 phút đến khi mềm rồi nghiền theo kết cấu của giai đoạn."
+    ],
+    "safetyNotes": [],
+    "contentVersion": 1,
+    "status": "draft"
+  },
+  {
+    "id": "dish_bo_chuoi_nghien",
+    "name": "Bơ chuối nghiền",
+    "description": "Bơ chín và chuối nghiền, béo mịn, không cần nấu.",
+    "mealType": "snack",
+    "prepMin": 5,
+    "cookMin": 0,
+    "tool": "Thìa, bát",
+    "stages": [1, 2, 3],
+    "variants": [
+      {
+        "stage": 1,
+        "texture": "puree_smooth",
+        "portionText": "1–2 thìa"
+      },
+      {
+        "stage": 2,
+        "texture": "mashed",
+        "portionText": "60–80 ml",
+        "portionMl": 70
+      },
+      {
+        "stage": 3,
+        "texture": "mashed",
+        "portionText": "Khoảng 80 ml",
+        "portionMl": 80
+      }
+    ],
+    "ingredients": [
+      {
+        "ingredientId": "ing_bo",
+        "qty": 30,
+        "unit": "g",
+        "isMain": true
+      },
+      {
+        "ingredientId": "ing_chuoi",
+        "qty": 30,
+        "unit": "g",
+        "isMain": false
+      }
+    ],
+    "steps": [
+      "Nạo thịt bơ và chuối chín.",
+      "Nghiền đều theo kết cấu của giai đoạn, cho bé ăn ngay."
+    ],
+    "safetyNotes": [],
+    "contentVersion": 1,
+    "status": "draft"
+  }
+]

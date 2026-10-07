@@ -1,0 +1,8 @@
+design/
+coverage/
+dist/
+packages/api-client/src/generated/
+apps/api/src/generated/
+apps/api/openapi.json
+package-lock.json
+docs/

@@ -1,0 +1,315 @@
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.hero {
+  position: relative;
+  height: 250px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e4d9c7;
+  padding-top: env(safe-area-inset-top);
+}
+.snack {
+  background: var(--group-veg-bg);
+}
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.back {
+  position: absolute;
+  top: calc(20px + env(safe-area-inset-top));
+  left: 16px;
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.content {
+  flex: 1;
+  margin-top: -24px;
+  position: relative;
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  padding: 24px max(var(--gutter), env(safe-area-inset-right)) 24px
+    max(var(--gutter), env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.reviewed {
+  color: var(--primary);
+  font-weight: 600;
+}
+.title {
+  font-size: 1.875rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.description {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.facts {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.facts li {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
+}
+.factLabel {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+.factValue {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 359px) {
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+.heading {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  scroll-margin-top: 16px;
+}
+.score {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.pairs {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font-size: 0.8125rem;
+}
+.pairs div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pairs div:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+.pairs dt {
+  color: var(--text-muted);
+}
+.pairs dd {
+  margin: 0;
+  font-weight: 600;
+}
+.card {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.ingredient {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 0.8125rem;
+  color: var(--text-2);
+}
+.ingredient:last-child {
+  border-bottom: none;
+}
+.ingredientName {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.firstTry {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--warn-text);
+}
+.group {
+  width: 74px;
+  flex-shrink: 0;
+  text-align: center;
+  padding: 3px 0;
+  border-radius: 6px;
+  background: var(--divider);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+.group.carb {
+  background: var(--group-carb-bg);
+  color: var(--group-carb-text);
+}
+.group.protein {
+  background: var(--group-protein-bg);
+  color: var(--group-protein-text);
+}
+.group.fat {
+  background: var(--group-fat-bg);
+  color: var(--group-fat-text);
+}
+/* Fruit counts towards "Rau củ" in the four groups, so it shares its colour. */
+.group.veg,
+.group.fruit {
+  background: var(--group-veg-bg);
+  color: var(--group-veg-text);
+}
+.safety {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 16px;
+  background: var(--danger-soft);
+  color: #6e2418;
+}
+.safetyTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.safety ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.steps li {
+  display: flex;
+  gap: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.stepNumber {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary-deep);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 10px;
+  padding: 12px max(var(--gutter), env(safe-area-inset-right))
+    calc(12px + env(safe-area-inset-bottom)) max(var(--gutter), env(safe-area-inset-left));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+.swap {
+  min-height: 50px;
+  padding: 0 18px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.cook {
+  flex: 1;
+}
+.status {
+  padding: 24px var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text-muted);
+}
+.status .back {
+  position: static;
+  border: 1px solid var(--border);
+}

@@ -1,0 +1,50 @@
+/* Design tokens extracted from design/App thực đơn ăn dặm.html (docs §7.10). */
+:root {
+  --bg: #f6f1e8;
+  --surface: #fffdf9;
+  --text: #2b2722;
+  --text-2: #4a433c;
+  --text-muted: #6b6259;
+  --border: #e6ddd0;
+  --border-strong: #d9cfc0;
+  --divider: #efe8dc;
+
+  --primary: #4f6b4a;
+  --primary-strong: #3a5236;
+  --primary-deep: #2f4a2b;
+  --primary-soft: #e3ebdd;
+  --primary-faint: #f3f6ef;
+  --on-primary: #ffffff;
+
+  --danger: #8a2e20;
+  --danger-soft: #f6dcd6;
+  --danger-border: #e7c3ba;
+  --warn-bg: #f7e1cf;
+  --warn-text: #7a3a12;
+
+  --group-carb-bg: #f3e6c4;
+  --group-carb-text: #6e5310;
+  --group-protein-bg: #f4d8cc;
+  --group-protein-text: #8a3b22;
+  --group-fat-bg: #efe9b8;
+  --group-fat-text: #5e5610;
+  --group-veg-bg: #dce8d3;
+  --group-veg-text: #3d5a34;
+
+  --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Lora', Georgia, serif;
+
+  --radius-pill: 999px;
+  --radius-button: 14px;
+  --radius-control: 12px;
+  --radius-card: 22px;
+  --radius-tag: 8px;
+
+  --touch: 44px;
+  --gutter: 20px;
+  --nav-height: 78px;
+  --shell-max: 480px;
+
+  --shadow-card: 0 1px 0 var(--border), 0 12px 28px -18px rgba(60, 45, 30, 0.35);
+  --focus-ring: 0 0 0 3px rgba(79, 107, 74, 0.45);
+}
