@@ -107,6 +107,12 @@ export class PlannedMeal {
     this.state.status = 'prepared';
   }
 
+  /** Same dish, served for the child's current stage and health (BR-50..53). */
+  reserve(serving: { texture: Texture; portionText: string }): void {
+    if (this.isLogged) throw new MealAlreadyLoggedError();
+    Object.assign(this.state, serving);
+  }
+
   /** FR-045: the caller has checked the dish is safe and fits the slot. */
   swapTo(target: {
     dishId: string;

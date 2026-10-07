@@ -9,6 +9,7 @@ import type {
   ScheduledSlot,
   Texture,
 } from './model.js';
+import { HEALTH_ADJUSTMENTS, servingFor } from './health-adjustment.js';
 import { newAllergenIds, newIngredientIds } from './novelty.js';
 import { exclusionReason } from './safety-filter.js';
 
@@ -27,10 +28,10 @@ const SNACK_PREFERENCE: { slot: MealSlot; time: string }[] = [
   { slot: 'extra_snack', time: '20:00' },
 ];
 
-/** Slots of a day: all main meals, the lower bound of snacks, one more snack while ill (BR-50). */
+/** Slots of a day: all main meals, the lower bound of snacks, one more snack while sick (BR-50). */
 export function slotsForDay(stage: StageSchedule, health: HealthState): ScheduledSlot[] {
   const mains = stage.schedule.filter((s) => !isSnack(s.slot));
-  const snackCount = stage.snacksMin + (health === 'normal' ? 0 : 1);
+  const snackCount = stage.snacksMin + HEALTH_ADJUSTMENTS[health].extraSnacks;
   const snacks = SNACK_PREFERENCE.slice(0, snackCount).map(
     (preferred) => stage.schedule.find((s) => s.slot === preferred.slot) ?? preferred,
   );
@@ -108,10 +109,6 @@ export function isLiked(ctx: PlanningContext, dishId: string): boolean {
 }
 
 export const totalMinutes = (dish: PlanDish) => dish.prepMin + dish.cookMin;
-
-export function variantFor(dish: PlanDish, stage: PlanningContext['stage']) {
-  return dish.variants.find((v) => v.stage === stage)!;
-}
 
 export interface ScoredDish {
   dish: PlanDish;
@@ -259,13 +256,11 @@ export function generateDay(ctx: PlanningContext, request: DayRequest): DayGener
       unfilled.push(slot);
       continue;
     }
-    const variant = variantFor(best.dish, ctx.stage);
     meals.push({
       slot: slot.slot,
       time: slot.time,
       dishId: best.dish.id,
-      texture: variant.texture,
-      portionText: variant.portionText,
+      ...servingFor(best.dish, ctx),
       newIngredientIds: best.firstTries,
       newAllergenIds: newAllergenIds(best.dish, ctx),
       reasons: best.reasons,

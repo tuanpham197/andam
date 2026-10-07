@@ -4,7 +4,14 @@ import { http, HttpResponse } from 'msw';
 import type { DayPlanDto } from '@appandam/api-client';
 import { API, problem, signedIn } from '../test/api';
 import { renderApp } from '../test/app';
-import { LUNCH_ID, NA_ID, childFixture, dayFixture, mealFixture } from '../test/fixtures';
+import {
+  LUNCH_ID,
+  NA_ID,
+  childFixture,
+  dayFixture,
+  healthFixture,
+  mealFixture,
+} from '../test/fixtures';
 import { server } from '../test/server';
 
 // 09:40 in Hà Nội on Thursday 24 September 2026.
@@ -96,8 +103,8 @@ describe('Today (S01)', () => {
 
   it.each([
     ['Bé đã ăn', 'Ghi nhận bữa ăn'],
-    ['Sức khỏe: Bình thường', 'Tình trạng sức khỏe'],
-  ])('TC-UI-025 "%s" opens its screen (a later phase), with a way back', async (link, title) => {
+    ['Sức khỏe: Bình thường', 'Hôm nay bé Na thế nào?'],
+  ])('TC-UI-025 "%s" opens its screen, with a way back', async (link, title) => {
     serveDay();
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { router } = renderApp('/');
@@ -433,5 +440,45 @@ describe('Today (S01)', () => {
     expect(await screen.findByText('Thứ Sáu, 25 tháng 9')).toBeInTheDocument();
     await nextMeal();
     expect(requested).toEqual(['2026-09-24', '2026-09-25']);
+  });
+
+  it('names the current health status on its chip', async () => {
+    serveDay();
+    server.use(
+      http.get(`${API}/children/:childId/health`, () =>
+        HttpResponse.json(healthFixture({ status: 'sick', startDate: '2026-09-24' })),
+      ),
+    );
+    renderApp('/');
+    expect(await screen.findByRole('link', { name: 'Sức khỏe: Đang ốm' })).toHaveAttribute(
+      'href',
+      '/health',
+    );
+  });
+
+  it('TC-HLT-009 suggests updating the status once the expected end has passed', async () => {
+    serveDay();
+    server.use(
+      http.get(`${API}/children/:childId/health`, () =>
+        HttpResponse.json(
+          healthFixture({
+            status: 'sick',
+            startDate: '2026-09-20',
+            expectedEndDate: '2026-09-23',
+            overdue: true,
+          }),
+        ),
+      ),
+    );
+    renderApp('/');
+    expect(
+      await screen.findByText(
+        'Đã qua ngày dự kiến khỏi (23/9). Bé đã khỏe hơn chưa? Cập nhật để thực đơn theo kịp.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Cập nhật sức khỏe' })).toHaveAttribute(
+      'href',
+      '/health',
+    );
   });
 });

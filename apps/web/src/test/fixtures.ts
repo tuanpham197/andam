@@ -1,6 +1,9 @@
 import type {
   ChildDto,
   DayPlanDto,
+  HealthDto,
+  HealthPreviewDto,
+  WeekPlanDto,
   LibraryDishDto,
   LibraryDto,
   MealDto,
@@ -357,6 +360,73 @@ export function libraryFixture(overrides: Partial<LibraryDto> = {}): LibraryDto 
         { dishId: 'dish_banh_trung', name: 'Bánh trứng sữa', reason: 'allergen' },
         { dishId: 'dish_com_nat', name: 'Cơm nát cá', reason: 'age' },
         { dishId: 'dish_mi_ga', name: 'Mì gà cắt nhỏ', reason: 'age' },
+      ],
+    },
+    ...overrides,
+  };
+}
+
+export function healthFixture(overrides: Partial<HealthDto> = {}): HealthDto {
+  return {
+    status: 'normal',
+    symptoms: [],
+    startDate: null,
+    expectedEndDate: null,
+    overdue: false,
+    ...overrides,
+  };
+}
+
+export function healthPreviewFixture(status: HealthPreviewDto['status']): HealthPreviewDto {
+  const adjustments = {
+    normal: { extraSnacks: 0, portionPercent: 100, softerTexture: 0, pauseNewFoods: false },
+    sick: { extraSnacks: 1, portionPercent: 70, softerTexture: 1, pauseNewFoods: true },
+    recovering: { extraSnacks: 0, portionPercent: 85, softerTexture: 0, pauseNewFoods: true },
+  } as const;
+  return { status, ...adjustments[status] };
+}
+
+const WEEK_DISHES = [
+  'Cháo gà cà rốt',
+  'Cháo cá lóc bí xanh',
+  'Cháo bò khoai tây',
+  'Cháo cá hồi rau ngót',
+  'Cháo thịt heo cải bó xôi',
+  'Súp khoai lang đậu Hà Lan',
+  'Cháo bò bí đỏ',
+];
+
+/** Bé Na’s week of 21–27/9 as on design S04 (Thursday 24 is today). */
+export function weekFixture(overrides: Partial<WeekPlanDto> = {}): WeekPlanDto {
+  const days = WEEK_DISHES.map((name, i) => {
+    const date = `2026-09-${String(21 + i).padStart(2, '0')}`;
+    return {
+      date,
+      groupsCovered: i === 2 ? 3 : 4,
+      meals: [
+        mealFixture({
+          id: `30000000-0000-4000-8000-00000000000${i}`,
+          dish: { ...mealFixture().dish, id: `dish_${i}`, name },
+          newIngredients: i === 5 ? [{ id: 'ing_dau_ha_lan', name: 'Đậu Hà Lan' }] : [],
+        }),
+      ],
+    };
+  });
+  return {
+    weekStart: '2026-09-21',
+    plannable: true,
+    days,
+    stats: {
+      distinctDishes: 19,
+      totalMeals: 28,
+      daysFullGroups: 6,
+      proteinRotation: [
+        { protein: 'fish', meals: 3, avoided: false },
+        { protein: 'chicken', meals: 3, avoided: false },
+        { protein: 'beef', meals: 2, avoided: false },
+        { protein: 'pork', meals: 2, avoided: false },
+        { protein: 'legume', meals: 2, avoided: false },
+        { protein: 'egg', meals: 0, avoided: true },
       ],
     },
     ...overrides,

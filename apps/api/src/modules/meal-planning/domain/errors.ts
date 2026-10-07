@@ -81,3 +81,27 @@ export class ChildNotPlannableError extends DomainError {
     super('Bé chưa ở độ tuổi được lập thực đơn (6–24 tháng)');
   }
 }
+
+export class InvalidWeekStartError extends DomainError {
+  readonly code = 'INVALID_WEEK_START';
+  readonly kind = 'invalid_input';
+  constructor() {
+    super('Tuần phải bắt đầu từ Thứ Hai (YYYY-MM-DD)');
+  }
+}
+
+export class WeekOutOfRangeError extends DomainError {
+  readonly code = 'WEEK_OUT_OF_RANGE';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Chỉ lên được thực đơn cho tuần này và tuần kế tiếp');
+  }
+}
+
+export class PlanExistsError extends DomainError {
+  readonly code = 'PLAN_EXISTS';
+  readonly kind = 'conflict';
+  constructor() {
+    super('Tuần này đã có thực đơn');
+  }
+}

@@ -1,5 +1,6 @@
 import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.js';
-import { rankSlot, totalMinutes, variantFor, WINDOW_DAYS, type ReasonCode } from './menu-engine.js';
+import { servingFor } from './health-adjustment.js';
+import { rankSlot, totalMinutes, WINDOW_DAYS, type ReasonCode } from './menu-engine.js';
 import type { MealSlot, MealUse, PlanningContext, Texture } from './model.js';
 import { exclusionReason, summarizeExclusions, type ExclusionSummary } from './safety-filter.js';
 
@@ -97,12 +98,10 @@ export function suggestSwaps(ctx: PlanningContext, request: SwapRequest): SwapSu
 
   return {
     ranked: ranked.slice(0, MAX_SUGGESTIONS).map(({ dish, reasons: codes, firstTries }) => {
-      const variant = variantFor(dish, ctx.stage);
       const all: SwapReasonCode[] = request.reason === 'faster' ? ['FASTER', ...codes] : codes;
       return {
         dishId: dish.id,
-        texture: variant.texture,
-        portionText: variant.portionText,
+        ...servingFor(dish, ctx),
         newIngredientIds: firstTries,
         reasons: DISPLAY_ORDER.filter((code) => all.includes(code)).slice(0, MAX_REASONS),
         fasterByMin: Math.max(0, currentMinutes - totalMinutes(dish)),

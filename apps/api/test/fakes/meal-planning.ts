@@ -21,6 +21,7 @@ import { LibraryService } from '../../src/modules/meal-planning/application/use-
 import { RecipeService } from '../../src/modules/meal-planning/application/use-cases/recipe.service.js';
 import { RegenerateFutureService } from '../../src/modules/meal-planning/application/use-cases/regenerate-future.service.js';
 import { SwapService } from '../../src/modules/meal-planning/application/use-cases/swap.service.js';
+import { WeekPlanService } from '../../src/modules/meal-planning/application/use-cases/week-plan.service.js';
 import { FixedClock, ImmediateUnitOfWork, SequenceIds, type Snapshotable } from './kernel.js';
 import { catalogFixture } from './meal-planning-fixtures.js';
 
@@ -185,6 +186,8 @@ export class FakeHistory implements FoodHistoryReader {
   dishFeedback = new Map<string, DishFeedback>();
   introductions: string[] = [];
   healthState: HealthState = 'normal';
+  /** Overrides `healthState` on given dates. */
+  healthOn = new Map<string, HealthState>();
   async tried() {
     return new Set(this.triedIds);
   }
@@ -197,8 +200,8 @@ export class FakeHistory implements FoodHistoryReader {
   async allergenIntroductions(_childId: string, from: string, to: string) {
     return this.introductions.filter((d) => d >= from && d <= to);
   }
-  async health() {
-    return this.healthState;
+  async health(_childId: string, date: string) {
+    return this.healthOn.get(date) ?? this.healthState;
   }
 }
 
@@ -220,6 +223,7 @@ export function planningTestbed() {
   });
   plans.owners.set(CHILD, USER);
   const uow = new ImmediateUnitOfWork().track(plans);
+  const dayPlans = new DayPlanService(plans, children, catalog, history, ids, clock);
   return {
     uow,
     clock,
@@ -228,7 +232,8 @@ export function planningTestbed() {
     children,
     catalog,
     history,
-    dayPlans: new DayPlanService(plans, children, catalog, history, ids, clock),
+    dayPlans,
+    weeks: new WeekPlanService(plans, children, catalog, dayPlans, clock, uow),
     recipes: new RecipeService(children, catalog, history, clock),
     regenerate: new RegenerateFutureService(plans, children, catalog, history, ids, clock),
     swaps: new SwapService(plans, children, catalog, history, ids, clock, uow),

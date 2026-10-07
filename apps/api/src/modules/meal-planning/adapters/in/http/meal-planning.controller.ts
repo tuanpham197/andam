@@ -17,8 +17,12 @@ import { DayPlanService } from '../../../application/use-cases/day-plan.service.
 import { LibraryService } from '../../../application/use-cases/library.service.js';
 import { RecipeService } from '../../../application/use-cases/recipe.service.js';
 import { SwapService } from '../../../application/use-cases/swap.service.js';
+import { WeekPlanService } from '../../../application/use-cases/week-plan.service.js';
 import {
   DayPlanDto,
+  GenerateWeekDto,
+  HealthPreviewDto,
+  HealthPreviewQueryDto,
   LibraryDto,
   LibraryQueryDto,
   MealDto,
@@ -29,6 +33,7 @@ import {
   SwapQueryDto,
   SwapSuggestionsDto,
   UpdateMealDto,
+  WeekPlanDto,
 } from './dto.js';
 
 const Uuid = (name: string) => Param(name, new ParseUUIDPipe({ version: '4' }));
@@ -42,6 +47,7 @@ export class MealPlanningController {
     @Inject(RecipeService) private readonly recipes: RecipeService,
     @Inject(SwapService) private readonly swaps: SwapService,
     @Inject(LibraryService) private readonly library: LibraryService,
+    @Inject(WeekPlanService) private readonly weeks: WeekPlanService,
   ) {}
 
   @Get('children/:childId/days/:date')
@@ -116,5 +122,46 @@ export class MealPlanningController {
     @Query() query: RecipeQueryDto,
   ): Promise<RecipeDto> {
     return this.recipes.get(user.userId, childId, dishId, query.stage);
+  }
+
+  @Get('children/:childId/weeks/:weekStart')
+  @ApiOperation({
+    operationId: 'getWeekPlan',
+    summary: 'Thực đơn tuần (Thứ Hai → Chủ nhật) và chỉ số (UC-12)',
+  })
+  @ApiOkResponse({ type: WeekPlanDto })
+  week(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('weekStart') weekStart: string,
+  ): Promise<WeekPlanDto> {
+    return this.weeks.getWeek(user.userId, childId, weekStart);
+  }
+
+  @Post('children/:childId/weeks/:weekStart/generate')
+  @HttpCode(200)
+  @ApiOperation({ operationId: 'generateWeekPlan', summary: 'Lên thực đơn tuần (UC-13)' })
+  @ApiOkResponse({ type: WeekPlanDto })
+  generateWeek(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('weekStart') weekStart: string,
+    @Body() dto: GenerateWeekDto,
+  ): Promise<WeekPlanDto> {
+    return this.weeks.generate(user.userId, childId, weekStart, dto.overwrite ?? false);
+  }
+
+  @Get('children/:childId/health/preview')
+  @ApiOperation({
+    operationId: 'previewHealthMenu',
+    summary: 'Thực đơn sẽ thay đổi thế nào theo trạng thái sức khỏe (FR-083)',
+  })
+  @ApiOkResponse({ type: HealthPreviewDto })
+  healthPreview(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Query() query: HealthPreviewQueryDto,
+  ): Promise<HealthPreviewDto> {
+    return this.dayPlans.healthPreview(user.userId, childId, query.status);
   }
 }

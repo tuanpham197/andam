@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../../shared/infrastructure/prisma/prisma.service.js';
+import { ChildHealthQueries } from '../../../../child-health/application/use-cases/child-health.service.js';
 import {
   APP_TIMEZONE,
   toLocalDate,
@@ -9,12 +10,16 @@ import type { FoodHistoryReader } from '../../../application/ports/out/food-hist
 import type { DishFeedback, HealthState } from '../../../domain/model.js';
 
 /**
- * Reads what other modules record (logs, exposures, pauses, health episodes). Until those
- * modules exist (P5, P6) the tables are simply empty; then this adapter moves to their ports.
+ * Reads what other modules record (logs, exposures, pauses). Until the meal-log and safety
+ * modules exist (P5) the tables are simply empty; then this adapter moves to their ports.
+ * Health comes from the child-health module, inside the caller's transaction.
  */
 @Injectable()
 export class PrismaFoodHistoryReader implements FoodHistoryReader {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService,
+    @Inject(ChildHealthQueries) private readonly healthQueries: ChildHealthQueries,
+  ) {}
 
   async tried(childId: string): Promise<Set<string>> {
     const rows = await this.prisma.ingredientExposure.findMany({
@@ -67,18 +72,7 @@ export class PrismaFoodHistoryReader implements FoodHistoryReader {
       .filter((date) => date >= from && date <= to);
   }
 
-  async health(childId: string, date: LocalDate): Promise<HealthState> {
-    const day = new Date(`${date}T00:00:00.000Z`);
-    const episode = await this.prisma.healthEpisode.findFirst({
-      where: {
-        childId,
-        endedAt: null,
-        startDate: { lte: day },
-        OR: [{ expectedEndDate: null }, { expectedEndDate: { gte: day } }],
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { status: true },
-    });
-    return episode?.status ?? 'normal';
+  health(childId: string, date: LocalDate): Promise<HealthState> {
+    return this.healthQueries.statusOn(childId, date);
   }
 }

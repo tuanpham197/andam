@@ -6,6 +6,7 @@ import {
   parseLocalDate,
   toLocalDate,
   toLocalTime,
+  weekStartOf,
 } from './local-date.js';
 
 describe('local dates', () => {
@@ -59,5 +60,12 @@ describe('local dates', () => {
     expect(compareDates('2026-09-24', '2026-09-25')).toBeLessThan(0);
     expect(compareDates('2026-09-25', '2026-09-24')).toBeGreaterThan(0);
     expect(compareDates('2026-09-24', '2026-09-24')).toBe(0);
+  });
+
+  it('finds the Monday a week starts on (docs §7.8)', () => {
+    expect(weekStartOf('2026-09-24')).toBe('2026-09-21'); // Thursday
+    expect(weekStartOf('2026-09-21')).toBe('2026-09-21');
+    expect(weekStartOf('2026-09-27')).toBe('2026-09-21'); // Sunday
+    expect(weekStartOf('2027-01-01')).toBe('2026-12-28');
   });
 });

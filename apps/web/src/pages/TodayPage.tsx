@@ -1,27 +1,18 @@
 import {
+  useGetChildHealth,
   useGetDayPlan,
   useListStages,
   type ChildDto,
-  type DayPlanDto,
-  type MealDto,
-  type MealDtoSlot,
 } from '@appandam/api-client';
 import { Link } from 'react-router';
 import { AlertBox } from '../components/AlertBox';
 import { Chip } from '../components/Chip';
-import { Disclaimer } from '../components/Disclaimer';
 import { Icon } from '../components/Icon';
 import { LoadError } from '../components/LoadError';
 import { formatAge, textureLabel } from '../features/child/format';
 import { useActiveChild } from '../features/child/guards';
-import {
-  avoidSummary,
-  dayHeading,
-  daySummary,
-  isSnackSlot,
-  todayInVietnam,
-} from '../features/meals/format';
-import { MealRow, type MealRowState } from '../features/meals/MealRow';
+import { DayMealList } from '../features/meals/DayMealList';
+import { avoidSummary, dayHeading, shortDate, todayInVietnam } from '../features/meals/format';
 import { NextMealCard } from '../features/meals/NextMealCard';
 import { useNow } from '../features/meals/use-now';
 import { usePrepareMeal } from '../features/meals/use-prepare-meal';
@@ -32,6 +23,7 @@ const t = vi.today;
 
 function Header({ child, date }: { child: ChildDto; date: string }) {
   const stage = useListStages().data?.find((s) => s.id === child.effectiveStage);
+  const health = useGetChildHealth(child.id).data;
   const avoided = [
     ...child.avoidAllergens.map((a) => vi.allergens[a]),
     ...child.avoidIngredients.map((i) => i.name ?? i.ingredientId),
@@ -57,12 +49,26 @@ function Header({ child, date }: { child: ChildDto; date: string }) {
           {stage && <Chip to="/settings/age">{t.texture(textureLabel(stage.texture))}</Chip>}
           <Chip tone="primary" to="/health">
             <Icon name="pulse" size={14} />
-            {t.health}
+            {t.health(vi.healthStatus[health?.status ?? 'normal'])}
           </Chip>
           {avoided.length > 0 && <Chip tone="danger">{t.avoid(avoidSummary(avoided))}</Chip>}
         </div>
       )}
     </div>
+  );
+}
+
+/** BR-53: past the expected end, the parent is nudged to update the status (TC-HLT-009). */
+function HealthOverdue({ child }: { child: ChildDto }) {
+  const health = useGetChildHealth(child.id).data;
+  if (!health?.overdue || !health.expectedEndDate) return null;
+  return (
+    <AlertBox tone="warn">
+      <span>{t.healthOverdue(shortDate(health.expectedEndDate))}</span>{' '}
+      <Link to="/health" className={styles.inlineLink}>
+        {t.updateHealth}
+      </Link>
+    </AlertBox>
   );
 }
 
@@ -74,59 +80,6 @@ function NotPlannable({ reason }: { reason: ChildDto['notPlannableReason'] }) {
         {t.checkAge}
       </Link>
     </div>
-  );
-}
-
-interface Row {
-  time: string;
-  slot: MealDtoSlot;
-  meal?: MealDto;
-}
-
-function rowFor(meal: MealDto, nextMealId: string | null): { note: string; state: MealRowState } {
-  if (meal.id === nextMealId) return { note: t.status.next, state: 'next' };
-  if (meal.status === 'eaten') return { note: t.status.eaten, state: 'eaten' };
-  if (meal.status === 'refused' || meal.status === 'skipped')
-    return { note: t.status[meal.status], state: 'closed' };
-  if (meal.status === 'prepared') return { note: t.status.prepared, state: 'pending' };
-  const minutes = vi.minutes(meal.dish.prepMin + meal.dish.cookMin);
-  const protein = meal.dish.mainProtein;
-  const lead = isSnackSlot(meal.slot)
-    ? t.snack
-    : protein && `${vi.foodGroups.protein} · ${vi.proteins[protein]}`;
-  return { note: [lead, minutes].filter(Boolean).join(' · '), state: 'pending' };
-}
-
-function MealList({ day }: { day: DayPlanDto }) {
-  const rows: Row[] = [
-    ...day.meals.map((meal) => ({ time: meal.time, slot: meal.slot, meal })),
-    ...day.unfilledSlots,
-  ].sort((a, b) => a.time.localeCompare(b.time));
-
-  return (
-    <section aria-label={t.listLabel} className={styles.stack}>
-      <div className={styles.listHead}>
-        <h2 className={styles.listTitle}>{t.listTitle}</h2>
-        <span className={styles.muted}>{daySummary(rows.map((r) => r.slot))}</span>
-      </div>
-      <div className={styles.list}>
-        {rows.map(({ time, slot, meal }) =>
-          meal ? (
-            <MealRow
-              key={slot}
-              time={time}
-              slot={slot}
-              name={meal.dish.name}
-              to={`/dishes/${meal.dish.id}?meal=${meal.id}`}
-              {...rowFor(meal, day.nextMealId)}
-            />
-          ) : (
-            <MealRow key={slot} time={time} slot={slot} name={t.unfilled} note="" state="empty" />
-          ),
-        )}
-      </div>
-      <Disclaimer>{t.disclaimer}</Disclaimer>
-    </section>
   );
 }
 
@@ -172,7 +125,7 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
           </section>
         )
       )}
-      <MealList day={day.data} />
+      <DayMealList day={day.data} title={t.listTitle} label={t.listLabel} />
     </>
   );
 }
@@ -185,6 +138,7 @@ export function TodayPage() {
   return (
     <>
       <Header child={child} date={date} />
+      <HealthOverdue child={child} />
       {child.plannable ? (
         <DayPlan child={child} date={date} now={now} />
       ) : (

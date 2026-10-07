@@ -6,8 +6,11 @@ import {
   addDays,
   toLocalDate,
   toLocalTime,
+  type LocalDate,
 } from '../../../../shared/kernel/local-date.js';
+import { servingFor } from '../../domain/health-adjustment.js';
 import { generateDay, slotsForDay } from '../../domain/menu-engine.js';
+import type { PlanningContext } from '../../domain/model.js';
 import { PlannedMeal } from '../../domain/planned-meal.js';
 import { exclusionReason } from '../../domain/safety-filter.js';
 import {
@@ -29,7 +32,7 @@ import {
 } from './planning-context.js';
 
 /**
- * BR-31: after a profile change, upcoming meals follow the new profile. Meals already past,
+ * BR-31: after a profile or health change, upcoming meals follow it. Meals already past,
  * prepared or logged stay; a swapped meal stays while it is still safe at the same stage.
  */
 @Injectable()
@@ -64,24 +67,39 @@ export class RegenerateFutureService {
       return;
     }
     const stage = child.stage;
-    const { ctx, schedule } = await loadPlanningContext(
+    const { ctx: base, schedule } = await loadPlanningContext(
       this.catalog,
       this.history,
       child,
       stage,
       today,
     );
-    const byId = dishMap(ctx.dishes);
+    // Health follows the episode's dates, so each day is planned with its own status (FR-082).
+    const dates = [...new Set(changeable.map((m) => m.date))].sort();
+    const contexts = new Map<LocalDate, PlanningContext>();
+    for (const date of dates)
+      contexts.set(date, { ...base, health: await this.history.health(child.childId, date) });
+
+    const byId = dishMap(base.dishes);
     const replaced = changeable.filter(
       (m) =>
         m.source === 'auto' ||
         m.stageId !== stage ||
-        exclusionReason(byId.get(m.dishId)!, ctx, m.date) !== null,
+        exclusionReason(byId.get(m.dishId)!, contexts.get(m.date)!, m.date) !== null,
     );
     await this.plans.remove(replaced.map((m) => m.id));
 
-    const dates = [...new Set(replaced.map((m) => m.date))].sort();
+    // A dish the parent chose stays, served for the day's health (texture, portion).
+    const removed = new Set(replaced.map((m) => m.id));
+    for (const meal of changeable.filter((m) => !removed.has(m.id))) {
+      const serving = servingFor(byId.get(meal.dishId)!, contexts.get(meal.date)!);
+      if (serving.texture === meal.texture && serving.portionText === meal.portionText) continue;
+      meal.reserve(serving);
+      await this.plans.save(meal);
+    }
+
     for (const date of dates) {
+      const ctx = contexts.get(date)!;
       const around = await this.plans.findBetween(
         child.childId,
         addDays(date, -7),

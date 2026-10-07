@@ -294,11 +294,12 @@ describe('PrismaFoodHistoryReader', () => {
       expect(await history.health(childId, '2026-09-24')).toBe('normal');
     });
 
-    it('follows the latest episode covering the date', async () => {
+    it('follows the latest open episode, through the child-health module', async () => {
       await episode('sick', '2026-09-20', null);
       await episode('recovering', '2026-09-23', '2026-09-26');
       expect(await history.health(childId, '2026-09-24')).toBe('recovering');
-      expect(await history.health(childId, '2026-09-21')).toBe('sick');
+      // The newer episode supersedes the older one, even for its days.
+      expect(await history.health(childId, '2026-09-21')).toBe('normal');
     });
 
     it('is normal after the expected end, after the episode ended, and before it starts', async () => {

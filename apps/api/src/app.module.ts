@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
+import { ChildHealthModule } from './modules/child-health/child-health.module.js';
 import { ChildProfileModule } from './modules/child-profile/child-profile.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IdentityModule } from './modules/identity/identity.module.js';
@@ -34,6 +35,7 @@ import { PersistenceModule } from './shared/infrastructure/persistence/persisten
     IdentityModule,
     CatalogModule,
     ChildProfileModule,
+    ChildHealthModule,
     MealPlanningModule,
   ],
   providers: [

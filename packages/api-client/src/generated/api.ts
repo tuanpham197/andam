@@ -409,6 +409,69 @@ export interface ChildProfileDto {
   stages: StageStateDto[];
 }
 
+export type HealthDtoStatus = typeof HealthDtoStatus[keyof typeof HealthDtoStatus];
+
+
+export const HealthDtoStatus = {
+  normal: 'normal',
+  sick: 'sick',
+  recovering: 'recovering',
+} as const;
+
+export type HealthDtoSymptomsItem = typeof HealthDtoSymptomsItem[keyof typeof HealthDtoSymptomsItem];
+
+
+export const HealthDtoSymptomsItem = {
+  fever: 'fever',
+  poor_appetite: 'poor_appetite',
+  cough: 'cough',
+  diarrhea: 'diarrhea',
+  vomit: 'vomit',
+  teething: 'teething',
+} as const;
+
+export interface HealthDto {
+  status: HealthDtoStatus;
+  symptoms: HealthDtoSymptomsItem[];
+  /** @nullable */
+  startDate: string | null;
+  /** @nullable */
+  expectedEndDate: string | null;
+  /** Đã qua ngày dự kiến kết thúc mà chưa cập nhật */
+  overdue: boolean;
+}
+
+export type UpdateHealthDtoStatus = typeof UpdateHealthDtoStatus[keyof typeof UpdateHealthDtoStatus];
+
+
+export const UpdateHealthDtoStatus = {
+  normal: 'normal',
+  sick: 'sick',
+  recovering: 'recovering',
+} as const;
+
+export type UpdateHealthDtoSymptomsItem = typeof UpdateHealthDtoSymptomsItem[keyof typeof UpdateHealthDtoSymptomsItem];
+
+
+export const UpdateHealthDtoSymptomsItem = {
+  fever: 'fever',
+  poor_appetite: 'poor_appetite',
+  cough: 'cough',
+  diarrhea: 'diarrhea',
+  vomit: 'vomit',
+  teething: 'teething',
+} as const;
+
+export interface UpdateHealthDto {
+  status: UpdateHealthDtoStatus;
+  /** Bị bỏ qua khi trạng thái là Bình thường */
+  symptoms: UpdateHealthDtoSymptomsItem[];
+  /** Mặc định hôm nay */
+  startDate?: string;
+  /** @nullable */
+  expectedEndDate?: string | null;
+}
+
 /**
  * @nullable
  */
@@ -943,6 +1006,110 @@ export interface RecipeDto {
   exclusion: RecipeDtoExclusion;
 }
 
+export interface WeekDayDto {
+  date: string;
+  meals: MealDto[];
+  /**
+     * Số nhóm chất các bữa chính đạt (BR-61)
+     * @minimum 0
+     * @maximum 4
+     */
+  groupsCovered: number;
+}
+
+export type ProteinRotationDtoProtein = typeof ProteinRotationDtoProtein[keyof typeof ProteinRotationDtoProtein];
+
+
+export const ProteinRotationDtoProtein = {
+  fish: 'fish',
+  chicken: 'chicken',
+  beef: 'beef',
+  pork: 'pork',
+  legume: 'legume',
+  egg: 'egg',
+} as const;
+
+export interface ProteinRotationDto {
+  protein: ProteinRotationDtoProtein;
+  meals: number;
+  /** Hồ sơ loại trừ mọi thực phẩm của nguồn đạm này */
+  avoided: boolean;
+}
+
+export interface WeekStatsDto {
+  distinctDishes: number;
+  totalMeals: number;
+  daysFullGroups: number;
+  proteinRotation: ProteinRotationDto[];
+}
+
+export interface WeekPlanDto {
+  weekStart: string;
+  plannable: boolean;
+  days: WeekDayDto[];
+  stats: WeekStatsDto;
+}
+
+export interface GenerateWeekDto {
+  /** Thay các bữa chưa nấu, chưa ghi nhận */
+  overwrite?: boolean;
+}
+
+export type HealthPreviewDtoStatus = typeof HealthPreviewDtoStatus[keyof typeof HealthPreviewDtoStatus];
+
+
+export const HealthPreviewDtoStatus = {
+  normal: 'normal',
+  sick: 'sick',
+  recovering: 'recovering',
+} as const;
+
+/**
+ * Bữa phụ thêm mỗi ngày (BR-50)
+ */
+export type HealthPreviewDtoExtraSnacks = typeof HealthPreviewDtoExtraSnacks[keyof typeof HealthPreviewDtoExtraSnacks];
+
+
+export const HealthPreviewDtoExtraSnacks = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+} as const;
+
+/**
+ * Phần trăm khẩu phần theo giai đoạn
+ */
+export type HealthPreviewDtoPortionPercent = typeof HealthPreviewDtoPortionPercent[keyof typeof HealthPreviewDtoPortionPercent];
+
+
+export const HealthPreviewDtoPortionPercent = {
+  NUMBER_100: 100,
+  NUMBER_85: 85,
+  NUMBER_70: 70,
+} as const;
+
+/**
+ * Số mức kết cấu mềm hơn giai đoạn (BR-51)
+ */
+export type HealthPreviewDtoSofterTexture = typeof HealthPreviewDtoSofterTexture[keyof typeof HealthPreviewDtoSofterTexture];
+
+
+export const HealthPreviewDtoSofterTexture = {
+  NUMBER_0: 0,
+  NUMBER_1: 1,
+} as const;
+
+export interface HealthPreviewDto {
+  status: HealthPreviewDtoStatus;
+  /** Bữa phụ thêm mỗi ngày (BR-50) */
+  extraSnacks: HealthPreviewDtoExtraSnacks;
+  /** Phần trăm khẩu phần theo giai đoạn */
+  portionPercent: HealthPreviewDtoPortionPercent;
+  /** Số mức kết cấu mềm hơn giai đoạn (BR-51) */
+  softerTexture: HealthPreviewDtoSofterTexture;
+  /** Tạm ngưng thử nguyên liệu mới (BR-52/53) */
+  pauseNewFoods: boolean;
+}
+
 export type SearchIngredientsParams = {
 /**
  * Tên hoặc tên gọi khác, không cần dấu
@@ -1009,6 +1176,19 @@ export type GetRecipeParams = {
  */
 stage?: number;
 };
+
+export type PreviewHealthMenuParams = {
+status: PreviewHealthMenuStatus;
+};
+
+export type PreviewHealthMenuStatus = typeof PreviewHealthMenuStatus[keyof typeof PreviewHealthMenuStatus];
+
+
+export const PreviewHealthMenuStatus = {
+  normal: 'normal',
+  sick: 'sick',
+  recovering: 'recovering',
+} as const;
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -2691,6 +2871,196 @@ export function usePreviewStage<TData = Awaited<ReturnType<typeof previewStage>>
 
 
 
+export const getGetChildHealthUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/health`
+}
+
+/**
+ * @summary Tình trạng sức khỏe hiện tại (UC-11)
+ */
+export const getChildHealth = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<HealthDto> => {
+
+  return apiFetch<HealthDto>(getGetChildHealthUrl(childId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetChildHealthQueryKey = (childId: string,) => {
+    return [
+    `/api/v1/children/${childId}/health`
+    ] as const;
+    }
+
+
+export const getGetChildHealthQueryOptions = <TData = Awaited<ReturnType<typeof getChildHealth>>, TError = ErrorType<unknown>>(childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetChildHealthQueryKey(childId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getChildHealth>>> = ({ signal }) => getChildHealth(childId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetChildHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getChildHealth>>>
+export type GetChildHealthQueryError = ErrorType<unknown>
+
+
+export function useGetChildHealth<TData = Awaited<ReturnType<typeof getChildHealth>>, TError = ErrorType<unknown>>(
+ childId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChildHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getChildHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChildHealth<TData = Awaited<ReturnType<typeof getChildHealth>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChildHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getChildHealth>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChildHealth<TData = Awaited<ReturnType<typeof getChildHealth>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Tình trạng sức khỏe hiện tại (UC-11)
+ */
+
+export function useGetChildHealth<TData = Awaited<ReturnType<typeof getChildHealth>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getChildHealth>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetChildHealthQueryOptions(childId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateChildHealthUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/health`
+}
+
+/**
+ * @summary Cập nhật sức khỏe và sinh lại các bữa sắp tới (FR-080..084)
+ */
+export const updateChildHealth = async (childId: string,
+    updateHealthDto: UpdateHealthDto, options?: Parameters<typeof apiFetch>[1]): Promise<HealthDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<HealthDto>(getUpdateChildHealthUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateHealthDto)
+  }
+);}
+
+
+
+
+
+export const getUpdateChildHealthMutationKey = () => ['updateChildHealth'] as const;
+
+export const getUpdateChildHealthMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChildHealth>>, TError,UpdateChildHealthMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateChildHealth>>, TError,UpdateChildHealthMutationVariables, TContext> => {
+
+const mutationKey = getUpdateChildHealthMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateChildHealth>>, UpdateChildHealthMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  updateChildHealth(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateChildHealthMutationResult = NonNullable<Awaited<ReturnType<typeof updateChildHealth>>>
+    export type UpdateChildHealthMutationBody = UpdateHealthDto
+    export type UpdateChildHealthMutationError = ErrorType<unknown>
+    export type UpdateChildHealthMutationVariables = {childId: string;data: UpdateHealthDto}
+
+    /**
+ * @summary Cập nhật sức khỏe và sinh lại các bữa sắp tới (FR-080..084)
+ */
+export const useUpdateChildHealth = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChildHealth>>, TError,UpdateChildHealthMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateChildHealth>>,
+        TError,
+        UpdateChildHealthMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateChildHealthMutationOptions(options), queryClient);
+    }
+
 export const getGetDayPlanUrl = (childId: string,
     date: string,) => {
 
@@ -3322,6 +3692,322 @@ export function useGetRecipe<TData = Awaited<ReturnType<typeof getRecipe>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetRecipeQueryOptions(childId,dishId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetWeekPlanUrl = (childId: string,
+    weekStart: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/weeks/${weekStart}`
+}
+
+/**
+ * @summary Thực đơn tuần (Thứ Hai → Chủ nhật) và chỉ số (UC-12)
+ */
+export const getWeekPlan = async (childId: string,
+    weekStart: string, options?: Parameters<typeof apiFetch>[1]): Promise<WeekPlanDto> => {
+
+  return apiFetch<WeekPlanDto>(getGetWeekPlanUrl(childId,weekStart),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWeekPlanQueryKey = (childId: string,
+    weekStart: string,) => {
+    return [
+    `/api/v1/children/${childId}/weeks/${weekStart}`
+    ] as const;
+    }
+
+
+export const getGetWeekPlanQueryOptions = <TData = Awaited<ReturnType<typeof getWeekPlan>>, TError = ErrorType<unknown>>(childId: string,
+    weekStart: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWeekPlanQueryKey(childId,weekStart);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWeekPlan>>> = ({ signal }) => getWeekPlan(childId,weekStart, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined && weekStart !== null && weekStart !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetWeekPlanQueryResult = NonNullable<Awaited<ReturnType<typeof getWeekPlan>>>
+export type GetWeekPlanQueryError = ErrorType<unknown>
+
+
+export function useGetWeekPlan<TData = Awaited<ReturnType<typeof getWeekPlan>>, TError = ErrorType<unknown>>(
+ childId: string,
+    weekStart: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWeekPlan>>,
+          TError,
+          Awaited<ReturnType<typeof getWeekPlan>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWeekPlan<TData = Awaited<ReturnType<typeof getWeekPlan>>, TError = ErrorType<unknown>>(
+ childId: string,
+    weekStart: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getWeekPlan>>,
+          TError,
+          Awaited<ReturnType<typeof getWeekPlan>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetWeekPlan<TData = Awaited<ReturnType<typeof getWeekPlan>>, TError = ErrorType<unknown>>(
+ childId: string,
+    weekStart: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Thực đơn tuần (Thứ Hai → Chủ nhật) và chỉ số (UC-12)
+ */
+
+export function useGetWeekPlan<TData = Awaited<ReturnType<typeof getWeekPlan>>, TError = ErrorType<unknown>>(
+ childId: string,
+    weekStart: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWeekPlan>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetWeekPlanQueryOptions(childId,weekStart,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGenerateWeekPlanUrl = (childId: string,
+    weekStart: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/weeks/${weekStart}/generate`
+}
+
+/**
+ * @summary Lên thực đơn tuần (UC-13)
+ */
+export const generateWeekPlan = async (childId: string,
+    weekStart: string,
+    generateWeekDto: GenerateWeekDto, options?: Parameters<typeof apiFetch>[1]): Promise<WeekPlanDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<WeekPlanDto>(getGenerateWeekPlanUrl(childId,weekStart),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(generateWeekDto)
+  }
+);}
+
+
+
+
+
+export const getGenerateWeekPlanMutationKey = () => ['generateWeekPlan'] as const;
+
+export const getGenerateWeekPlanMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateWeekPlan>>, TError,GenerateWeekPlanMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof generateWeekPlan>>, TError,GenerateWeekPlanMutationVariables, TContext> => {
+
+const mutationKey = getGenerateWeekPlanMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof generateWeekPlan>>, GenerateWeekPlanMutationVariables> = (props) => {
+          const {childId,weekStart,data} = props ?? {};
+
+          return  generateWeekPlan(childId,weekStart,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GenerateWeekPlanMutationResult = NonNullable<Awaited<ReturnType<typeof generateWeekPlan>>>
+    export type GenerateWeekPlanMutationBody = GenerateWeekDto
+    export type GenerateWeekPlanMutationError = ErrorType<unknown>
+    export type GenerateWeekPlanMutationVariables = {childId: string;weekStart: string;data: GenerateWeekDto}
+
+    /**
+ * @summary Lên thực đơn tuần (UC-13)
+ */
+export const useGenerateWeekPlan = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof generateWeekPlan>>, TError,GenerateWeekPlanMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof generateWeekPlan>>,
+        TError,
+        GenerateWeekPlanMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGenerateWeekPlanMutationOptions(options), queryClient);
+    }
+
+export const getPreviewHealthMenuUrl = (childId: string,
+    params: PreviewHealthMenuParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/children/${childId}/health/preview?${stringifiedParams}` : `/api/v1/children/${childId}/health/preview`
+}
+
+/**
+ * @summary Thực đơn sẽ thay đổi thế nào theo trạng thái sức khỏe (FR-083)
+ */
+export const previewHealthMenu = async (childId: string,
+    params: PreviewHealthMenuParams, options?: Parameters<typeof apiFetch>[1]): Promise<HealthPreviewDto> => {
+
+  return apiFetch<HealthPreviewDto>(getPreviewHealthMenuUrl(childId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPreviewHealthMenuQueryKey = (childId: string,
+    params?: PreviewHealthMenuParams,) => {
+    return [
+    `/api/v1/children/${childId}/health/preview`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getPreviewHealthMenuQueryOptions = <TData = Awaited<ReturnType<typeof previewHealthMenu>>, TError = ErrorType<unknown>>(childId: string,
+    params: PreviewHealthMenuParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPreviewHealthMenuQueryKey(childId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof previewHealthMenu>>> = ({ signal }) => previewHealthMenu(childId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PreviewHealthMenuQueryResult = NonNullable<Awaited<ReturnType<typeof previewHealthMenu>>>
+export type PreviewHealthMenuQueryError = ErrorType<unknown>
+
+
+export function usePreviewHealthMenu<TData = Awaited<ReturnType<typeof previewHealthMenu>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params: PreviewHealthMenuParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewHealthMenu>>,
+          TError,
+          Awaited<ReturnType<typeof previewHealthMenu>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewHealthMenu<TData = Awaited<ReturnType<typeof previewHealthMenu>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params: PreviewHealthMenuParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewHealthMenu>>,
+          TError,
+          Awaited<ReturnType<typeof previewHealthMenu>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewHealthMenu<TData = Awaited<ReturnType<typeof previewHealthMenu>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params: PreviewHealthMenuParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Thực đơn sẽ thay đổi thế nào theo trạng thái sức khỏe (FR-083)
+ */
+
+export function usePreviewHealthMenu<TData = Awaited<ReturnType<typeof previewHealthMenu>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params: PreviewHealthMenuParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewHealthMenu>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPreviewHealthMenuQueryOptions(childId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

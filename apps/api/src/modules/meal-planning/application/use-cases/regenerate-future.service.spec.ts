@@ -91,4 +91,48 @@ describe('RegenerateFutureService (BR-31, TC-PLN-003)', () => {
     await t.regenerate.execute({ childId: 'ghost', userId: USER });
     expect(t.plans.rows.size).toBe(before);
   });
+
+  describe('after a health change (BR-50..53, TC-HLT-008/010)', () => {
+    it('re-plans the upcoming meals for the sick days and keeps the prepared one', async () => {
+      const t = await planToday();
+      const lunch = mealsOn(t, TODAY).find((m) => m.slot === 'lunch')!;
+      t.plans.put(PlannedMeal.restore({ ...snapshot(lunch), status: 'prepared' }));
+      t.history.healthState = 'sick';
+      await t.regenerate.execute({ childId: CHILD, userId: USER });
+
+      const today = mealsOn(t, TODAY);
+      expect(today.find((m) => m.slot === 'lunch')).toMatchObject({
+        id: lunch.id,
+        status: 'prepared',
+        texture: 'lumpy',
+      });
+      expect(today.find((m) => m.slot === 'dinner')).toMatchObject({
+        texture: 'mashed',
+        portionText: 'Khoảng 90 ml',
+      });
+      expect(mealsOn(t, '2026-09-25')).toHaveLength(5);
+    });
+
+    it('serves a parent’s swapped dish softer instead of replacing it', async () => {
+      const t = await planToday();
+      const tomorrow = mealsOn(t, '2026-09-25');
+      for (const meal of tomorrow)
+        t.plans.put(PlannedMeal.restore({ ...snapshot(meal), source: 'swap' }));
+      t.history.healthOn.set('2026-09-25', 'sick');
+      await t.regenerate.execute({ childId: CHILD, userId: USER });
+
+      const after = mealsOn(t, '2026-09-25');
+      expect(after).toHaveLength(5); // the extra snack is added on a day of swaps only
+      for (const meal of tomorrow) {
+        const kept = after.find((m) => m.id === meal.id)!;
+        expect(kept.dishId).toBe(meal.dishId);
+        expect(kept.texture).toBe('mashed');
+      }
+      // Back to normal: the day is untouched for swapped meals already served as normal.
+      t.history.healthOn.clear();
+      await t.regenerate.execute({ childId: CHILD, userId: USER });
+      expect(mealsOn(t, TODAY).every((m) => m.texture === 'lumpy')).toBe(true);
+      expect(mealsOn(t, '2026-09-25').filter((m) => m.slot.endsWith('snack'))).toHaveLength(1);
+    });
+  });
 });

@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CatalogModule } from '../catalog/catalog.module.js';
+import { ChildHealthModule } from '../child-health/child-health.module.js';
 import { ChildProfileModule } from '../child-profile/child-profile.module.js';
+import { HealthChangedListener } from './adapters/in/events/health-changed.listener.js';
 import { ProfileChangedListener } from './adapters/in/events/profile-changed.listener.js';
 import { MealPlanningController } from './adapters/in/http/meal-planning.controller.js';
 import { CatalogPlanningAdapter } from './adapters/out/cross-module/catalog-planning.adapter.js';
@@ -16,6 +18,7 @@ import { LibraryService } from './application/use-cases/library.service.js';
 import { RecipeService } from './application/use-cases/recipe.service.js';
 import { RegenerateFutureService } from './application/use-cases/regenerate-future.service.js';
 import { SwapService } from './application/use-cases/swap.service.js';
+import { WeekPlanService } from './application/use-cases/week-plan.service.js';
 
 const ports = [
   { provide: MEAL_PLAN_REPOSITORY, useClass: PrismaMealPlanRepository },
@@ -25,7 +28,7 @@ const ports = [
 ];
 
 @Module({
-  imports: [ChildProfileModule, CatalogModule],
+  imports: [ChildProfileModule, ChildHealthModule, CatalogModule],
   controllers: [MealPlanningController],
   providers: [
     ...ports,
@@ -34,7 +37,9 @@ const ports = [
     RegenerateFutureService,
     SwapService,
     LibraryService,
+    WeekPlanService,
     ProfileChangedListener,
+    HealthChangedListener,
   ],
   exports: ports.map((p) => p.provide),
 })

@@ -10,5 +10,6 @@ export interface FoodHistoryReader {
   feedback(childId: string): Promise<Map<string, DishFeedback>>;
   /** Days a new allergenic food was eaten (planned introductions are read from the plan). */
   allergenIntroductions(childId: string, from: LocalDate, to: LocalDate): Promise<LocalDate[]>;
+  /** Health status the menu follows on `date` (BR-50..53). */
   health(childId: string, date: LocalDate): Promise<HealthState>;
 }
