@@ -197,6 +197,22 @@ describe('PrismaInviteRepository', () => {
     expect(await invites.findByTokenHash(invite.tokenHash)).toMatchObject({ acceptedBy: dad });
   });
 
+  it('TC-FAM-029 revokes only the pending links of the user closing the account', async () => {
+    const pending = issue();
+    const used = issue();
+    const expired = issue(new Date(NOW.getTime() - INVITE_TTL_MS));
+    await Promise.all([pending, used, expired].map((i) => invites.add(i)));
+    used.accept(dad, NOW);
+    await invites.markAccepted(used);
+    const later = new Date(NOW.getTime() + 60_000);
+    await invites.revokeAllBy(dad, later);
+    expect((await invites.find(childId, pending.id))!.revokedAt).toBeNull();
+    await invites.revokeAllBy(mom, later);
+    expect((await invites.find(childId, pending.id))!.revokedAt).toEqual(later);
+    expect((await invites.find(childId, expired.id))!.revokedAt).toEqual(later);
+    expect((await invites.find(childId, used.id))!.revokedAt).toBeNull();
+  });
+
   it('hashes tokens with SHA-256 and never stores the token itself', () => {
     const { token, hash } = tokens.create();
     expect(token).toMatch(/^[\w-]{43}$/);

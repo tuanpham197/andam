@@ -14,7 +14,12 @@ export function RequireChild() {
         <LoadError error={children.error} retry={() => children.refetch()} />
       </div>
     );
-  if (children.data.length === 0) return <Navigate to="/onboarding/1" replace />;
+  if (children.data.length === 0) {
+    // A list restored from the device cache may be older than the profile just created: never
+    // leave the requested screen on it — wait for the server's answer.
+    if (children.isFetching) return <Splash />;
+    return <Navigate to="/onboarding/1" replace />;
+  }
   return <ChildChoiceProvider list={children.data} />;
 }
 
@@ -66,7 +71,11 @@ export function RequireNoChild() {
         <LoadError error={children.error} retry={() => children.refetch()} />
       </div>
     );
-  if (children.data.length > 0) return <Navigate to="/" replace />;
+  if (children.data.length > 0) {
+    // Same for a cached list that still shows a child that is gone.
+    if (children.isFetching) return <Splash />;
+    return <Navigate to="/" replace />;
+  }
   return <Outlet />;
 }
 

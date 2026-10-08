@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router';
 import { Splash } from '../../app/layouts';
+import { OfflineBanner } from '../../components/OfflineBanner';
 import { refreshSessionOnce } from '../../lib/session-refresh';
 import { useSession } from './session-store';
 
@@ -9,8 +10,18 @@ export function SessionRoot() {
   const { status } = useSession();
   useEffect(() => {
     if (status === 'unknown') void refreshSessionOnce();
+    if (status !== 'offline') return;
+    // Back online: check the session again (NFR-008).
+    const retry = () => void refreshSessionOnce();
+    window.addEventListener('online', retry);
+    return () => window.removeEventListener('online', retry);
   }, [status]);
-  return <Outlet />;
+  return (
+    <>
+      <OfflineBanner />
+      <Outlet />
+    </>
+  );
 }
 
 export function RequireAuth() {

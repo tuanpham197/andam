@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/dist/**',
       '**/coverage/**',
       'design/**',
+      // k6 scripts run in k6's runtime, not Node.
+      'load/**',
       'apps/api/src/generated/**',
       'packages/api-client/src/generated/**',
     ],
@@ -26,7 +28,14 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/api/**/*.{ts,js}', '*.js', 'packages/**/*.{ts,js}'],
+    files: [
+      'apps/api/**/*.{ts,js}',
+      '*.js',
+      'packages/**/*.{ts,js}',
+      'apps/web/scripts/**',
+      'apps/web/e2e/**',
+      'apps/web/playwright.config.ts',
+    ],
     languageOptions: { globals: globals.node },
   },
   {

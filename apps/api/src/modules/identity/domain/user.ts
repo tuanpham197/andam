@@ -15,6 +15,9 @@ interface UserState {
 }
 
 const DISPLAY_NAME_MAX = 30;
+
+/** UC-19: a closed account is erased for good this long after it was closed. */
+export const HARD_DELETE_AFTER_DAYS = 30;
 const graphemes = new Intl.Segmenter('vi', { granularity: 'grapheme' });
 
 export class User {
@@ -72,7 +75,7 @@ export class User {
     this.state.passwordHash = passwordHash;
   }
 
-  /** Soft delete: access stops now, hard deletion follows within 30 days (UC-19). */
+  /** Soft delete: access stops now, hard deletion follows after 30 days (UC-19). */
   delete(now: Date): void {
     this.state.deletedAt ??= now;
   }

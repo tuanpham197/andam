@@ -127,6 +127,53 @@ describe('PrismaUserRepository', () => {
       deletedAt: now,
     });
   });
+
+  it('TC-AUTH-032 erases accounts closed before the cutoff, keeping shared records unnamed', async () => {
+    const [mom, dad, fresh] = [newUser('me@example.vn'), newUser('ba@example.vn'), newUser()];
+    for (const u of [mom, dad, fresh]) await users.create(u, consent());
+    const child = (id: string, userId: string, name: string) =>
+      prisma.child.create({
+        data: { id, userId, name, birthDate: new Date('2026-01-12'), priorReaction: 'never' },
+      });
+    // Mom's own child goes with her; dad's child, where she recorded an illness, stays.
+    const [own, shared] = [uuid(), uuid()];
+    await child(own, mom.id, 'Na');
+    await child(shared, dad.id, 'Bin');
+    await prisma.childMember.createMany({
+      data: [
+        { childId: own, userId: mom.id, role: 'owner', joinedAt: now },
+        { childId: shared, userId: dad.id, role: 'owner', joinedAt: now },
+      ],
+    });
+    const episode = await prisma.healthEpisode.create({
+      data: {
+        id: uuid(),
+        childId: shared,
+        status: 'sick',
+        symptoms: ['fever'],
+        startDate: new Date('2026-09-20'),
+        actorId: mom.id,
+      },
+    });
+    await refreshTokens.create(newRefresh(mom.id));
+    mom.delete(new Date('2026-08-01T00:00:00Z'));
+    fresh.delete(now);
+    await users.save(mom);
+    await users.save(fresh);
+
+    expect(await users.purgeDeletedBefore(new Date('2026-08-29T00:00:00Z'))).toBe(1);
+    expect(await users.findById(mom.id)).toBeNull();
+    expect(await prisma.consent.count({ where: { userId: mom.id } })).toBe(0);
+    expect(await prisma.refreshToken.count({ where: { userId: mom.id } })).toBe(0);
+    expect(await prisma.child.findUnique({ where: { id: own } })).toBeNull();
+    expect(await prisma.child.findUnique({ where: { id: shared } })).not.toBeNull();
+    expect(
+      (await prisma.healthEpisode.findUnique({ where: { id: episode.id } }))!.actorId,
+    ).toBeNull();
+    // Closed too recently, or still active: untouched.
+    expect(await users.findById(fresh.id)).not.toBeNull();
+    expect(await users.findById(dad.id)).not.toBeNull();
+  });
 });
 
 describe('PrismaRefreshTokenRepository', () => {

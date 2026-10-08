@@ -99,6 +99,38 @@ describe('DeleteAccountService (UC-19)', () => {
   });
 });
 
+describe('PurgeDeletedAccountsService (UC-19)', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+
+  it('TC-AUTH-032 erases an account 30 days after it was closed, not a moment earlier', async () => {
+    const t = identityTestbed();
+    const { userId } = await registered(t);
+    const other = await registered(t, 'ba@example.vn');
+    await t.deleteAccount.execute({ userId, password: PASSWORD });
+
+    t.clock.advance(30 * DAY);
+    expect(await t.purge.execute()).toBe(0);
+    expect(await t.users.findById(userId)).not.toBeNull();
+
+    t.clock.advance(1);
+    expect(await t.purge.execute()).toBe(1);
+    expect(await t.users.findById(userId)).toBeNull();
+    expect(t.users.consents.has(userId)).toBe(false);
+    // An active account is never touched, and a second run finds nothing left.
+    expect(await t.users.findById(other.userId)).not.toBeNull();
+    expect(await t.purge.execute()).toBe(0);
+  });
+
+  it('frees the e-mail once the account is erased', async () => {
+    const t = identityTestbed();
+    const { userId } = await registered(t);
+    await t.deleteAccount.execute({ userId, password: PASSWORD });
+    t.clock.advance(31 * DAY);
+    await t.purge.execute();
+    await expect(registered(t)).resolves.toMatchObject({ userId: expect.any(String) });
+  });
+});
+
 describe('AuthenticateService', () => {
   it('resolves a valid access token to its user', async () => {
     const t = identityTestbed();

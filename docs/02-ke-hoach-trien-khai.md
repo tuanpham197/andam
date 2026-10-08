@@ -49,7 +49,7 @@
 | P5 | Ghi nhận, phản ứng & an toàn · Món của bạn | 6 | 5 | 6 ngày | |
 | P5b | Nhiều người chăm | 4 | 3 | 4 ngày | |
 | P6 | Sức khỏe & Thực đơn tuần | 3 | 3 | 3 ngày | **M3** ✅ |
-| P7 | Hoàn thiện, bảo mật & phát hành | 4 | 3 | 4 ngày | **M4** |
+| P7 | Hoàn thiện, bảo mật & phát hành | 4 | 3 | 4 ngày | **M4** 🚧 |
 | | **Tổng MVP** | **34** | **30** | **~35 ngày (~7 tuần)** | |
 
 > Nếu chỉ có 1 dev fullstack: ~53 ngày công (~11 tuần).
@@ -350,24 +350,32 @@ gantt
 
 ---
 
-### P7 — Hoàn thiện, bảo mật & phát hành (BE 4 · FE 3) — **M4**
+### P7 — Hoàn thiện, bảo mật & phát hành (BE 4 · FE 3) — **M4** — 🚧 Phần code xong 08/10/2026, còn các mục vận hành / pháp lý / nội dung
 
 **Backend / hạ tầng**
-- [ ] Staging + production: API container (≥ 2 instance), PostgreSQL managed (backup hằng ngày, PITR), `prisma migrate deploy` là bước riêng trong pipeline.
-- [ ] Sentry, health check, cảnh báo uptime (NFR-006); diễn tập khôi phục backup (NFR-007).
-- [ ] Load test k6: 200 user đồng thời, đo p95 (NFR-002, 003, 005).
-- [ ] Rà soát bảo mật: e2e truy cập chéo cho **mọi** route có `:childId`/`:mealId` (NFR-017), throttle, cookie flags, HSTS, CORS, dependency audit; checklist OWASP ASVS L1.
-- [ ] Job xóa cứng tài khoản sau 30 ngày (UC-19).
-- [ ] Thay seed `draft` bằng **catalog đã duyệt** (~60 món, ~80 nguyên liệu); production từ chối món `draft`.
+- [ ] Staging + production: API container (≥ 2 instance), PostgreSQL managed (backup hằng ngày, PITR), `prisma migrate deploy` là bước riêng trong pipeline. *(Cần chủ dự án: gói Render trả phí cho ≥ 2 instance; bật PITR/backup trên Supabase.)*
+- [ ] Sentry, health check, cảnh báo uptime (NFR-006); diễn tập khôi phục backup (NFR-007). *(Health check `/api/v1/health` đã có. Cần chủ dự án: tạo dự án Sentry (DSN), cấu hình cảnh báo uptime, diễn tập khôi phục.)*
+- [x] Load test k6 — `load/k6-load.js` (đăng ký N tài khoản + bé, mỗi user ảo: danh sách bé, ngày hôm nay, công thức, gợi ý đổi món, thư viện, nhật ký; 1/10 vòng lên thực đơn tuần; 1/5 vòng cập nhật sức khỏe). **Đo trên máy dev (1 instance API, Postgres Docker), chưa phải staging:**
+  - 200 user (NFR-005): **0 lỗi 5xx / 32 583 request** ✓; p95 đọc 532 ms, ghi 464 ms, sinh tuần 555 ms.
+  - 50 user (NFR-003): p95 đọc **15 ms**, ghi **42 ms**, sinh tuần **67 ms** ✓.
+  - NFR-002 yêu cầu catalog 200 món — catalog hiện có 12 món nên con số trên chỉ là mốc tham khảo.
+  - Lần chạy đầu phát hiện **1 lỗi 500**: hai request lên thực đơn tuần cùng lúc cho một bé → `addMany` gặp trùng slot bên trong transaction, Postgres hủy cả transaction (`25P02`). Sửa: `addMany` dùng `SAVEPOINT` khi đang trong transaction (test integration tái hiện đúng lỗi khi bỏ savepoint).
+- [x] Rà soát bảo mật:
+  - e2e truy cập chéo: ngoài ma trận TC-FAM-011 (mọi route có `:childId`/`:mealId`/`:eventId` × 3 vai trò), thêm **TC-FAM-030** cho cặp lệch (id bé của mình + món tự tạo / nguyên liệu tạm dừng của gia đình khác) → `404`, dữ liệu gia đình kia không đổi.
+  - Đã có: throttle (auth 5/phút, API 120/phút), cookie refresh `HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth`, helmet (HSTS, nosniff), CORS theo danh sách, body ≤ 100 KB. Mới: **`Cache-Control: no-store`** cho mọi phản hồi API (dữ liệu sức khỏe không nằm trong cache trình duyệt/proxy).
+  - `npm audit --omit=dev`: `source-map-js` đã sửa; còn `mysql2` + `deepmerge-ts` (high) đi kèm **Prisma CLI 7.10** — chỉ sửa được bằng bản Prisma major; không khai thác được ở đây (chỉ dùng PostgreSQL; `deepmerge-ts` chỉ đọc file cấu hình của chính repo). Ghi nhận ở §7.
+- [x] Job xóa cứng tài khoản sau 30 ngày (UC-19): `PurgeDeletedAccountsService` + `AccountPurgeJob` (chạy lúc khởi động và mỗi `ACCOUNT_PURGE_INTERVAL_MINUTES`, mặc định 360; 0 = tắt; nhiều instance chạy cùng lúc vẫn an toàn). Xóa user → khóa ngoại xóa phiên, đồng ý, bé chỉ mình họ chăm; bản ghi trên bé chung còn, cột người làm thành `null`. **Phát hiện khi làm:** link mời của chủ đã đóng tài khoản vẫn dùng được trong 30 ngày → người nhận tham gia rồi mất bé khi xóa cứng. Sửa: đóng tài khoản thu hồi mọi link mời đang chờ (TC-FAM-029).
+- [ ] Thay seed `draft` bằng **catalog đã duyệt** (~60 món, ~80 nguyên liệu); production từ chối món `draft` *(seed đã từ chối `draft` khi `NODE_ENV=production`; cần chuyên gia dinh dưỡng duyệt nội dung — hiện 12 món / 46 nguyên liệu, tất cả `draft`).*
 
 **Frontend**
-- [ ] PWA: manifest (theme `#4F6B4A`, nền `#F6F1E8`, icon), precache shell + font; persist cache TanStack Query để xem offline (NFR-008); báo rõ khi thao tác ghi cần mạng.
-- [ ] Playwright (WebKit + Chromium) cho 5 luồng NFR-011 trên 7 viewport của NFR-014, chạy với API + DB thật trong CI; assert không cuộn ngang + screenshot so sánh.
-- [ ] axe-core trên mọi route, thử VoiceOver với S01/S07/S08 (NFR-013); Lighthouse mobile ≥ 90, LCP ≤ 2.5 s, bundle ≤ 200 KB.
-- [ ] Error boundary, màn lỗi mạng/phiên hết hạn thân thiện.
+- [x] PWA: `vite-plugin-pwa` — manifest (theme `#4F6B4A`, nền `#F6F1E8`, icon 192/512/maskable/apple-touch), service worker precache shell + font, API luôn đi mạng. Cache TanStack Query lưu trên máy 24 h **theo danh sách cho phép** (bé, giai đoạn, ngày, tuần, công thức đã mở, sức khỏe) — không lưu tài khoản, link mời (token), email thành viên, nhật ký; xóa ngay khi không còn ai đăng nhập. Mở app khi mất mạng: phiên ở trạng thái `offline`, hiện dữ liệu đã lưu + banner “cần kết nối”, có mạng lại thì kiểm phiên lại; server 5xx không còn đăng xuất người dùng. Thao tác ghi báo lỗi ngay khi mất mạng (không treo).
+- [x] Playwright (WebKit + Chromium): `apps/web/e2e` — 5 luồng NFR-011 trên cả 2 trình duyệt; 12 màn chính + 4 màn đăng nhập × **7 viewport** NFR-014 (không cuộn ngang); chạy với bản build production + API + DB thật (`e2e/start-api.sh`, DB riêng `appandam_e2e`, chỉ `migrate deploy` — không reset); job `e2e` trong CI. *Chưa có so sánh screenshot (baseline phụ thuộc hệ điều hành và S01 có đồng hồ đếm ngược — để sau, chạy trong image Playwright Docker).*
+- [x] axe-core (WCAG 2.1 A/AA, chặn mức serious/critical) trên mọi màn ở trên. Phát hiện & sửa: chữ “Ảnh món ăn” tương phản 4.1:1 (< 4.5:1); màn Tài khoản và Tạo món không có `h1`. *VoiceOver với S01/S07/S08 cần thử trên máy thật. Lighthouse: bundle khởi tạo **148 KB gzip** (≤ 200 KB, kiểm tự động sau `npm run build`); LCP cần đo trên staging.*
+- [x] Error boundary (màn “Có lỗi xảy ra” + tải lại / về Hôm nay), banner mất mạng, thông báo “Phiên đăng nhập đã hết hạn” ở màn đăng nhập.
+- **Phát hiện khi chạy e2e song song:** cache trên máy được ghi tối đa 1 lần/giây, nên tải lại trang ngay sau khi tạo hồ sơ thì danh sách bé khôi phục từ cache vẫn rỗng → guard chuyển sang onboarding rồi về `/`, mất màn đang mở. Sửa: guard không chuyển hướng theo dữ liệu cache khi đang tải dữ liệu mới (TC-UI-028).
 
-**Pháp lý & nội dung**
-- [ ] Chính sách quyền riêng tư + điều khoản; nội dung màn đồng ý (G11) được duyệt; hồ sơ đánh giá tác động xử lý dữ liệu cá nhân (C-007); chốt nơi đặt server (Q12).
+**Pháp lý & nội dung** *(cần chủ dự án / chuyên gia — không làm bằng code)*
+- [ ] Chính sách quyền riêng tư + điều khoản; nội dung màn đồng ý (G11) được duyệt; hồ sơ đánh giá tác động xử lý dữ liệu cá nhân (C-007); chốt nơi đặt server (Q12 — Supabase hiện ở Seoul).
 - [ ] Rà soát copy tiếng Việt + mọi disclaimer (C-005).
 - [ ] UAT với 5 phụ huynh; fix toàn bộ bug blocker + major.
 
@@ -424,6 +432,9 @@ gantt
 | Chia sẻ dữ liệu sức khỏe trẻ cho người khác (NĐ 13) | Trung bình | Màn xác nhận ở G14, lưu ai mời / lúc nào; hỏi tư vấn pháp lý (Q17) trước P7. |
 | Test API chạy đủ 3 project cùng lúc thỉnh thoảng rất chậm (1 lần ở P4, 1 lần ở P5: ~50 phút, hook integration hết giờ) | Trung bình | Chưa tái hiện; khi gặp lại: xem `pg_stat_activity` trong container test (truy vấn / transaction treo) trước khi chạy lại. Nếu là tranh chấp tài nguyên, chạy 3 project tuần tự trong CI. |
 | Hành vi `tel:` / PWA khác nhau trên iOS | Thấp | Test thiết bị thật ở P7; hiện số 115 dạng text cạnh nút. |
+| Lỗ hổng `mysql2`, `deepmerge-ts` (high) trong Prisma CLI 7.10 | Thấp | Chấp nhận: chỉ dùng PostgreSQL, `deepmerge-ts` chỉ đọc cấu hình của repo; nâng khi Prisma 8 ổn định. |
+| npm 11.19+ chặn script cài đặt chưa duyệt (argon2, prisma, esbuild) và cần lockfile có `@emnapi/*` | Trung bình | Lockfile sinh bằng npm 11.19 (`npm ci` chạy được cả 11.6 và 11.19); Docker dùng npm của Node 24.11.1. Nếu nâng npm trên máy build, khai báo `allowScripts`. |
+| WebKit không giữ cookie `Secure` qua `http://localhost` | Thấp | Chỉ ảnh hưởng e2e: luồng điều hướng trong app thay vì tải lại trang; production luôn HTTPS. |
 
 ## 8. Definition of Done (áp dụng mọi phase)
 

@@ -50,6 +50,40 @@ jobs:
       - name: Generated API client is committed and up to date
         run: git diff --exit-code -- apps/api/openapi.json packages/api-client/src/generated
 
+  e2e:
+    # NFR-011/013/014: the production web build against a real API and database (Playwright).
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: appandam
+          POSTGRES_PASSWORD: appandam
+          POSTGRES_DB: appandam_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U appandam -d appandam_e2e"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      E2E_DATABASE_URL: postgresql://appandam:appandam@localhost:5432/appandam_e2e
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+        working-directory: apps/web
+      - run: npm run e2e --workspace apps/web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
+
   build:
     runs-on: ubuntu-latest
     needs: [quality, test]

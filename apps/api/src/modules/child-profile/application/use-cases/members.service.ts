@@ -166,7 +166,12 @@ export class MembersService {
     return this.members.ownedWithOthers(userId);
   }
 
-  leaveAllAsCaregiver(userId: string): Promise<void> {
-    return this.members.leaveAllAsCaregiver(userId);
+  /**
+   * Closing an account (BR-76): the user leaves every child they care for, and the links they
+   * shared stop working — nobody can join a child whose owner is about to be erased.
+   */
+  async leaveAllAsCaregiver(userId: string): Promise<void> {
+    await this.members.leaveAllAsCaregiver(userId);
+    await this.invites.revokeAllBy(userId, this.clock.now());
   }
 }

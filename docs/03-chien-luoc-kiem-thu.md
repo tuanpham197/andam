@@ -144,6 +144,7 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-AUTH-029 | Tab thứ 2 refresh bằng cookie vừa xoay vòng (≤ 10 s) | được cấp phiên mới, không đăng xuất; sau 10 s → coi là đánh cắp | D, T | A, E |
 | TC-AUTH-030 | Đăng xuất xảy ra đúng lúc refresh đang chạy | không làm sống lại phiên | D, S | A |
 | TC-AUTH-031 | Đồng hồ app lệch đồng hồ máy chủ | hạn JWT tính theo `Clock` của app | T | U |
+| TC-AUTH-032 | Job xóa cứng (UC-19) | tài khoản đóng đúng 30 ngày → chưa xóa; quá 30 ngày → xóa user, phiên, đồng ý, bé không ai khác chăm; bản ghi trên bé chung còn, không tên người làm; chạy lại không lỗi; job lỗi chỉ ghi log | B, D | U, I |
 
 ### 5.3 Hồ sơ bé & danh sách tránh (`child-profile`) — FR-001..013
 
@@ -385,6 +386,8 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-UI-024 | “Đã chuẩn bị xong” bị từ chối (bữa đã ghi ở máy khác, 409) | card đổi ngay rồi hoàn tác, báo lỗi tiếng Việt, tải lại thực đơn ngày | L | C |
 | TC-UI-025 | Link tới màn của phase sau (Đổi món, Bé đã ăn, Sức khỏe) | mở màn tạm có nút Quay lại, không rơi vào “Không tìm thấy” | B | C |
 | TC-UI-026 | Ngày có slot không tìm được món an toàn / bé ngoài 6–24 tháng | hiện slot “Chưa có món phù hợp” + link sửa thực phẩm cần tránh / thông báo độ tuổi, **không** gọi API lập thực đơn | B | C |
+| TC-UI-027 | Mở lại app khi mất mạng (đã xem trong 24 h) | phiên `offline`, hiện thực đơn hôm nay + công thức đã mở từ cache trên máy, banner “cần kết nối”; có mạng lại → kiểm phiên, bỏ banner; cache không chứa tài khoản, link mời, email thành viên, nhật ký; đăng xuất / hết phiên → xóa cache | E, S | C |
+| TC-UI-028 | Tải lại trang ngay sau khi tạo hồ sơ (cache trên máy còn danh sách bé rỗng) | ở lại màn đang mở, không bị đẩy qua onboarding rồi về Hôm nay | D | C |
 
 ---
 
@@ -442,6 +445,8 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-FAM-026 | Token lời mời trong log server | không xuất hiện: bộ serializer request thay token trong `url` và bỏ `params` | S | U |
 | TC-FAM-027 | Gọi `GET /invites/:token` quá giới hạn | `429` như `/auth/*` | S | E |
 | TC-FAM-028 | UI người chăm | không thấy nút sửa hồ sơ, sửa danh sách tránh, dùng lại nguyên liệu, xóa bé, mời; server từ chối `403` thì vẫn báo lỗi đúng | N, S | C |
+| TC-FAM-029 | Chủ đóng tài khoản khi còn link mời chưa dùng | link chuyển sang đã thu hồi (`410 INVITE_REVOKED`); link đã dùng giữ nguyên | S | U, I |
+| TC-FAM-030 | Id bé của mình + đối tượng của gia đình khác (món tự tạo: xem/công thức/sửa/xóa/đổi sang; nguyên liệu tạm dừng: dùng lại) | `404 DISH_NOT_FOUND` / `409 INGREDIENT_NOT_PAUSED` / `404 CHILD_NOT_FOUND`; dữ liệu gia đình kia không đổi (NFR-017) | S | E |
 
 ## 6. Truy vết
 
@@ -458,4 +463,4 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | P5 ✅ | TC-LOG-*, TC-URG-*, TC-RES-*, TC-CUS-* (TC-URG-006 offline cần PWA — P7) |
 | P5b ✅ | TC-FAM-* (TC-FAM-011 tự kiểm mọi route mới trong `openapi.json` ở các phase sau) |
 | P6 ✅ | TC-HLT-*, TC-WK-* (TC-HLT-008 chạy ở tầng A với dữ liệu thật; TC-WK-004/005/006/007/008 ở tầng A) |
-| P7 | TC-API-008..009, TC-UI-001..019 đầy đủ trên 7 viewport, mutation testing |
+| P7 🚧 | TC-UI-027/028, TC-FAM-029/030, TC-AUTH-032; Playwright 5 luồng (Chromium + WebKit) + 16 màn × 7 viewport + axe ✅. Còn: screenshot so sánh, mutation testing, thiết bị thật |

@@ -44,6 +44,10 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
 
   async addMany(meals: PlannedMeal[]): Promise<boolean> {
     if (meals.length === 0) return true;
+    // Inside a unit of work a failed statement would abort the whole transaction (25P02):
+    // a savepoint lets a slot conflict with a concurrent request be absorbed instead.
+    const savepoint = this.txHost.isTransactionActive();
+    if (savepoint) await this.txHost.tx.$executeRaw`SAVEPOINT add_many`;
     try {
       // One statement: the whole batch is stored or none of it.
       await this.txHost.tx.plannedMeal.createMany({
@@ -63,10 +67,13 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
           generatedAt: m.generatedAt,
         })),
       });
+      if (savepoint) await this.txHost.tx.$executeRaw`RELEASE SAVEPOINT add_many`;
       return true;
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002')
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        if (savepoint) await this.txHost.tx.$executeRaw`ROLLBACK TO SAVEPOINT add_many`;
         return false;
+      }
       throw error;
     }
   }

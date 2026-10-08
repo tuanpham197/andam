@@ -420,6 +420,7 @@ export function CustomDishPage() {
       <ScreenHeader
         title={dishId ? t.editTitle : t.createTitle}
         back={dishId ? `/dishes/${dishId}` : '/dishes'}
+        level={1}
       />
       <p className={styles.muted}>{t.intro}</p>
       {dishId ? <EditDish dishId={dishId} /> : <DishForm initial={EMPTY} />}

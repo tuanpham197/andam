@@ -31,6 +31,8 @@ const envSchema = z.object({
   // Reverse proxies in front of the app (e.g. Vercel rewrite + Render = 2). Rate limits key on
   // the client IP they forward; 0 ignores X-Forwarded-For so it cannot be spoofed.
   TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+  // UC-19 hard deletion of closed accounts runs this often on each instance; 0 turns it off.
+  ACCOUNT_PURGE_INTERVAL_MINUTES: z.coerce.number().int().min(0).max(10_080).default(360),
 });
 
 export type Env = z.infer<typeof envSchema>;

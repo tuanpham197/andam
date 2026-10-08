@@ -5,6 +5,7 @@ import { ENV } from '../../shared/infrastructure/config/config.module.js';
 import type { Env } from '../../shared/infrastructure/config/env.js';
 import { ChildProfileModule } from '../child-profile/child-profile.module.js';
 import { AuthController } from './adapters/in/http/auth.controller.js';
+import { AccountPurgeJob } from './adapters/in/schedule/account-purge.job.js';
 import { MeController } from './adapters/in/http/me.controller.js';
 import { AccountChildrenAdapter } from './adapters/out/cross-module/account-children.adapter.js';
 import { createMailer } from './adapters/out/mail/nodemailer-mailer.js';
@@ -23,6 +24,7 @@ import { DeleteAccountService } from './application/use-cases/delete-account.ser
 import { GetMeService } from './application/use-cases/get-me.service.js';
 import { LoginService } from './application/use-cases/login.service.js';
 import { LogoutService } from './application/use-cases/logout.service.js';
+import { PurgeDeletedAccountsService } from './application/use-cases/purge-deleted-accounts.service.js';
 import { RefreshSessionService } from './application/use-cases/refresh-session.service.js';
 import { RegisterService } from './application/use-cases/register.service.js';
 import { RequestPasswordResetService } from './application/use-cases/request-password-reset.service.js';
@@ -49,6 +51,8 @@ import { SessionStarter } from './application/use-cases/session-starter.service.
     ResetPasswordService,
     GetMeService,
     DeleteAccountService,
+    PurgeDeletedAccountsService,
+    AccountPurgeJob,
     AuthenticateService,
     { provide: PASSWORD_HASHER, useClass: Argon2PasswordHasher },
     { provide: ACCESS_TOKENS, useClass: JwtAccessTokens },

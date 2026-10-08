@@ -205,6 +205,12 @@ export class InMemoryInvites implements InviteRepository, Snapshotable {
   async saveRevoked(invite: ChildInvite) {
     this.rows = this.rows.map((i) => (i.id === invite.id ? copyInvite(invite) : i));
   }
+  async revokeAllBy(userId: string, now: Date) {
+    for (const invite of this.rows) {
+      if (invite.createdBy === userId && !invite.acceptedAt && !invite.revokedAt)
+        invite.revoke(now);
+    }
+  }
   snapshot() {
     return this.rows.map(copyInvite);
   }

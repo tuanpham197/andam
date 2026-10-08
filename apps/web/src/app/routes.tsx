@@ -12,6 +12,7 @@ import { AgeSettingsPage } from '../pages/AgeSettingsPage';
 import { CustomDishPage } from '../pages/CustomDishPage';
 import { DayDetailPage } from '../pages/DayDetailPage';
 import { DishesPage } from '../pages/DishesPage';
+import { ErrorPage } from '../pages/ErrorPage';
 import { HealthPage } from '../pages/HealthPage';
 import { InvitePage } from '../pages/InvitePage';
 import { JournalPage } from '../pages/JournalPage';
@@ -29,6 +30,7 @@ import { AppShell, BareShell, PlainShell } from './layouts';
 export const routes: RouteObject[] = [
   {
     element: <SessionRoot />,
+    errorElement: <ErrorPage />,
     children: [
       {
         element: <PlainShell />,

@@ -26,7 +26,8 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  color: var(--text-muted);
+  /* --text-muted is 4.1:1 on the photo background; NFR-013 needs 4.5:1. */
+  color: var(--text-2);
   font-size: 0.8125rem;
 }
 .back {

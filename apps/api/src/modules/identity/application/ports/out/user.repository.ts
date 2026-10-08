@@ -16,4 +16,10 @@ export interface UserRepository {
   /** Throws EmailTakenError when the e-mail already exists (unique index race, TC-AUTH-002). */
   create(user: User, consent: ConsentRecord): Promise<void>;
   save(user: User): Promise<void>;
+  /**
+   * Erases accounts closed before `cutoff`, with what only they could see (UC-19): sessions,
+   * consents, children nobody else cares for. Records they wrote on a shared child stay,
+   * without their name (BR-80). Returns how many accounts were erased.
+   */
+  purgeDeletedBefore(cutoff: Date): Promise<number>;
 }

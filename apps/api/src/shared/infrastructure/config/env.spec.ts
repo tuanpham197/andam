@@ -15,6 +15,7 @@ const valid = {
   AUTH_RATE_LIMIT: '10',
   API_RATE_LIMIT: '200',
   TRUST_PROXY: '2',
+  ACCOUNT_PURGE_INTERVAL_MINUTES: '60',
 };
 
 describe('validateEnv', () => {
@@ -32,6 +33,7 @@ describe('validateEnv', () => {
       AUTH_RATE_LIMIT: 10,
       API_RATE_LIMIT: 200,
       TRUST_PROXY: 2,
+      ACCOUNT_PURGE_INTERVAL_MINUTES: 60,
     });
   });
 
@@ -49,6 +51,7 @@ describe('validateEnv', () => {
       AUTH_RATE_LIMIT: 5,
       API_RATE_LIMIT: 120,
       TRUST_PROXY: 0,
+      ACCOUNT_PURGE_INTERVAL_MINUTES: 360,
     });
   });
 
@@ -88,6 +91,11 @@ describe('validateEnv', () => {
       ['SMTP_URL another word', { ...valid, SMTP_URL: 'off' }, 'SMTP_URL'],
       ['TRUST_PROXY negative', { ...valid, TRUST_PROXY: '-1' }, 'TRUST_PROXY'],
       ['TRUST_PROXY true', { ...valid, TRUST_PROXY: 'true' }, 'TRUST_PROXY'],
+      [
+        'purge interval negative',
+        { ...valid, ACCOUNT_PURGE_INTERVAL_MINUTES: '-1' },
+        'ACCOUNT_PURGE_INTERVAL_MINUTES',
+      ],
       ['AUTH_RATE_LIMIT zero', { ...valid, AUTH_RATE_LIMIT: '0' }, 'AUTH_RATE_LIMIT'],
       ['API_RATE_LIMIT not a number', { ...valid, API_RATE_LIMIT: 'many' }, 'API_RATE_LIMIT'],
     ])('%s', (_label, raw, variable) => {

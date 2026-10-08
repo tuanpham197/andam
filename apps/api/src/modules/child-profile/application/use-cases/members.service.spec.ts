@@ -200,6 +200,17 @@ describe('MembersService members (UC-22)', () => {
     expect(await t.membership.blockingAccountDeletion(MOM)).toEqual([]);
     expect(second.role).toBe('owner');
   });
+
+  it('TC-FAM-029 closing the account revokes the links the user shared, used ones stay', async () => {
+    const t = await family();
+    const used = await t.membership.createInvite(MOM, t.childId);
+    await t.membership.createInvite(MOM, t.childId);
+    await t.membership.accept(DAD, 'token-1');
+    await t.membership.remove(MOM, t.childId, DAD);
+    await t.membership.leaveAllAsCaregiver(MOM);
+    await expect(t.membership.preview('token-2')).rejects.toThrow(InviteRevokedError);
+    expect(t.invites.rows.find((i) => i.id === used.id)!.revokedAt).toBeNull();
+  });
 });
 
 describe('ChildProfileService for caregivers (BR-73)', () => {

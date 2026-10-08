@@ -7,6 +7,14 @@ export const vi = {
     close: 'Đóng',
     loading: 'Đang tải…',
     comingSoon: 'Tính năng đang được xây dựng.',
+    offline:
+      'Không có kết nối mạng. Bạn vẫn xem được thực đơn đã tải; ghi nhận và thay đổi cần có mạng.',
+  },
+  crash: {
+    title: 'Có lỗi xảy ra',
+    body: 'Màn hình này gặp sự cố. Dữ liệu của bạn vẫn an toàn — hãy tải lại trang.',
+    reload: 'Tải lại trang',
+    home: 'Về trang Hôm nay',
   },
   nav: {
     label: 'Điều hướng chính',
@@ -23,6 +31,7 @@ export const vi = {
     offline: 'Không kết nối được máy chủ. Kiểm tra kết nối mạng của bạn.',
   },
   auth: {
+    sessionExpired: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.',
     email: 'Email',
     password: 'Mật khẩu',
     newPassword: 'Mật khẩu mới',

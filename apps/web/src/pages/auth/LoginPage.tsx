@@ -7,7 +7,7 @@ import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { PasswordField } from '../../features/auth/PasswordField';
 import { safeNext, withNext } from '../../features/auth/guards';
-import { setAuthenticated } from '../../features/auth/session-store';
+import { setAuthenticated, useSession } from '../../features/auth/session-store';
 import { messageFor } from '../../lib/errors';
 import { vi } from '../../strings/vi';
 
@@ -17,6 +17,7 @@ export function LoginPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const login = useLogin();
+  const { expired } = useSession();
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -31,7 +32,11 @@ export function LoginPage() {
       <h1 className={styles.title}>{vi.auth.loginTitle}</h1>
       <p className={styles.intro}>{vi.auth.loginIntro}</p>
       <form className={styles.form} onSubmit={submit} noValidate>
-        {login.error && <AlertBox tone="danger">{messageFor(login.error)}</AlertBox>}
+        {login.error ? (
+          <AlertBox tone="danger">{messageFor(login.error)}</AlertBox>
+        ) : (
+          expired && <AlertBox tone="info">{vi.auth.sessionExpired}</AlertBox>
+        )}
         <TextField
           label={vi.auth.email}
           type="email"

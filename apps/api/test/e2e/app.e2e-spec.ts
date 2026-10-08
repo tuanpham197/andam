@@ -132,6 +132,7 @@ describe('HTTP platform (P0)', () => {
     expect(res.headers['strict-transport-security']).toMatch(/max-age=\d+/);
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['x-powered-by']).toBeUndefined();
+    expect(res.headers['cache-control']).toBe('no-store');
   });
 
   describe('OpenAPI', () => {

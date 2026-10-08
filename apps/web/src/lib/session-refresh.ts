@@ -1,5 +1,10 @@
-import { refreshSession } from '@appandam/api-client';
-import { setAnonymous, setAuthenticated } from '../features/auth/session-store';
+import { ApiError, refreshSession } from '@appandam/api-client';
+import {
+  getSession,
+  setAnonymous,
+  setAuthenticated,
+  setOffline,
+} from '../features/auth/session-store';
 
 let inFlight: Promise<boolean> | null = null;
 
@@ -14,8 +19,17 @@ export function refreshSessionOnce(): Promise<boolean> {
       setAuthenticated(session.accessToken);
       return true;
     })
-    .catch(() => {
-      setAnonymous();
+    .catch((error: unknown) => {
+      const { status } = getSession();
+      // No answer from the server (no network, server down): nothing says the session is over.
+      // At start-up the app opens on what it cached; in use, the current screen stays.
+      const noAnswer = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
+      if (noAnswer) {
+        if (status === 'unknown' || status === 'offline') setOffline();
+        return false;
+      }
+      // Signed in a moment ago: the login screen says why the user is back there.
+      setAnonymous(status === 'authenticated');
       return false;
     })
     .finally(() => {

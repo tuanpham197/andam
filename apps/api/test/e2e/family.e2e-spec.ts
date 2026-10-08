@@ -663,3 +663,52 @@ describe('Two parents at once (BR-77, BR-78)', () => {
     expect(cleared.body.displayName).toBeNull();
   });
 });
+
+describe('NFR-017 / TC-FAM-030 another family’s object under your own child', () => {
+  const as = (p: Person) => ({ Authorization: p.authorization });
+
+  it('hides another family’s custom dish behind your child id: read, recipe, edit, delete', async () => {
+    const [f, g] = [await family(), await family()];
+    const own = `/api/v1/children/${f.childId}`;
+    const calls = [
+      api().get(`${own}/custom-dishes/${g.customDishId}`).set(as(f.mom)),
+      api().get(`${own}/dishes/${g.customDishId}`).set(as(f.mom)),
+      api().put(`${own}/custom-dishes/${g.customDishId}`).set(as(f.mom)).send(dish('Đổi tên')),
+      api().delete(`${own}/custom-dishes/${g.customDishId}`).set(as(f.mom)),
+    ];
+    for (const res of await Promise.all(calls)) {
+      expect([res.status, res.body.code]).toEqual([404, 'DISH_NOT_FOUND']);
+    }
+    // Still there, unchanged, for its own family.
+    const theirs = await api()
+      .get(`/api/v1/children/${g.childId}/custom-dishes/${g.customDishId}`)
+      .set(as(g.mom))
+      .expect(200);
+    expect(theirs.body.name).toBe('Cháo gạo yến mạch');
+  });
+
+  it('refuses to swap your meal to another family’s custom dish', async () => {
+    const [f, g] = [await family(), await family()];
+    const swap = await api()
+      .post(`/api/v1/meals/${f.lunchId}/swap`)
+      .set(as(f.mom))
+      .send({ dishId: g.customDishId, reason: 'other' })
+      .expect(404);
+    expect(swap.body.code).toBe('DISH_NOT_FOUND');
+  });
+
+  it('resumes only a food paused for this child, and only for its members', async () => {
+    const [f, g] = [await family(), await family()];
+    const notPaused = await api()
+      .post(`/api/v1/children/${f.childId}/paused-ingredients/ing_thit_bo/resume`)
+      .set(as(f.mom))
+      .expect(409);
+    expect(notPaused.body.code).toBe('INGREDIENT_NOT_PAUSED');
+    // Another family's owner, with an ingredient that is paused for this child.
+    const stranger = await api()
+      .post(`/api/v1/children/${f.childId}/paused-ingredients/${f.pausedId}/resume`)
+      .set(as(g.mom))
+      .expect(404);
+    expect(stranger.body.code).toBe('CHILD_NOT_FOUND');
+  });
+});

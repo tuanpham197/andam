@@ -102,7 +102,7 @@ export function AccountPage() {
   const blocking = blockingChildren(remove.error);
   return (
     <>
-      <ScreenHeader title={t.title} back="/profile" />
+      <ScreenHeader title={t.title} back="/profile" level={1} />
       <section
         className={styles.card}
         style={{ display: 'flex', flexDirection: 'column', gap: 12 }}

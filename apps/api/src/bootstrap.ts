@@ -21,6 +21,13 @@ export function configureApp(app: NestExpressApplication): void {
   app.useLogger(app.get(Logger));
   app.set('trust proxy', env.TRUST_PROXY);
   app.use(helmet());
+  // A child's menu, health and reactions must never sit in a browser or proxy cache (ASVS 8.2.1).
+  app.use(
+    (_req: unknown, res: { setHeader(name: string, value: string): void }, next: () => void) => {
+      res.setHeader('Cache-Control', 'no-store');
+      next();
+    },
+  );
   app.use(cookieParser());
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
   app.useBodyParser('json', { limit: '100kb' });

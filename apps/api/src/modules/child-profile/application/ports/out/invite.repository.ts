@@ -11,4 +11,6 @@ export interface InviteRepository {
   /** Conditional: false when someone else used or revoked the link first (TC-FAM-007). */
   markAccepted(invite: ChildInvite): Promise<boolean>;
   saveRevoked(invite: ChildInvite): Promise<void>;
+  /** Revokes every pending link `userId` created (they close their account). */
+  revokeAllBy(userId: string, now: Date): Promise<void>;
 }

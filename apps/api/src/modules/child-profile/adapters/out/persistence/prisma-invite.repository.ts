@@ -53,4 +53,11 @@ export class PrismaInviteRepository implements InviteRepository {
       data: { revokedAt: invite.revokedAt },
     });
   }
+
+  async revokeAllBy(userId: string, now: Date): Promise<void> {
+    await this.txHost.tx.childInvite.updateMany({
+      where: { createdBy: userId, acceptedAt: null, revokedAt: null },
+      data: { revokedAt: now },
+    });
+  }
 }

@@ -9,8 +9,11 @@ export function ScreenHeader({
   back,
   close,
   trailing,
+  level = 2,
 }: {
   title: string;
+  /** 1 when the header title is the screen's only title (NFR-013: one h1 per screen). */
+  level?: 1 | 2;
   back?: string;
   close?: string;
   trailing?: ReactNode;
@@ -22,7 +25,11 @@ export function ScreenHeader({
           <Icon name="back" />
         </Link>
       )}
-      <h2 className={styles.title}>{title}</h2>
+      {level === 1 ? (
+        <h1 className={styles.title}>{title}</h1>
+      ) : (
+        <h2 className={styles.title}>{title}</h2>
+      )}
       {trailing}
       {close && (
         <Link to={close} aria-label={vi.common.close} className={styles.nav}>

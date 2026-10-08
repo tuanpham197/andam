@@ -67,4 +67,12 @@ export class PrismaUserRepository implements UserRepository {
       },
     });
   }
+
+  async purgeDeletedBefore(cutoff: Date): Promise<number> {
+    // Foreign keys do the rest: children, sessions and consents cascade; actor columns null out.
+    const { count } = await this.txHost.tx.user.deleteMany({
+      where: { deletedAt: { lt: cutoff } },
+    });
+    return count;
+  }
 }

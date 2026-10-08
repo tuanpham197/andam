@@ -55,6 +55,16 @@ describe('routing guards', () => {
     const { router } = renderApp('/account');
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     expect(router.state.location.search).toBe('?next=%2Faccount');
+    expect(
+      await screen.findByText('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.'),
+    ).toBeInTheDocument();
+  });
+
+  it('opens login without the expiry note for a visitor who was never signed in', async () => {
+    server.use(signedOut());
+    renderApp('/login');
+    expect(await screen.findByRole('heading', { level: 1 })).toBeInTheDocument();
+    expect(screen.queryByText(/Phiên đăng nhập đã hết hạn/)).not.toBeInTheDocument();
   });
 
   it('TC-UI-017 shows a not-found page with a way home', async () => {

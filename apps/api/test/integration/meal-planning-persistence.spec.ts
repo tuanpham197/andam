@@ -28,6 +28,7 @@ import { ConfigModule } from '../../src/shared/infrastructure/config/config.modu
 import { KernelModule } from '../../src/shared/infrastructure/kernel/kernel.module.js';
 import { PersistenceModule } from '../../src/shared/infrastructure/persistence/persistence.module.js';
 import { PrismaService } from '../../src/shared/infrastructure/prisma/prisma.service.js';
+import { UNIT_OF_WORK, type UnitOfWork } from '../../src/shared/kernel/unit-of-work.port.js';
 import { insertUser, resetDatabase } from '../support/database.js';
 
 let moduleRef: TestingModule;
@@ -36,6 +37,7 @@ let plans: MealPlanRepository;
 let history: FoodHistoryReader;
 let children: ChildPlanningReader;
 let catalog: PlanningCatalog;
+let uow: UnitOfWork;
 let ownerId: string;
 let childId: string;
 
@@ -67,6 +69,7 @@ beforeAll(async () => {
   history = moduleRef.get(FOOD_HISTORY_READER);
   children = moduleRef.get(CHILD_PLANNING_READER);
   catalog = moduleRef.get(PLANNING_CATALOG);
+  uow = moduleRef.get(UNIT_OF_WORK, { strict: false });
   await resetDatabase(prisma);
   await seedCatalog(prisma, await loadCatalog(REPO_CATALOG_DIR));
 });
@@ -110,6 +113,16 @@ describe('PrismaMealPlanRepository', () => {
     await plans.addMany([meal()]);
     expect(await plans.addMany([meal({ slot: 'dinner', time: '18:00' }), meal()])).toBe(false);
     expect(await plans.findBetween(childId, '2026-09-24', '2026-09-24')).toHaveLength(1);
+  });
+
+  it('TC-PLN-001 absorbs a slot conflict inside a unit of work, which still commits', async () => {
+    await plans.addMany([meal()]);
+    await uow.run(async () => {
+      expect(await plans.addMany([meal({ slot: 'dinner', time: '18:00' }), meal()])).toBe(false);
+      // Without a savepoint Postgres would refuse this: "current transaction is aborted".
+      expect(await plans.addMany([meal({ slot: 'dinner', time: '18:00' })])).toBe(true);
+    });
+    expect(await plans.findBetween(childId, '2026-09-24', '2026-09-24')).toHaveLength(2);
   });
 
   it('surfaces database errors other than a slot conflict (meal for a deleted child)', async () => {

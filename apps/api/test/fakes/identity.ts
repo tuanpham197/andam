@@ -19,6 +19,7 @@ import type {
 } from '../../src/modules/identity/application/ports/out/user.repository.js';
 import { AuthenticateService } from '../../src/modules/identity/application/use-cases/authenticate.service.js';
 import { DeleteAccountService } from '../../src/modules/identity/application/use-cases/delete-account.service.js';
+import { PurgeDeletedAccountsService } from '../../src/modules/identity/application/use-cases/purge-deleted-accounts.service.js';
 import { GetMeService } from '../../src/modules/identity/application/use-cases/get-me.service.js';
 import { LoginService } from '../../src/modules/identity/application/use-cases/login.service.js';
 import { LogoutService } from '../../src/modules/identity/application/use-cases/logout.service.js';
@@ -95,6 +96,14 @@ export class InMemoryUsers implements UserRepository, Snapshotable {
   }
   async save(user: User) {
     this.rows.set(user.id, snapshotUser(user));
+  }
+  async purgeDeletedBefore(cutoff: Date) {
+    const gone = [...this.rows.values()].filter((u) => u.deletedAt && u.deletedAt < cutoff);
+    for (const user of gone) {
+      this.rows.delete(user.id);
+      this.consents.delete(user.id);
+    }
+    return gone.length;
   }
 }
 
@@ -295,6 +304,7 @@ export function identityTestbed() {
       accountChildren,
     ),
     accountChildren,
+    purge: new PurgeDeletedAccountsService(users, clock),
     authenticate: new AuthenticateService(accessTokens, users),
   };
 }
