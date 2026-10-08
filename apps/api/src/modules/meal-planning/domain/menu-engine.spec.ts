@@ -82,11 +82,15 @@ describe('slotsForDay (BR-13/14, BR-50)', () => {
   });
 
   it('TC-HLT-003 creates a snack slot for GĐ1 while sick even though the schedule has none', () => {
-    expect(slotsForDay(GD1, 'recovering')).toEqual([
+    expect(slotsForDay(GD1, 'sick')).toEqual([
       { slot: 'breakfast', time: '08:00' },
       { slot: 'lunch', time: '11:00' },
       { slot: 'afternoon_snack', time: '15:00' },
     ]);
+  });
+
+  it('keeps the usual meals while recovering: only portions and new foods differ (BR-53)', () => {
+    expect(slotsForDay(GD1, 'recovering').map((s) => s.slot)).toEqual(['breakfast', 'lunch']);
   });
 });
 

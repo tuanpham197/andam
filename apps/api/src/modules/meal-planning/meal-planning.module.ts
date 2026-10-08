@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { CatalogModule } from '../catalog/catalog.module.js';
+import { ChildHealthModule } from '../child-health/child-health.module.js';
 import { ChildProfileModule } from '../child-profile/child-profile.module.js';
+import { HealthChangedListener } from './adapters/in/events/health-changed.listener.js';
 import { ProfileChangedListener } from './adapters/in/events/profile-changed.listener.js';
 import { SafetyChangedListener } from './adapters/in/events/safety-changed.listener.js';
 import { MealPlanningController } from './adapters/in/http/meal-planning.controller.js';
@@ -22,6 +24,7 @@ import { PlanningDishes } from './application/use-cases/planning-dishes.js';
 import { RecipeService } from './application/use-cases/recipe.service.js';
 import { RegenerateFutureService } from './application/use-cases/regenerate-future.service.js';
 import { SwapService } from './application/use-cases/swap.service.js';
+import { WeekPlanService } from './application/use-cases/week-plan.service.js';
 
 const ports = [
   { provide: MEAL_PLAN_REPOSITORY, useClass: PrismaMealPlanRepository },
@@ -32,7 +35,7 @@ const ports = [
 ];
 
 @Module({
-  imports: [ChildProfileModule, CatalogModule],
+  imports: [ChildProfileModule, ChildHealthModule, CatalogModule],
   controllers: [MealPlanningController],
   providers: [
     ...ports,
@@ -44,8 +47,10 @@ const ports = [
     LibraryService,
     CustomDishService,
     MealAccessService,
+    WeekPlanService,
     ProfileChangedListener,
     SafetyChangedListener,
+    HealthChangedListener,
   ],
   // MealAccessService: the meal-log and safety modules reach planned meals only through it.
   exports: [...ports.map((p) => p.provide), MealAccessService],

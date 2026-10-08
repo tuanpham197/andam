@@ -366,3 +366,53 @@ export class CustomDishFormDto {
   @ApiProperty() cookMin: number;
   @ApiProperty({ type: [String] }) steps: string[];
 }
+
+export class HealthPreviewQueryDto {
+  @ApiProperty({ enum: ['normal', 'sick', 'recovering'] })
+  @IsIn(['normal', 'sick', 'recovering'])
+  status: 'normal' | 'sick' | 'recovering';
+}
+
+export class HealthPreviewDto {
+  @ApiProperty({ enum: ['normal', 'sick', 'recovering'] }) status: string;
+  @ApiProperty({ enum: [0, 1], description: 'Bữa phụ thêm mỗi ngày (BR-50)' }) extraSnacks: number;
+  @ApiProperty({ enum: [100, 85, 70], description: 'Phần trăm khẩu phần theo giai đoạn' })
+  portionPercent: number;
+  @ApiProperty({ enum: [0, 1], description: 'Số mức kết cấu mềm hơn giai đoạn (BR-51)' })
+  softerTexture: number;
+  @ApiProperty({ description: 'Tạm ngưng thử nguyên liệu mới (BR-52/53)' }) pauseNewFoods: boolean;
+}
+
+export class GenerateWeekDto {
+  @ApiPropertyOptional({ default: false, description: 'Thay các bữa chưa nấu, chưa ghi nhận' })
+  @IsOptional()
+  @IsBoolean()
+  overwrite?: boolean;
+}
+
+class WeekDayDto {
+  @ApiProperty({ format: 'date' }) date: string;
+  @ApiProperty({ type: [MealDto] }) meals: MealDto[];
+  @ApiProperty({ minimum: 0, maximum: 4, description: 'Số nhóm chất các bữa chính đạt (BR-61)' })
+  groupsCovered: number;
+}
+
+class ProteinRotationDto {
+  @ApiProperty({ enum: PROTEINS }) protein: string;
+  @ApiProperty() meals: number;
+  @ApiProperty({ description: 'Hồ sơ loại trừ mọi thực phẩm của nguồn đạm này' }) avoided: boolean;
+}
+
+class WeekStatsDto {
+  @ApiProperty() distinctDishes: number;
+  @ApiProperty() totalMeals: number;
+  @ApiProperty() daysFullGroups: number;
+  @ApiProperty({ type: [ProteinRotationDto] }) proteinRotation: ProteinRotationDto[];
+}
+
+export class WeekPlanDto {
+  @ApiProperty({ format: 'date' }) weekStart: string;
+  @ApiProperty() plannable: boolean;
+  @ApiProperty({ type: [WeekDayDto] }) days: WeekDayDto[];
+  @ApiProperty({ type: WeekStatsDto }) stats: WeekStatsDto;
+}

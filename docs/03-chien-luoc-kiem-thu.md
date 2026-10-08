@@ -457,5 +457,5 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | P4 ✅ | TC-SWP-*, TC-LIB-* (TC-SWP-001 phần số liệu thật chờ catalog P7) |
 | P5 ✅ | TC-LOG-*, TC-URG-*, TC-RES-*, TC-CUS-* (TC-URG-006 offline cần PWA — P7) |
 | P5b ✅ | TC-FAM-* (TC-FAM-011 tự kiểm mọi route mới trong `openapi.json` ở các phase sau) |
-| P6 | TC-HLT-*, TC-WK-* |
+| P6 ✅ | TC-HLT-*, TC-WK-* (TC-HLT-008 chạy ở tầng A với dữ liệu thật; TC-WK-004/005/006/007/008 ở tầng A) |
 | P7 | TC-API-008..009, TC-UI-001..019 đầy đủ trên 7 viewport, mutation testing |

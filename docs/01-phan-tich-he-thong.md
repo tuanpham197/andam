@@ -14,6 +14,7 @@
 |---|---|
 | v0.1 | Bản đầu, kiến trúc local-first (không backend). |
 | v0.2 | Chốt stack React + NestJS + PostgreSQL → kiến trúc client–server; thêm tài khoản/đăng nhập & đồng ý xử lý dữ liệu vào MVP; menu engine chuyển về backend; thêm đặc tả API, schema PostgreSQL, bảo mật; cập nhật NFR và ràng buộc. |
+| v0.4 | P6: module sức khỏe tên `child-health` (tránh trùng health check); BR-53 hồi phục **không** thêm bữa phụ; khẩu phần ml làm tròn 10 ml, khẩu phần bằng thìa ghi “ít hơn bình thường”; sức khỏe áp dụng theo từng ngày (sau ngày dự kiến kết thúc lập như bình thường, S01 chỉ gợi ý cập nhật); `health/preview` trả bảng điều chỉnh do meal-planning phục vụ; lên tuần với `overwrite` giữ bữa đã chuẩn bị/đã ghi nhận; mã lỗi `HEALTH_END_BEFORE_START`, `HEALTH_START_TOO_FAR`, `INVALID_WEEK_START`, `PLAN_EXISTS`, `WEEK_OUT_OF_RANGE`. |
 | v0.3 | P4: BR-28/29 dùng nguyên liệu chính (`isMain`) của món; tìm món ưu tiên từ nguyên vẹn và dấu tiếng Việt; chốt dạng response đổi món/thư viện và mã lỗi mới. Chốt Q3 khi làm P3: “nguyên liệu mới” chỉ tính đạm/rau củ/trái cây chưa ăn; BR-24/25 chỉ ràng buộc nguyên liệu mới **có tag dị ứng**. |
 | v0.4 | Đưa F17 **Nhiều người chăm** vào MVP (phase P5b, ngay sau P5): vai trò chủ hồ sơ / người chăm, lời mời qua link, quản lý thành viên, chuyển bé tối giản (G04). Thêm UC-20..22, FR-110..120, BR-70..79, màn G13/G14, bảng `child_members`/`child_invites`, cột `actor_id`, API thành viên & lời mời, mã lỗi mới, Q14–Q18. Thêm F18 **Món của bạn** (phụ huynh tự tạo món, làm trong P5): UC-23, FR-130..137, BR-80..87, màn G15, cột `dishes.owner_child_id`/`archived_at`, API `custom-dishes`, Q19–Q20. |
 
@@ -971,9 +972,9 @@ erDiagram
 | safety | `PATCH /urgent-events/:id` | `{contactedMedical: true}` | FR-067 |
 | safety | `GET /children/:childId/paused-ingredients` | Danh sách đang tạm dừng (lý do, thời điểm, bữa gây ra) | G08 |
 | safety | `POST /children/:childId/paused-ingredients/:ingredientId/resume` | `204`; dùng lại nguyên liệu → phát `IngredientResumed` → sinh lại bữa tự động tương lai | UC-14, FR-068 |
-| health | `GET /children/:childId/health` | Giai đoạn sức khỏe hiện tại | UC-11 |
-| health | `GET /children/:childId/health/preview?status=` | Danh sách thay đổi thực đơn | FR-083 |
-| health | `POST /children/:childId/health` | Tạo/cập nhật giai đoạn → phát `HealthChanged` | FR-080..084 |
+| child-health | `GET /children/:childId/health` | `{status, symptoms, startDate, expectedEndDate, overdue}` — giai đoạn đang mở | UC-11 |
+| meal-planning | `GET /children/:childId/health/preview?status=` | `{status, extraSnacks, portionPercent, softerTexture, pauseNewFoods}` — thay đổi thực đơn theo trạng thái | FR-083 |
+| child-health | `POST /children/:childId/health` | `{status, symptoms, startDate?, expectedEndDate?}` → đóng giai đoạn cũ, mở giai đoạn mới, phát `HealthChanged` (sinh lại bữa tương lai cùng transaction) | FR-080..084 |
 | system | `GET /health` | Health check (DB ping) | |
 
 **Thông tin kèm lỗi:** lỗi nghiệp vụ có thể mang extension members theo RFC 9457 §3.2 (VD `ingredients`, `field`, `ingredientIds`, `reason`); các trường chuẩn (`type`, `status`, `code`…) luôn thắng.

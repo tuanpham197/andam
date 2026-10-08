@@ -43,6 +43,28 @@ export function shortDate(date: string): string {
   return `${Number(day)}/${Number(month)}`;
 }
 
+/** Monday of the week containing `date` (weeks start on Monday, docs §7.8). */
+export function weekStartOf(date: string): string {
+  const day = new Date(`${date}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - ((day.getUTCDay() + 6) % 7));
+  return day.toISOString().slice(0, 10);
+}
+
+export function addDays(date: string, days: number): string {
+  const day = new Date(`${date}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() + days);
+  return day.toISOString().slice(0, 10);
+}
+
+/** "21–27/9", or "28/9–4/10" across months. */
+export function weekRange(monday: string): string {
+  const sunday = addDays(monday, 6);
+  const [a, b] = [new Date(`${monday}T00:00:00Z`), new Date(`${sunday}T00:00:00Z`)];
+  return a.getUTCMonth() === b.getUTCMonth()
+    ? `${a.getUTCDate()}–${shortDate(sunday)}`
+    : `${shortDate(monday)}–${shortDate(sunday)}`;
+}
+
 export function mealInstant(date: string, time: string): Date {
   return new Date(`${date}T${time}:00${OFFSET}`);
 }

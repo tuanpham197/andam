@@ -9,6 +9,7 @@ import {
   NA_ID,
   childFixture,
   dayFixture,
+  healthFixture,
   logFormFixture,
   mealFixture,
 } from '../test/fixtures';
@@ -115,19 +116,18 @@ describe('Today (S01)', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
   });
 
-  it.each([['Sức khỏe: Bình thường', 'Tình trạng sức khỏe']])(
-    'TC-UI-025 "%s" opens its screen (a later phase), with a way back',
-    async (link, title) => {
-      serveDay();
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      const { router } = renderApp('/');
-      await nextMeal();
-      await user.click(screen.getAllByRole('link', { name: link })[0]!);
-      expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
-      await user.click(screen.getByRole('link', { name: 'Quay lại' }));
-      await waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    },
-  );
+  it('TC-UI-025 "Sức khỏe" opens the health screen (S09), with a way back', async () => {
+    serveDay();
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { router } = renderApp('/');
+    await nextMeal();
+    await user.click(screen.getAllByRole('link', { name: 'Sức khỏe: Bình thường' })[0]!);
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Hôm nay bé Na thế nào?' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Quay lại' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+  });
 
   it('counts down every minute and says when the meal is due (TC-NXT-004)', async () => {
     serveDay();
@@ -488,5 +488,45 @@ describe('Today (S01)', () => {
     );
     renderApp('/');
     expect(await screen.findByText(/Người dùng đã xóa 07:45/)).toBeInTheDocument();
+  });
+
+  it('names the current health status on its chip', async () => {
+    serveDay();
+    server.use(
+      http.get(`${API}/children/:childId/health`, () =>
+        HttpResponse.json(healthFixture({ status: 'sick', startDate: '2026-09-24' })),
+      ),
+    );
+    renderApp('/');
+    expect(await screen.findByRole('link', { name: 'Sức khỏe: Đang ốm' })).toHaveAttribute(
+      'href',
+      '/health',
+    );
+  });
+
+  it('TC-HLT-009 suggests updating the status once the expected end has passed', async () => {
+    serveDay();
+    server.use(
+      http.get(`${API}/children/:childId/health`, () =>
+        HttpResponse.json(
+          healthFixture({
+            status: 'sick',
+            startDate: '2026-09-20',
+            expectedEndDate: '2026-09-23',
+            overdue: true,
+          }),
+        ),
+      ),
+    );
+    renderApp('/');
+    expect(
+      await screen.findByText(
+        'Đã qua ngày dự kiến khỏi (23/9). Bé đã khỏe hơn chưa? Cập nhật để thực đơn theo kịp.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Cập nhật sức khỏe' })).toHaveAttribute(
+      'href',
+      '/health',
+    );
   });
 });

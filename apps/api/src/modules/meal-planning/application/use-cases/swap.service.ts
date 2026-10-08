@@ -13,7 +13,7 @@ import {
   MealNotFoundError,
   MealChangedError,
 } from '../../domain/errors.js';
-import { variantFor } from '../../domain/menu-engine.js';
+import { servingFor } from '../../domain/health-adjustment.js';
 import type { MealSlot, ProteinSource, Texture } from '../../domain/model.js';
 import { newIngredientIds } from '../../domain/novelty.js';
 import type { PlannedMeal } from '../../domain/planned-meal.js';
@@ -163,11 +163,9 @@ export class SwapService {
     if (unsafe) throw new DishNotSafeError(unsafe);
 
     const fromDishId = meal.dishId;
-    const variant = variantFor(dish, ctx.stage);
     meal.swapTo({
       dishId: dish.id,
-      texture: variant.texture,
-      portionText: variant.portionText,
+      ...servingFor(dish, ctx),
       newIngredientIds: newIngredientIds(dish, ctx),
     });
     await this.uow.run(async () => {

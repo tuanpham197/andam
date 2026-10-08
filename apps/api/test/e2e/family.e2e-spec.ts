@@ -84,10 +84,6 @@ async function family(): Promise<Family> {
     .set('Authorization', mom.authorization)
     .expect(200);
   const lunchId = day.body.meals.find((m: { slot: string }) => m.slot === 'lunch').id as string;
-  const suggestions = await api()
-    .get(`/api/v1/meals/${lunchId}/swap-suggestions?reason=other`)
-    .set('Authorization', mom.authorization)
-    .expect(200);
   const custom = await api()
     .post(`/api/v1/children/${childId}/custom-dishes`)
     .set('Authorization', mom.authorization)
@@ -99,6 +95,11 @@ async function family(): Promise<Family> {
     .set('Authorization', mom.authorization)
     .send({ mealId: lunchId })
     .expect(201);
+  // After the urgent event: its paused foods are no longer suggested (BR-41).
+  const suggestions = await api()
+    .get(`/api/v1/meals/${lunchId}/swap-suggestions?reason=other`)
+    .set('Authorization', mom.authorization)
+    .expect(200);
   return {
     mom,
     dad,
@@ -330,6 +331,44 @@ const MATRIX: [string, Call, number, number][] = [
   [
     'GET /api/v1/children/{childId}/journal',
     (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/journal` }),
+    200,
+    200,
+  ],
+  [
+    'GET /api/v1/children/{childId}/health',
+    (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/health` }),
+    200,
+    200,
+  ],
+  [
+    'POST /api/v1/children/{childId}/health',
+    (f) => ({
+      method: 'post',
+      url: `/api/v1/children/${f.childId}/health`,
+      body: { status: 'sick', symptoms: ['fever'] },
+    }),
+    200,
+    200,
+  ],
+  [
+    'GET /api/v1/children/{childId}/health/preview',
+    (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/health/preview?status=sick` }),
+    200,
+    200,
+  ],
+  [
+    'GET /api/v1/children/{childId}/weeks/{weekStart}',
+    (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/weeks/2026-09-21` }),
+    200,
+    200,
+  ],
+  [
+    'POST /api/v1/children/{childId}/weeks/{weekStart}/generate',
+    (f) => ({
+      method: 'post',
+      url: `/api/v1/children/${f.childId}/weeks/2026-09-28/generate`,
+      body: { overwrite: true },
+    }),
     200,
     200,
   ],

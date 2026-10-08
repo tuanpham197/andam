@@ -879,6 +879,86 @@
         ]
       }
     },
+    "/api/v1/children/{childId}/health": {
+      "get": {
+        "operationId": "getChildHealth",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tình trạng sức khỏe hiện tại (UC-11)",
+        "tags": [
+          "child-health"
+        ]
+      },
+      "post": {
+        "operationId": "updateChildHealth",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHealthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cập nhật sức khỏe và sinh lại các bữa sắp tới (FR-080..084)",
+        "tags": [
+          "child-health"
+        ]
+      }
+    },
     "/api/v1/children/{childId}/days/{date}": {
       "get": {
         "operationId": "getDayPlan",
@@ -1366,6 +1446,153 @@
           }
         ],
         "summary": "Xóa món của bạn (FR-136)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/weeks/{weekStart}": {
+      "get": {
+        "operationId": "getWeekPlan",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "weekStart",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekPlanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thực đơn tuần (Thứ Hai → Chủ nhật) và chỉ số (UC-12)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/weeks/{weekStart}/generate": {
+      "post": {
+        "operationId": "generateWeekPlan",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "weekStart",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateWeekDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeekPlanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lên thực đơn tuần (UC-13)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/health/preview": {
+      "get": {
+        "operationId": "previewHealthMenu",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "normal",
+                "sick",
+                "recovering"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthPreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thực đơn sẽ thay đổi thế nào theo trạng thái sức khỏe (FR-083)",
         "tags": [
           "meal-planning"
         ]
@@ -2525,6 +2752,96 @@
           "allergenTags"
         ]
       },
+      "HealthDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "sick",
+              "recovering"
+            ]
+          },
+          "symptoms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "fever",
+                "poor_appetite",
+                "cough",
+                "diarrhea",
+                "vomit",
+                "teething"
+              ]
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "expectedEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "overdue": {
+            "type": "boolean",
+            "description": "Đã qua ngày dự kiến kết thúc mà chưa cập nhật"
+          }
+        },
+        "required": [
+          "status",
+          "symptoms",
+          "startDate",
+          "expectedEndDate",
+          "overdue"
+        ]
+      },
+      "UpdateHealthDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "sick",
+              "recovering"
+            ]
+          },
+          "symptoms": {
+            "type": "array",
+            "description": "Bị bỏ qua khi trạng thái là Bình thường",
+            "items": {
+              "type": "string",
+              "enum": [
+                "fever",
+                "poor_appetite",
+                "cough",
+                "diarrhea",
+                "vomit",
+                "teething"
+              ]
+            }
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Mặc định hôm nay"
+          },
+          "expectedEndDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        },
+        "required": [
+          "status",
+          "symptoms"
+        ]
+      },
       "MealDishDto": {
         "type": "object",
         "properties": {
@@ -3622,6 +3939,172 @@
           "prepMin",
           "cookMin",
           "steps"
+        ]
+      },
+      "WeekDayDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "meals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealDto"
+            }
+          },
+          "groupsCovered": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 4,
+            "description": "Số nhóm chất các bữa chính đạt (BR-61)"
+          }
+        },
+        "required": [
+          "date",
+          "meals",
+          "groupsCovered"
+        ]
+      },
+      "ProteinRotationDto": {
+        "type": "object",
+        "properties": {
+          "protein": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ]
+          },
+          "meals": {
+            "type": "number"
+          },
+          "avoided": {
+            "type": "boolean",
+            "description": "Hồ sơ loại trừ mọi thực phẩm của nguồn đạm này"
+          }
+        },
+        "required": [
+          "protein",
+          "meals",
+          "avoided"
+        ]
+      },
+      "WeekStatsDto": {
+        "type": "object",
+        "properties": {
+          "distinctDishes": {
+            "type": "number"
+          },
+          "totalMeals": {
+            "type": "number"
+          },
+          "daysFullGroups": {
+            "type": "number"
+          },
+          "proteinRotation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProteinRotationDto"
+            }
+          }
+        },
+        "required": [
+          "distinctDishes",
+          "totalMeals",
+          "daysFullGroups",
+          "proteinRotation"
+        ]
+      },
+      "WeekPlanDto": {
+        "type": "object",
+        "properties": {
+          "weekStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "plannable": {
+            "type": "boolean"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeekDayDto"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/WeekStatsDto"
+          }
+        },
+        "required": [
+          "weekStart",
+          "plannable",
+          "days",
+          "stats"
+        ]
+      },
+      "GenerateWeekDto": {
+        "type": "object",
+        "properties": {
+          "overwrite": {
+            "type": "boolean",
+            "default": false,
+            "description": "Thay các bữa chưa nấu, chưa ghi nhận"
+          }
+        }
+      },
+      "HealthPreviewDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "sick",
+              "recovering"
+            ]
+          },
+          "extraSnacks": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "Bữa phụ thêm mỗi ngày (BR-50)"
+          },
+          "portionPercent": {
+            "type": "number",
+            "enum": [
+              100,
+              85,
+              70
+            ],
+            "description": "Phần trăm khẩu phần theo giai đoạn"
+          },
+          "softerTexture": {
+            "type": "number",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "Số mức kết cấu mềm hơn giai đoạn (BR-51)"
+          },
+          "pauseNewFoods": {
+            "type": "boolean",
+            "description": "Tạm ngưng thử nguyên liệu mới (BR-52/53)"
+          }
+        },
+        "required": [
+          "status",
+          "extraSnacks",
+          "portionPercent",
+          "softerTexture",
+          "pauseNewFoods"
         ]
       },
       "OpenUrgentDto": {

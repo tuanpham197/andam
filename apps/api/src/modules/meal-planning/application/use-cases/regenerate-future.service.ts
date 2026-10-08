@@ -6,8 +6,11 @@ import {
   addDays,
   toLocalDate,
   toLocalTime,
+  type LocalDate,
 } from '../../../../shared/kernel/local-date.js';
+import { servingFor } from '../../domain/health-adjustment.js';
 import { generateDay, slotsForDay } from '../../domain/menu-engine.js';
+import type { PlanningContext } from '../../domain/model.js';
 import { PlannedMeal } from '../../domain/planned-meal.js';
 import { exclusionReason } from '../../domain/safety-filter.js';
 import {
@@ -29,15 +32,15 @@ import {
 } from './planning-context.js';
 
 /**
- * - `all`: after a profile change or a food resumed, automatic meals are planned again.
+ * - `all`: after a profile, health or resumed-food change, automatic meals are planned again.
  * - `unsafe`: after a food is paused or a dish deleted, only meals that became unsafe change.
  */
 export type RegenerateScope = 'all' | 'unsafe';
 
 /**
- * BR-31: upcoming meals follow the child's current profile. Past and logged meals never change.
- * A swapped or prepared meal stays while it is still safe at the same stage; once unsafe it is
- * replaced, prepared or not — a dish the child must not eat is never left on the plan.
+ * BR-31: upcoming meals follow the child's current profile and health. Past and logged meals
+ * never change. A swapped or prepared meal stays while it is still safe at the same stage; once
+ * unsafe it is replaced, prepared or not — a dish the child must not eat is never left on the plan.
  */
 @Injectable()
 export class RegenerateFutureService {
@@ -78,18 +81,26 @@ export class RegenerateFutureService {
       return;
     }
     const stage = child.stage;
-    const { ctx, schedule } = await loadPlanningContext(
+    const { ctx: base, schedule } = await loadPlanningContext(
       this.catalog,
       this.history,
       child,
       stage,
       today,
     );
-    const byId = dishMap(ctx.dishes);
+    // Health follows the episode's dates, so each day is planned with its own status (FR-082).
+    const dates = [...new Set(future.map((m) => m.date))].sort();
+    const contexts = new Map<LocalDate, PlanningContext>();
+    for (const date of dates)
+      contexts.set(date, { ...base, health: await this.history.health(child.childId, date) });
+
+    const byId = dishMap(base.dishes);
     const unsafe = (m: PlannedMeal) => {
       const dish = byId.get(m.dishId)!;
       return (
-        m.stageId !== stage || dish.archived === true || exclusionReason(dish, ctx, m.date) !== null
+        m.stageId !== stage ||
+        dish.archived === true ||
+        exclusionReason(dish, contexts.get(m.date)!, m.date) !== null
       );
     };
     const replaced = future.filter(
@@ -97,8 +108,18 @@ export class RegenerateFutureService {
     );
     await this.plans.remove(replaced.map((m) => m.id));
 
-    const dates = [...new Set(replaced.map((m) => m.date))].sort();
+    // A dish the parent chose stays, served for the day's health (texture, portion); a meal
+    // already prepared is served as it was cooked.
+    const removed = new Set(replaced.map((m) => m.id));
+    for (const meal of future.filter((m) => m.status === 'planned' && !removed.has(m.id))) {
+      const serving = servingFor(byId.get(meal.dishId)!, contexts.get(meal.date)!);
+      if (serving.texture === meal.texture && serving.portionText === meal.portionText) continue;
+      meal.reserve(serving);
+      await this.plans.save(meal);
+    }
+
     for (const date of dates) {
+      const ctx = contexts.get(date)!;
       const around = await this.plans.findBetween(
         child.childId,
         addDays(date, -7),

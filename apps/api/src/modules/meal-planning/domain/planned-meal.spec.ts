@@ -167,4 +167,13 @@ describe('PlannedMeal.updateNewIngredients (BR-86)', () => {
     ids.push('ing_bi');
     expect(m.newIngredientIds).toEqual(['ing_ga']);
   });
+
+  it('is served again for the current health, keeping its dish (BR-50..53)', () => {
+    const m = meal();
+    m.reserve({ texture: 'mashed', portionText: 'Khoảng 90 ml' });
+    expect([m.dishId, m.texture, m.portionText]).toEqual(['dish_chao', 'mashed', 'Khoảng 90 ml']);
+    expect(() => meal('eaten').reserve({ texture: 'mashed', portionText: 'x' })).toThrow(
+      MealAlreadyLoggedError,
+    );
+  });
 });

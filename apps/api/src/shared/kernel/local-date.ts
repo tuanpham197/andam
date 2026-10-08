@@ -70,3 +70,9 @@ export function compareDates(a: LocalDate, b: LocalDate): number {
 
 /** All users are in Vietnam for the MVP (docs §7.8); users.timezone is kept for later. */
 export const APP_TIMEZONE = 'Asia/Ho_Chi_Minh';
+
+/** Monday of the week containing `date`; weeks start on Monday (docs §7.8). */
+export function weekStartOf(date: LocalDate): LocalDate {
+  const weekday = new Date(toUtcMs(date)).getUTCDay(); // 0 = Sunday
+  return addDays(date, -((weekday + 6) % 7));
+}

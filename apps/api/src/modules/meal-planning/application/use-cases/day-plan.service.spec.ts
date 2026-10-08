@@ -204,4 +204,33 @@ describe('DayPlanService.markPrepared (FR-025)', () => {
       MealAlreadyLoggedError,
     );
   });
+
+  describe('healthPreview (FR-083)', () => {
+    it('describes what the menu does for a status', async () => {
+      const t = planningTestbed();
+      expect(await t.dayPlans.healthPreview(USER, CHILD, 'recovering')).toEqual({
+        status: 'recovering',
+        extraSnacks: 0,
+        portionPercent: 85,
+        softerTexture: 0,
+        pauseNewFoods: true,
+      });
+    });
+
+    it('hides another user’s child', async () => {
+      const t = planningTestbed();
+      await expect(t.dayPlans.healthPreview('u-2', CHILD, 'sick')).rejects.toThrow(
+        PlanChildNotFoundError,
+      );
+    });
+  });
+
+  it('plans each day with that day’s health (FR-082)', async () => {
+    const t = planningTestbed();
+    t.history.healthOn.set('2026-09-25', 'sick');
+    await t.dayPlans.getDay(USER, CHILD, TODAY);
+    const sickDay = await t.dayPlans.getDay(USER, CHILD, '2026-09-25');
+    expect(sickDay.meals).toHaveLength(5);
+    expect(sickDay.meals[0]).toMatchObject({ texture: 'mashed', portionText: 'Khoảng 90 ml' });
+  });
 });

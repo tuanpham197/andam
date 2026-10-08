@@ -29,6 +29,7 @@ import { PlanningDishes } from '../../src/modules/meal-planning/application/use-
 import { RecipeService } from '../../src/modules/meal-planning/application/use-cases/recipe.service.js';
 import { RegenerateFutureService } from '../../src/modules/meal-planning/application/use-cases/regenerate-future.service.js';
 import { SwapService } from '../../src/modules/meal-planning/application/use-cases/swap.service.js';
+import { WeekPlanService } from '../../src/modules/meal-planning/application/use-cases/week-plan.service.js';
 import { FixedClock, ImmediateUnitOfWork, SequenceIds, type Snapshotable } from './kernel.js';
 import { catalogFixture } from './meal-planning-fixtures.js';
 
@@ -246,6 +247,8 @@ export class FakeHistory implements FoodHistoryReader {
   dishFeedback = new Map<string, DishFeedback>();
   introductions: string[] = [];
   healthState: HealthState = 'normal';
+  /** Overrides `healthState` on given dates. */
+  healthOn = new Map<string, HealthState>();
   async tried(_childId: string) {
     return new Set(this.triedIds);
   }
@@ -258,8 +261,8 @@ export class FakeHistory implements FoodHistoryReader {
   async allergenIntroductions(_childId: string, from: string, to: string) {
     return this.introductions.filter((d) => d >= from && d <= to);
   }
-  async health() {
-    return this.healthState;
+  async health(_childId: string, date: string) {
+    return this.healthOn.get(date) ?? this.healthState;
   }
   logged = new Map<string, { name: string | null; at: Date }>();
   async loggedBy(mealIds: string[]) {
@@ -289,6 +292,7 @@ export function planningTestbed() {
   const uow = new ImmediateUnitOfWork().track(plans, customs);
   const recipes = new RecipeService(children, dishes, history, clock);
   const regenerate = new RegenerateFutureService(plans, children, dishes, history, ids, clock);
+  const dayPlans = new DayPlanService(plans, children, dishes, history, ids, clock);
   return {
     uow,
     clock,
@@ -299,7 +303,8 @@ export function planningTestbed() {
     customs,
     dishes,
     history,
-    dayPlans: new DayPlanService(plans, children, dishes, history, ids, clock),
+    dayPlans,
+    weeks: new WeekPlanService(plans, children, dishes, history, dayPlans, clock, uow),
     recipes,
     regenerate,
     swaps: new SwapService(plans, children, dishes, history, ids, clock, uow),

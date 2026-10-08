@@ -48,7 +48,7 @@
 | P4 | Đổi món & Thư viện món | 3 | 3 | 3 ngày | **M2** |
 | P5 | Ghi nhận, phản ứng & an toàn · Món của bạn | 6 | 5 | 6 ngày | |
 | P5b | Nhiều người chăm | 4 | 3 | 4 ngày | |
-| P6 | Sức khỏe & Thực đơn tuần | 3 | 3 | 3 ngày | **M3** |
+| P6 | Sức khỏe & Thực đơn tuần | 3 | 3 | 3 ngày | **M3** ✅ |
 | P7 | Hoàn thiện, bảo mật & phát hành | 4 | 3 | 4 ngày | **M4** |
 | | **Tổng MVP** | **34** | **30** | **~35 ngày (~7 tuần)** | |
 
@@ -319,26 +319,34 @@ gantt
 
 ---
 
-### P6 — Sức khỏe & Thực đơn tuần (BE 3 · FE 3) — **M3**
+### P6 — Sức khỏe & Thực đơn tuần (BE 3 · FE 3) — **M3** — ✅ Hoàn thành 07/10/2026 (làm song song, trước P5)
 
 **Phạm vi:** S09, S04, G06, G09 · UC-11/12/13 · FR-080..084, FR-090..095 · BR-50..53, BR-60..62.
 
-**Backend**
-- [ ] Module **health**: domain `HealthEpisode` (chuyển trạng thái, ngày kết thúc ≥ bắt đầu), `HealthAdjustment` (BR-50..53 → thêm bữa phụ, hệ số khẩu phần, giảm kết cấu, chặn nguyên liệu mới); use cases `GetCurrentHealth`, `PreviewHealthChange`, `UpdateHealth` → `HealthChanged`.
-- [ ] Engine đọc `health` qua `ChildContextReader`; handler `HealthChanged` → `RegenerateFuture`.
-- [ ] Domain `MenuEngine.weekStats` (BR-60..62); use cases `GetWeek`, `GenerateWeek` (`overwrite` chỉ thay bữa chưa ghi nhận).
-- [ ] Endpoint: `/children/:id/health*`, `GET /children/:id/weeks/:weekStart`, `POST …/generate`.
-- [ ] Kiểm quyền qua `ChildAccess` ngay từ đầu (cập nhật sức khỏe, lên tuần: cả chủ và người chăm — BR-73); `health_episodes.actor_id`; thêm các route mới vào e2e ma trận truy cập.
+**Backend** ✅
+- [x] Module **child-health** (tài liệu phân tích gọi là `health`; đổi tên vì `health` đã là health check của server): domain `HealthEpisode` (ốm / hồi phục; “Bình thường” = không có giai đoạn mở; kết thúc ≥ bắt đầu; bắt đầu không quá 7 ngày tới; biểu hiện bỏ trùng, theo thứ tự cố định), `statusOn(date)` (áp dụng từ ngày bắt đầu đến ngày dự kiến kết thúc), `isOverdue`. Use case `ChildHealthService.current/update` + `ChildHealthQueries.statusOn` cho module khác.
+- [x] `update` đóng giai đoạn đang mở, mở giai đoạn mới rồi phát `HealthChanged` **trong cùng transaction**; handler ở meal-planning gọi `RegenerateFuture` → lỗi khi sinh lại thì giai đoạn mới cũng bị rollback. Chuyển sang “Bình thường” khi đang bình thường: không ghi, không phát sự kiện.
+- [x] Quy tắc thực đơn theo sức khỏe gom trong `meal-planning/domain/health-adjustment.ts` (một bảng `HEALTH_ADJUSTMENTS`): ốm +1 bữa phụ, khẩu phần 70%, kết cấu mềm hơn 1 mức (GĐ1 giữ nghiền mịn); hồi phục 85%, kết cấu theo giai đoạn, **không** thêm bữa phụ; cả hai không thử nguyên liệu mới. Khẩu phần ghi bằng ml được nhân và làm tròn 10 ml (125 ml → 90 ml); khẩu phần bằng thìa giữ chữ + “ít hơn bình thường”. `servingFor` thay `variantFor` ở lập ngày, đổi món, thư viện.
+- [x] Sức khỏe được tính **theo từng ngày** (giai đoạn có ngày dự kiến kết thúc → các ngày sau lập như bình thường). `RegenerateFuture` dùng trạng thái của từng ngày; món phụ huynh tự đổi vẫn giữ nếu còn an toàn nhưng được phục vụ lại theo sức khỏe (`PlannedMeal.reserve`: kết cấu + khẩu phần); ngày chỉ có món tự đổi vẫn được thêm bữa phụ khi ốm.
+- [x] `PrismaFoodHistoryReader.health` đọc qua `ChildHealthQueries` (trong transaction của người gọi) thay vì đọc thẳng bảng.
+- [x] Domain `weekStats` (BR-60..62) + `dayGroupsCovered`: nguồn đạm “đang tránh” khi hồ sơ loại **mọi** nguyên liệu của nguồn đó (dị ứng hoặc danh sách tránh). `WeekPlanService.getWeek` (Thứ Hai → Chủ nhật; các ngày từ hôm nay trong cửa sổ 14 ngày được lập khi đọc, tuần đã qua không bao giờ được lập), `generate` (`PLAN_EXISTS` 409 nếu tuần đã có bữa và chưa xác nhận; `overwrite` thay bữa `planned` chưa tới giờ, kể cả món tự đổi — giữ bữa `prepared`/đã ghi nhận; `WEEK_OUT_OF_RANGE` 422 nếu xa hơn tuần kế tiếp hoặc đã qua; `INVALID_WEEK_START` 400). Logic lập ngày gom vào `DayPlanService.ensurePlanned` (dùng chung cho ngày và tuần).
+- [x] Endpoint: `GET/POST /children/:id/health`, `GET /children/:id/health/preview?status=` (phục vụ bởi meal-planning vì mô tả thay đổi thực đơn), `GET /children/:id/weeks/:weekStart`, `POST …/generate`. Bảng `health_episodes` đã có từ schema v1 — không cần migration.
+- [x] Khi gộp với P5/P5b: kiểm quyền theo thành viên (cập nhật sức khỏe, lên tuần: cả chủ và người chăm — BR-73), ghi `health_episodes.actor_id`, các route `/health*` và `/weeks*` có trong e2e ma trận truy cập TC-FAM-011; tuần và ngày gồm cả “Món của bạn” và ghi chú người ghi nhận (FR-118); món đã nấu (`prepared`) giữ nguyên kết cấu/khẩu phần khi sức khỏe đổi.
 
-**Frontend**
-- [ ] **S09**: 3 `RadioCard`, 6 biểu hiện, ngày bắt đầu / dự kiến kết thúc, khối “Thực đơn sẽ thay đổi” (từ `health/preview`), link S08, Cập nhật thực đơn.
-- [ ] Banner trên S01 khi qua ngày dự kiến kết thúc: gợi ý chuyển “Đang hồi phục” / “Bình thường”.
-- [ ] **S04**: “Tuần 21–27/9”, tuần trước/sau (`?start=`), 2 thẻ chỉ số, thanh xoay vòng đạm (nguồn bị tránh = 0 + chú thích), 7 dòng ngày (Hôm nay nổi bật, x/4, “kế hoạch”, “mới”), câu “không phải điểm đánh giá”.
-- [ ] **G09** `/week/:date`: tái dùng danh sách bữa S01, đổi món cho ngày tương lai.
-- [ ] **G06** Lên thực đơn tuần sau: xác nhận ghi đè nếu đã có → chuyển sang tuần mới.
-- [ ] Nút *Danh sách đi chợ*: ẩn ở MVP (hoặc “Sắp ra mắt” — PO quyết định).
+**Frontend** ✅
+- [x] **S09** `/health`: 3 `RadioCard`, 6 biểu hiện (chỉ hiện khi ốm/hồi phục), ngày bắt đầu (mặc định hôm nay) / dự kiến kết thúc (tùy chọn, chặn ngày trước ngày bắt đầu), khối “Thực đơn sẽ thay đổi” từ `health/preview`, cảnh báo + link S08, *Cập nhật thực đơn* → làm mới mọi dữ liệu của bé → về S01.
+- [x] S01: chip “Sức khỏe: …” theo trạng thái thật; banner gợi ý cập nhật khi đã qua ngày dự kiến kết thúc (TC-HLT-009).
+- [x] **S04** `/week?start=`: “Bé Na · Tuần 21–27/9”, tuần trước/sau, 2 thẻ chỉ số, thanh xoay vòng đạm (nguồn đang tránh = 0 + “Đang tránh theo hồ sơ”), 7 dòng ngày (Hôm nay nổi bật, x/4 cho ngày đã qua/hôm nay, “kế hoạch” cho ngày tới, “· mới” khi có nguyên liệu lần đầu), câu “không phải điểm đánh giá”.
+- [x] **G09** `/week/:date`: danh sách bữa của S01 tách thành `DayMealList` dùng chung; đổi món ngày tới qua công thức → *Đổi món* như S01.
+- [x] **G06**: *Lên thực đơn tuần sau* → nếu `PLAN_EXISTS` hỏi “Thay thực đơn mới / Giữ thực đơn hiện có” → mở tuần sau.
+- [x] Nút *Danh sách đi chợ*: ẩn ở MVP. Route tạm `/urgent` (P5) để link từ S09 không gãy.
+- [ ] **Demo M3** trên staging — cần P5 xong và môi trường staging.
 
-**Nghiệm thu:** Chọn “Đang ốm” → bữa tương lai mềm hơn 1 mức, không nguyên liệu mới, thêm bữa phụ; chỉ số tuần khớp dữ liệu đã ghi nhận; mọi FR High của MVP ở trạng thái Implemented trên staging.
+**Nghiệm thu:** Chọn “Đang ốm” → bữa tương lai mềm hơn 1 mức (lumpy → mashed), khẩu phần ~70%, không nguyên liệu mới, thêm bữa phụ; bữa đã qua giờ / đã chuẩn bị giữ nguyên; “Hồi phục” → kết cấu theo giai đoạn, 85%, bỏ bữa phụ thêm; “Bình thường” → thực đơn đầy đủ. Chỉ số tuần khớp các bữa đã lưu và cập nhật ngay sau khi đổi món. “Mọi FR High ở trạng thái Implemented trên staging” chờ P5.
+
+**Kết quả kiểm chứng:** API 835 test · web 304 test · api-client 18 test — 100% line cả 3 workspace; domain 100% line + branch; lint + format + typecheck + build sạch; perf engine đạt; OpenAPI và client sinh lại khớp. Chạy thật trên Chrome 390 px và 320 px: S04 và S09 không cuộn ngang; cập nhật “Đang ốm” lúc 17:20 → bữa xế 15:00 giữ nguyên, bữa tối 18:00 đổi sang “Nghiền · 80–110 ml tham khảo”, chip S01 đổi thành “Sức khỏe: Đang ốm”.
+
+**Ghi nhận khi chạy thật:** với catalog dev 12 món, khi bé ốm (thêm bữa phụ, loại món có nguyên liệu chưa thử) nhiều ngày tới không còn món nào ngoài cửa sổ chống lặp 3 ngày → bữa “Chưa có món phù hợp”. Đúng quy tắc (BR-21 không nới dưới 3 ngày); cần catalog ≥ 60 món (P7).
 
 ---
 

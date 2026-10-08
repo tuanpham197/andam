@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { PrismaTransactionHost } from '../../../../../shared/infrastructure/persistence/transaction-host.js';
+import { ChildHealthQueries } from '../../../../child-health/application/use-cases/child-health.service.js';
 import {
   APP_TIMEZONE,
   toLocalDate,
@@ -11,13 +12,16 @@ import type { DishFeedback, HealthState } from '../../../domain/model.js';
 import { displayName } from '../../../../child-profile/domain/membership.js';
 
 /**
- * Read model over what other modules record (logs, exposures, pauses, health episodes).
- * Reads through the current transaction: a food paused a moment ago in the same unit of work
- * must already be excluded when upcoming meals are planned again (BR-31).
+ * Read model over what other modules record (logs, exposures, pauses); health comes from the
+ * child-health module. Reads through the current transaction: a food paused a moment ago in the
+ * same unit of work must already be excluded when upcoming meals are planned again (BR-31).
  */
 @Injectable()
 export class PrismaFoodHistoryReader implements FoodHistoryReader {
-  constructor(@Inject(TransactionHost) private readonly txHost: PrismaTransactionHost) {}
+  constructor(
+    @Inject(TransactionHost) private readonly txHost: PrismaTransactionHost,
+    @Inject(ChildHealthQueries) private readonly healthQueries: ChildHealthQueries,
+  ) {}
 
   private get prisma() {
     return this.txHost.tx;
@@ -92,18 +96,7 @@ export class PrismaFoodHistoryReader implements FoodHistoryReader {
     );
   }
 
-  async health(childId: string, date: LocalDate): Promise<HealthState> {
-    const day = new Date(`${date}T00:00:00.000Z`);
-    const episode = await this.prisma.healthEpisode.findFirst({
-      where: {
-        childId,
-        endedAt: null,
-        startDate: { lte: day },
-        OR: [{ expectedEndDate: null }, { expectedEndDate: { gte: day } }],
-      },
-      orderBy: { createdAt: 'desc' },
-      select: { status: true },
-    });
-    return episode?.status ?? 'normal';
+  health(childId: string, date: LocalDate): Promise<HealthState> {
+    return this.healthQueries.statusOn(childId, date);
   }
 }

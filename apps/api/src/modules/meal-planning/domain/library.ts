@@ -1,6 +1,7 @@
 import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.js';
 import { toSearchText } from '../../../shared/kernel/search-text.js';
-import { isLiked, variantFor, WINDOW_DAYS } from './menu-engine.js';
+import { servingFor } from './health-adjustment.js';
+import { isLiked, WINDOW_DAYS } from './menu-engine.js';
 import type { MealSlot, MealUse, PlanDish, PlanningContext, Texture } from './model.js';
 import { offered } from './model.js';
 import { newIngredientIds } from './novelty.js';
@@ -114,7 +115,7 @@ export function filterLibrary(ctx: PlanningContext, request: LibraryRequest): Li
   const entries = visible
     .map((dish) => ({
       dish,
-      texture: variantFor(dish, ctx.stage).texture,
+      texture: servingFor(dish, ctx).texture,
       newIngredientIds: newIngredientIds(dish, ctx),
       liked: isLiked(ctx, dish.id),
       lastEaten: lastEaten(dish.id),
