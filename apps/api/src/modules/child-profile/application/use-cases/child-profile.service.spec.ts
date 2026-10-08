@@ -26,6 +26,7 @@ describe('ChildProfileService', () => {
         avoidAllergens: ['egg'],
         avoidIngredients: [{ ingredientId: 'ing_muop_dang', name: 'Mướp đắng', reason: 'dislike' }],
         stageOverride: null,
+        role: 'owner',
         age: { months: 8, days: 12, corrected: false },
         autoStage: 2,
         effectiveStage: 2,

@@ -13,6 +13,7 @@ import { Disclaimer } from '../components/Disclaimer';
 import { Icon } from '../components/Icon';
 import { LoadError } from '../components/LoadError';
 import { formatAge, textureLabel } from '../features/child/format';
+import { ChildSwitcher } from '../features/child/ChildSwitcher';
 import { useActiveChild } from '../features/child/guards';
 import {
   avoidSummary,
@@ -20,6 +21,7 @@ import {
   daySummary,
   isSnackSlot,
   todayInVietnam,
+  timeInVietnam,
 } from '../features/meals/format';
 import { MealRow, type MealRowState } from '../features/meals/MealRow';
 import { NextMealCard } from '../features/meals/NextMealCard';
@@ -48,7 +50,10 @@ function Header({ child, date }: { child: ChildDto; date: string }) {
         </div>
         <div className={styles.who}>
           <div className={styles.date}>{dayHeading(date)}</div>
-          <h1 className={styles.title}>{t.childName(child.name)}</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>{t.childName(child.name)}</h1>
+            <ChildSwitcher />
+          </div>
           <div className={styles.summary}>{summary}</div>
         </div>
       </div>
@@ -83,11 +88,18 @@ interface Row {
   meal?: MealDto;
 }
 
+/** FR-118: "Đã ăn · Ba 11:40" so the other parent does not log the meal again. */
+function loggedNote(status: string, meal: MealDto): string {
+  if (!meal.loggedBy) return status;
+  const who = meal.loggedBy.name ?? vi.log.deletedUser;
+  return `${status} · ${who} ${timeInVietnam(meal.loggedBy.at)}`;
+}
+
 function rowFor(meal: MealDto, nextMealId: string | null): { note: string; state: MealRowState } {
   if (meal.id === nextMealId) return { note: t.status.next, state: 'next' };
-  if (meal.status === 'eaten') return { note: t.status.eaten, state: 'eaten' };
+  if (meal.status === 'eaten') return { note: loggedNote(t.status.eaten, meal), state: 'eaten' };
   if (meal.status === 'refused' || meal.status === 'skipped')
-    return { note: t.status[meal.status], state: 'closed' };
+    return { note: loggedNote(t.status[meal.status], meal), state: 'closed' };
   if (meal.status === 'prepared') return { note: t.status.prepared, state: 'pending' };
   const minutes = vi.minutes(meal.dish.prepMin + meal.dish.cookMin);
   const protein = meal.dish.mainProtein;
@@ -131,7 +143,8 @@ function MealList({ day }: { day: DayPlanDto }) {
 }
 
 function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Date }) {
-  const day = useGetDayPlan(child.id, date);
+  // FR-120: another member's log or swap shows up within a minute (and on returning to the tab).
+  const day = useGetDayPlan(child.id, date, { query: { refetchInterval: 60_000 } });
   const preparing = usePrepareMeal(child.id, date);
 
   if (day.isPending)

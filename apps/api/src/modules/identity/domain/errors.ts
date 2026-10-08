@@ -87,3 +87,23 @@ export class ResetTokenInvalidError extends DomainError {
     super('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
   }
 }
+
+export class InvalidDisplayNameError extends DomainError {
+  readonly code = 'INVALID_DISPLAY_NAME';
+  readonly kind = 'invalid_input';
+  constructor() {
+    super('Tên hiển thị tối đa 30 ký tự');
+  }
+}
+
+/** BR-76: the owner of a child other members still use must hand it over (or delete it) first. */
+export class OwnershipTransferRequiredError extends DomainError {
+  readonly code = 'OWNERSHIP_TRANSFER_REQUIRED';
+  readonly kind = 'conflict';
+  constructor(readonly children: { id: string; name: string }[]) {
+    super('Hãy chuyển quyền chủ hoặc xóa các hồ sơ bé còn người chăm trước khi xóa tài khoản');
+  }
+  override get details() {
+    return { children: this.children };
+  }
+}

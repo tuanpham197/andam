@@ -1,6 +1,7 @@
 import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.js';
 import { rankSlot, totalMinutes, variantFor, WINDOW_DAYS, type ReasonCode } from './menu-engine.js';
 import type { MealSlot, MealUse, PlanningContext, Texture } from './model.js';
+import { offered } from './model.js';
 import { exclusionReason, summarizeExclusions, type ExclusionSummary } from './safety-filter.js';
 
 export const SWAP_REASONS = ['missing_ingredient', 'disliked', 'faster', 'other'] as const;
@@ -16,6 +17,8 @@ export interface SwapEvent {
   toDishId: string;
   reason: SwapReason;
   createdAt: Date;
+  /** Who swapped (BR-78). */
+  actorId: string | null;
 }
 
 export const MAX_SUGGESTIONS = 5;
@@ -66,7 +69,9 @@ export interface SwapSuggestions {
  */
 export function suggestSwaps(ctx: PlanningContext, request: SwapRequest): SwapSuggestions {
   const current = ctx.dishes.find((d) => d.id === request.currentDishId)!;
-  const others = ctx.dishes.filter((d) => d.id !== current.id && d.mealType === current.mealType);
+  const others = offered(ctx.dishes).filter(
+    (d) => d.id !== current.id && d.mealType === current.mealType,
+  );
   const reasons = others.map((d) => exclusionReason(d, ctx, request.date));
   const safe = others.filter((_, i) => reasons[i] === null);
   const currentMinutes = totalMinutes(current);

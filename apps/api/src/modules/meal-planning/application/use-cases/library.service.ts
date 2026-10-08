@@ -14,7 +14,7 @@ import {
   MEAL_PLAN_REPOSITORY,
   type MealPlanRepository,
 } from '../ports/out/meal-plan.repository.js';
-import { PLANNING_CATALOG, type PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import { PlanningDishes } from './planning-dishes.js';
 import {
   dishMap,
   dishSummary,
@@ -42,7 +42,7 @@ export class LibraryService {
   constructor(
     @Inject(MEAL_PLAN_REPOSITORY) private readonly plans: MealPlanRepository,
     @Inject(CHILD_PLANNING_READER) private readonly children: ChildPlanningReader,
-    @Inject(PLANNING_CATALOG) private readonly catalog: PlanningCatalog,
+    @Inject(PlanningDishes) private readonly catalog: PlanningDishes,
     @Inject(FOOD_HISTORY_READER) private readonly history: FoodHistoryReader,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}

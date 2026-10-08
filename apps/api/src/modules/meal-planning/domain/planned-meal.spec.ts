@@ -140,5 +140,31 @@ describe('swap errors', () => {
 
   it('says why a dish is not safe', () => {
     expect(new DishNotSafeError('paused').reason).toBe('paused');
+    expect(new DishNotSafeError('paused').details).toEqual({ reason: 'paused' });
+  });
+});
+
+describe('PlannedMeal.markLogged (UC-08)', () => {
+  it.each(['planned', 'prepared'] as const)('closes a %s meal as eaten or refused', (status) => {
+    const eaten = meal(status);
+    eaten.markLogged('eaten');
+    expect(eaten.status).toBe('eaten');
+    const refused = meal(status);
+    refused.markLogged('refused');
+    expect(refused.status).toBe('refused');
+  });
+
+  it.each(['eaten', 'refused', 'skipped'] as const)('refuses to log a %s meal again', (status) => {
+    expect(() => meal(status).markLogged('eaten')).toThrow(MealAlreadyLoggedError);
+  });
+});
+
+describe('PlannedMeal.updateNewIngredients (BR-86)', () => {
+  it('replaces the first tries with a copy of the given list', () => {
+    const m = meal();
+    const ids = ['ing_ga'];
+    m.updateNewIngredients(ids);
+    ids.push('ing_bi');
+    expect(m.newIngredientIds).toEqual(['ing_ga']);
   });
 });

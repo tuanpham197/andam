@@ -75,7 +75,16 @@ describe('filterLibrary (UC-07)', () => {
     });
 
     it('offers the chips of the design, egg dishes only under "all"', () => {
-      expect(LIBRARY_CHIPS).toEqual(['all', 'chicken', 'fish', 'beef', 'pork', 'legume', 'snack']);
+      expect(LIBRARY_CHIPS).toEqual([
+        'all',
+        'chicken',
+        'fish',
+        'beef',
+        'pork',
+        'legume',
+        'snack',
+        'custom',
+      ]);
     });
   });
 
@@ -228,5 +237,32 @@ describe('filterLibrary (UC-07)', () => {
       lastEaten: { daysAgo: 2, slot: 'lunch' },
     });
     expect(result.dishes.find((e) => e.dish.id === 'dish_bo_0')!.liked).toBe(false);
+  });
+});
+
+describe('"Món của bạn" in the library (FR-133/134, BR-86)', () => {
+  const withCustom = (): PlanningContext => {
+    const base = catalogContext();
+    return {
+      ...base,
+      dishes: base.dishes.map((d) =>
+        d.id === 'dish_ga_0'
+          ? { ...d, custom: true }
+          : d.id === 'dish_ga_1'
+            ? { ...d, custom: true, archived: true }
+            : d,
+      ),
+    };
+  };
+
+  it('TC-CUS-009 the "custom" chip lists only the parents’ dishes still in use', () => {
+    const result = filterLibrary(withCustom(), request({ chip: 'custom' }));
+    expect(result.dishes.map((e) => e.dish.id)).toEqual(['dish_ga_0']);
+  });
+
+  it('TC-CUS-013 a deleted dish is neither shown nor counted as hidden', () => {
+    const result = filterLibrary(withCustom(), request());
+    expect(result.dishes.map((e) => e.dish.id)).not.toContain('dish_ga_1');
+    expect(result.hidden.items.map((i) => i.dishId)).not.toContain('dish_ga_1');
   });
 });

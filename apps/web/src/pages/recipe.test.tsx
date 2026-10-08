@@ -234,4 +234,52 @@ describe('Recipe (S03)', () => {
       expect(screen.getByRole('heading', { level: 1, name: 'Cháo cá hồi rau ngót' })).toBeVisible(),
     );
   });
+
+  it('TC-CUS-016 a parent’s own dish: not reviewed, any quantity, a way to edit it', async () => {
+    serveRecipe(
+      recipeFixture({
+        id: 'custom_1',
+        name: 'Cháo gà nhà làm',
+        custom: true,
+        reviewedBy: null,
+        description: '',
+        tool: '',
+        ingredients: [
+          {
+            ingredientId: 'ing_gao_te',
+            name: 'Gạo tẻ',
+            qty: null,
+            unit: null,
+            isMain: false,
+            foodGroup: 'carb',
+            allergenTags: [],
+            isNew: false,
+          },
+          {
+            ingredientId: 'ing_thit_ga',
+            name: 'Thịt gà',
+            qty: 2,
+            unit: null,
+            isMain: true,
+            foodGroup: 'protein',
+            allergenTags: [],
+            isNew: false,
+          },
+        ],
+      }),
+    );
+    renderApp('/dishes/custom_1');
+    expect(await screen.findByText('Món của bạn')).toBeInTheDocument();
+    expect(
+      screen.getByText('Món do bạn tạo, chưa qua chuyên gia dinh dưỡng duyệt.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Công thức v/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Dụng cụ')).not.toBeInTheDocument();
+    expect(section('Nguyên liệu').getByText('Tùy ý')).toBeInTheDocument();
+    expect(section('Nguyên liệu').getByText('2')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sửa món' })).toHaveAttribute(
+      'href',
+      '/dishes/custom_1/edit',
+    );
+  });
 });

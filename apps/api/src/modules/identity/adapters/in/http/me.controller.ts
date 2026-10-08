@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, Inject, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Inject, Patch, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import type { AuthenticatedUser } from '../../../../../shared/auth/authenticator.port.js';
 import { CurrentUser } from '../../../../../shared/auth/current-user.decorator.js';
 import { DeleteAccountService } from '../../../application/use-cases/delete-account.service.js';
 import { GetMeService } from '../../../application/use-cases/get-me.service.js';
-import { AccountResponseDto, DeleteAccountDto } from './dto.js';
+import { AccountResponseDto, DeleteAccountDto, UpdateMeDto } from './dto.js';
 import { clearRefreshCookie } from './refresh-cookie.js';
 
 @ApiTags('account')
@@ -22,6 +22,16 @@ export class MeController {
   @ApiOkResponse({ type: AccountResponseDto })
   me(@CurrentUser() user: AuthenticatedUser): Promise<AccountResponseDto> {
     return this.getMe.execute(user);
+  }
+
+  @Patch()
+  @ApiOperation({ operationId: 'updateMe', summary: 'Đặt tên hiển thị (FR-119)' })
+  @ApiOkResponse({ type: AccountResponseDto })
+  rename(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateMeDto,
+  ): Promise<AccountResponseDto> {
+    return this.getMe.rename({ userId: user.userId, displayName: dto.displayName ?? null });
   }
 
   @Delete()

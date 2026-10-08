@@ -33,7 +33,14 @@ export interface PlanDish {
   ingredientIds: string[];
   /** What the dish is built around; swapping for a missing or disliked food avoids these (BR-28/29). */
   mainIngredientIds: string[];
+  /** "Món của bạn": made by the child's parents, not reviewed by a nutritionist (BR-85). */
+  custom?: boolean;
+  /** A deleted "Món của bạn": still names past meals, never offered again (BR-86). */
+  archived?: boolean;
 }
+
+/** Dishes that may still be offered: a deleted "Món của bạn" only names past meals. */
+export const offered = (dishes: readonly PlanDish[]) => dishes.filter((d) => !d.archived);
 
 export interface ScheduledSlot {
   slot: MealSlot;

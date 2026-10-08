@@ -18,7 +18,10 @@ describe('loadCatalog', () => {
   });
 
   it('fails clearly when a file is missing', async () => {
+    // Only one file missing: the three are read in parallel, so which fails first is not fixed.
     const dir = await mkdtemp(join(tmpdir(), 'catalog-'));
+    await writeFile(join(dir, 'ingredients.json'), '[]');
+    await writeFile(join(dir, 'dishes.json'), '[]');
     await expect(loadCatalog(dir)).rejects.toThrow(/stages\.json/);
   });
 

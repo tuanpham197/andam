@@ -11,6 +11,8 @@ export interface MealPlanRepository {
   /** A meal of a child owned by `userId`, or null. */
   findOwned(mealId: string, userId: string): Promise<PlannedMeal | null>;
   save(meal: PlannedMeal): Promise<void>;
+  /** Saves a swap only while the meal still has `fromDishId` and is not logged (BR-77). */
+  saveSwap(meal: PlannedMeal, fromDishId: string): Promise<boolean>;
   remove(mealIds: string[]): Promise<void>;
   recordSwap(event: SwapEvent): Promise<void>;
 }

@@ -313,3 +313,23 @@
   position: static;
   border: 1px solid var(--border);
 }
+
+.custom {
+  font-weight: 700;
+  color: var(--warn-text);
+}
+.edit {
+  align-self: flex-start;
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-strong);
+}
+
+.customReview {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}

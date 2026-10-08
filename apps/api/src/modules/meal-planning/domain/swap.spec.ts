@@ -326,3 +326,19 @@ describe('suggestSwaps (UC-06)', () => {
     );
   });
 });
+
+describe('deleted "Món của bạn" (BR-86)', () => {
+  it('TC-CUS-013 is never suggested, yet a meal still using it can be swapped away', () => {
+    const base = catalogContext();
+    const ctx = {
+      ...base,
+      dishes: base.dishes.map((d) =>
+        d.id === 'dish_ca_0' || d.id === 'dish_heo_0' ? { ...d, archived: true } : d,
+      ),
+    };
+    const result = suggestSwaps(ctx, request());
+    expect(result.ranked.length).toBeGreaterThan(0);
+    expect(ids(result)).not.toContain('dish_heo_0');
+    expect(result.excluded.total).toBe(0);
+  });
+});

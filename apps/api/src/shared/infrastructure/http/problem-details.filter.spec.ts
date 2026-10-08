@@ -64,6 +64,8 @@ describe('ProblemDetailsFilter', () => {
     ['invalid_input', 400, 'Bad Request'],
     ['not_found', 404, 'Not Found'],
     ['conflict', 409, 'Conflict'],
+    ['forbidden', 403, 'Forbidden'],
+    ['gone', 410, 'Gone'],
     ['rule_violation', 422, 'Unprocessable Entity'],
     ['unauthenticated', 401, 'Unauthorized'],
     ['too_many_requests', 429, 'Too Many Requests'],
@@ -76,6 +78,26 @@ describe('ProblemDetailsFilter', () => {
       status,
       code: 'MEAL_ALREADY_LOGGED',
       detail: 'Thông điệp nghiệp vụ',
+      instance: '/api/v1/things/1',
+    });
+  });
+
+  it('adds the error details as extension members, never over the standard ones', () => {
+    const error = new (class extends DomainError {
+      readonly code = 'DISH_NOT_SAFE_FOR_CHILD';
+      readonly kind = 'rule_violation' as const;
+      override get details() {
+        return { ingredients: [{ id: 'ing_trung', reason: 'allergen' }], status: 200, code: 'X' };
+      }
+    })('Món có nguyên liệu không phù hợp');
+    const response = run(error);
+    expect(response.body).toEqual({
+      type: 'about:blank',
+      title: 'Unprocessable Entity',
+      status: 422,
+      code: 'DISH_NOT_SAFE_FOR_CHILD',
+      detail: 'Món có nguyên liệu không phù hợp',
+      ingredients: [{ id: 'ing_trung', reason: 'allergen' }],
       instance: '/api/v1/things/1',
     });
   });

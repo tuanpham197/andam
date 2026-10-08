@@ -17,6 +17,8 @@ const STATUS_BY_KIND: Record<DomainErrorKind, number> = {
   invalid_input: 400,
   not_found: 404,
   conflict: 409,
+  forbidden: 403,
+  gone: 410,
   rule_violation: 422,
   unauthenticated: 401,
   too_many_requests: 429,
@@ -52,7 +54,9 @@ export class ProblemDetailsFilter implements ExceptionFilter {
     const request = http.getRequest<{ originalUrl: string }>();
 
     const problem = this.toProblem(exception);
-    const body: ProblemDetails = {
+    // Extension members from DomainError.details (RFC 9457 §3.2); standard members win.
+    const body: ProblemDetails & Record<string, unknown> = {
+      ...(exception instanceof DomainError ? exception.details : undefined),
       type: 'about:blank',
       title: STATUS_CODES[problem.status] ?? 'Error',
       ...problem,

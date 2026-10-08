@@ -9,6 +9,7 @@ import type {
   ScheduledSlot,
   Texture,
 } from './model.js';
+import { offered } from './model.js';
 import { newAllergenIds, newIngredientIds } from './novelty.js';
 import { exclusionReason } from './safety-filter.js';
 
@@ -244,7 +245,7 @@ export function generateDay(ctx: PlanningContext, request: DayRequest): DayGener
   const meals: PlannedDraft[] = [];
   const unfilled: ScheduledSlot[] = [];
   let relaxedWindowDays: 3 | null = null;
-  const safe = ctx.dishes.filter((d) => exclusionReason(d, ctx, request.date) === null);
+  const safe = offered(ctx.dishes).filter((d) => exclusionReason(d, ctx, request.date) === null);
 
   for (const slot of request.slots) {
     const { ranked, relaxed } = rankSlot(ctx, safe, {

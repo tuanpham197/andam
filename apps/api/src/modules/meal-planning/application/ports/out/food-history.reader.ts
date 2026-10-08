@@ -11,4 +11,6 @@ export interface FoodHistoryReader {
   /** Days a new allergenic food was eaten (planned introductions are read from the plan). */
   allergenIntroductions(childId: string, from: LocalDate, to: LocalDate): Promise<LocalDate[]>;
   health(childId: string, date: LocalDate): Promise<HealthState>;
+  /** FR-118: who logged each of these meals and when (name null: account deleted). */
+  loggedBy(mealIds: string[]): Promise<Map<string, { name: string | null; at: Date }>>;
 }

@@ -17,4 +17,12 @@ describe('DomainError', () => {
   it('uses the subclass name so logs identify the error', () => {
     expect(new ChildTooYoungError('x').name).toBe('ChildTooYoungError');
   });
+
+  it('has no details unless a subclass gives some', () => {
+    const error = new (class extends DomainError {
+      readonly code = 'X';
+      readonly kind = 'conflict' as const;
+    })('x');
+    expect(error.details).toBeUndefined();
+  });
 });

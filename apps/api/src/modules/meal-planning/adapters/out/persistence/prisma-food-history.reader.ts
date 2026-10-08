@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PrismaService } from '../../../../../shared/infrastructure/prisma/prisma.service.js';
+import { TransactionHost } from '@nestjs-cls/transactional';
+import type { PrismaTransactionHost } from '../../../../../shared/infrastructure/persistence/transaction-host.js';
 import {
   APP_TIMEZONE,
   toLocalDate,
@@ -7,14 +8,20 @@ import {
 } from '../../../../../shared/kernel/local-date.js';
 import type { FoodHistoryReader } from '../../../application/ports/out/food-history.reader.js';
 import type { DishFeedback, HealthState } from '../../../domain/model.js';
+import { displayName } from '../../../../child-profile/domain/membership.js';
 
 /**
- * Reads what other modules record (logs, exposures, pauses, health episodes). Until those
- * modules exist (P5, P6) the tables are simply empty; then this adapter moves to their ports.
+ * Read model over what other modules record (logs, exposures, pauses, health episodes).
+ * Reads through the current transaction: a food paused a moment ago in the same unit of work
+ * must already be excluded when upcoming meals are planned again (BR-31).
  */
 @Injectable()
 export class PrismaFoodHistoryReader implements FoodHistoryReader {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(TransactionHost) private readonly txHost: PrismaTransactionHost) {}
+
+  private get prisma() {
+    return this.txHost.tx;
+  }
 
   async tried(childId: string): Promise<Set<string>> {
     const rows = await this.prisma.ingredientExposure.findMany({
@@ -65,6 +72,24 @@ export class PrismaFoodHistoryReader implements FoodHistoryReader {
     return rows
       .map((r) => toLocalDate(r.firstTriedAt!, APP_TIMEZONE))
       .filter((date) => date >= from && date <= to);
+  }
+
+  async loggedBy(mealIds: string[]): Promise<Map<string, { name: string | null; at: Date }>> {
+    if (mealIds.length === 0) return new Map();
+    const rows = await this.prisma.mealLog.findMany({
+      where: { mealId: { in: mealIds } },
+      select: {
+        mealId: true,
+        loggedAt: true,
+        actor: { select: { displayName: true, email: true } },
+      },
+    });
+    return new Map(
+      rows.map((r) => [
+        r.mealId,
+        { name: r.actor && displayName(r.actor.displayName, r.actor.email), at: r.loggedAt },
+      ]),
+    );
   }
 
   async health(childId: string, date: LocalDate): Promise<HealthState> {

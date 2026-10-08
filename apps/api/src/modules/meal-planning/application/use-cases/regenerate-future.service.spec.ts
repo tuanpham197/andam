@@ -31,25 +31,38 @@ describe('RegenerateFutureService (BR-31, TC-PLN-003)', () => {
     expect(mealsOn(t, '2026-09-25')).toHaveLength(4);
   });
 
-  it('keeps meals already past, prepared or logged', async () => {
+  it('keeps meals already past or logged, even when they now contain an avoided food', async () => {
     const t = await planToday();
-    const [breakfast, lunch] = mealsOn(t, TODAY);
-    t.plans.put(PlannedMeal.restore({ ...snapshot(lunch!), status: 'prepared' }));
-    const before = { breakfast: breakfast!.dishId, lunch: lunch!.dishId };
-
-    // Both meals now contain an avoided food, yet they are past or already cooked.
+    const [breakfast, , snack] = mealsOn(t, TODAY);
+    t.plans.put(PlannedMeal.restore({ ...snapshot(snack!), status: 'eaten' }));
     const dishes = await t.catalog.dishes();
-    const proteinOf = (dishId: string) => dishes.find((d) => d.id === dishId)!.ingredientIds[1]!;
+    const foodsOf = (dishId: string) => dishes.find((d) => d.id === dishId)!.ingredientIds;
     t.children.rows.get(CHILD)!.info.avoidIngredients = [
-      proteinOf(breakfast!.dishId),
-      proteinOf(lunch!.dishId),
+      foodsOf(breakfast!.dishId)[1]!,
+      ...foodsOf(snack!.dishId),
     ];
     await t.regenerate.execute({ childId: CHILD, userId: USER });
 
-    const [b, l] = mealsOn(t, TODAY);
-    expect(b!.dishId).toBe(before.breakfast); // 07:30 is before 09:00
-    expect(l!.dishId).toBe(before.lunch); // prepared
-    expect(l!.status).toBe('prepared');
+    const [b, , s] = mealsOn(t, TODAY);
+    expect(b!.dishId).toBe(breakfast!.dishId); // 07:30 is before 09:00
+    expect(s).toMatchObject({ dishId: snack!.dishId, status: 'eaten' });
+  });
+
+  it('keeps a prepared meal that is still safe, replaces one that is not (never left unsafe)', async () => {
+    const t = await planToday();
+    const [, lunch, , dinner] = mealsOn(t, TODAY);
+    t.plans.put(PlannedMeal.restore({ ...snapshot(lunch!), status: 'prepared' }));
+    t.plans.put(PlannedMeal.restore({ ...snapshot(dinner!), status: 'prepared' }));
+    const dishes = await t.catalog.dishes();
+    t.children.rows.get(CHILD)!.info.avoidIngredients = [
+      dishes.find((d) => d.id === lunch!.dishId)!.ingredientIds[1]!,
+    ];
+    await t.regenerate.execute({ childId: CHILD, userId: USER, scope: 'unsafe' });
+
+    const [, l, , d] = mealsOn(t, TODAY);
+    expect(l!.dishId).not.toBe(lunch!.dishId);
+    expect(l!.status).toBe('planned');
+    expect(d).toMatchObject({ dishId: dinner!.dishId, status: 'prepared' });
   });
 
   it('keeps a swapped meal that is still safe and replaces one that is not', async () => {

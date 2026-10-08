@@ -93,3 +93,9 @@
   color: inherit;
   font-weight: 700;
 }
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

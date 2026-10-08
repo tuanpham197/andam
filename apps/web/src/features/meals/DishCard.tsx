@@ -28,6 +28,9 @@ export function DishCard({ dish }: { dish: LibraryDishDto }) {
         </span>
         <div className={styles.tags}>
           <span className={`${styles.tag} ${styles.group}`}>{group}</span>
+          {dish.custom && (
+            <span className={`${styles.tag} ${styles.custom}`}>{vi.recipe.custom}</span>
+          )}
           {dish.newIngredients.length > 0 && (
             <span className={`${styles.tag} ${styles.new}`}>
               {vi.library.firstTry(firstTryNames(dish.newIngredients.map((i) => i.name)))}

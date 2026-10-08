@@ -5,6 +5,7 @@ import {
   DishNotFoundError,
   DishNotSafeError,
   MealAlreadyLoggedError,
+  MealChangedError,
   MealInPastError,
   MealNotFoundError,
   SameDishError,
@@ -129,6 +130,7 @@ describe('SwapService.apply (FR-045)', () => {
         toDishId: target.id,
         reason: 'missing_ingredient',
         createdAt: t.clock.now(),
+        actorId: USER,
       },
     ]);
     expect(t.uow.runs).toBe(1);
@@ -195,6 +197,35 @@ describe('SwapService.apply (FR-045)', () => {
     await expect(
       t.swaps.apply('u-2', t.dinner.id, { dishId: 'dish_heo_0', reason: 'other' }),
     ).rejects.toThrow(MealNotFoundError);
+  });
+
+  it('TC-FAM-021 refuses when the parent chose looking at a dish the meal no longer has', async () => {
+    const t = await planned();
+    const target = t.lunch.dishId === 'dish_heo_0' ? 'dish_heo_1' : 'dish_heo_0';
+    await expect(
+      t.swaps.apply(USER, t.lunch.id, {
+        dishId: target,
+        reason: 'other',
+        expectedDishId: 'dish_x',
+      }),
+    ).rejects.toThrow(MealChangedError);
+    await expect(
+      t.swaps.apply(USER, t.lunch.id, {
+        dishId: target,
+        reason: 'other',
+        expectedDishId: t.lunch.dishId,
+      }),
+    ).resolves.toMatchObject({ dish: { id: target } });
+  });
+
+  it('TC-FAM-021 another member’s swap landing first wins; this one changes nothing', async () => {
+    const t = await planned();
+    t.plans.saveSwap = async () => false;
+    const target = t.lunch.dishId === 'dish_heo_0' ? 'dish_heo_1' : 'dish_heo_0';
+    await expect(
+      t.swaps.apply(USER, t.lunch.id, { dishId: target, reason: 'other' }),
+    ).rejects.toThrow(MealChangedError);
+    expect(t.plans.swaps).toEqual([]);
   });
 
   it('TC-SWP-015 puts a prepared meal back to planned', async () => {

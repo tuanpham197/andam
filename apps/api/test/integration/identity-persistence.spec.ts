@@ -118,10 +118,12 @@ describe('PrismaUserRepository', () => {
     const user = newUser();
     await users.create(user, consent());
     user.changePassword('new-hash');
+    user.rename('Bà nội');
     user.delete(now);
     await users.save(user);
     expect(await users.findById(user.id)).toMatchObject({
       passwordHash: 'new-hash',
+      displayName: 'Bà nội',
       deletedAt: now,
     });
   });

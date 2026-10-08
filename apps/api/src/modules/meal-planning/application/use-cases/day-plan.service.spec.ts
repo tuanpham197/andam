@@ -66,6 +66,20 @@ describe('DayPlanService.getDay (UC-04, UC-16)', () => {
     ).toBe(false);
   });
 
+  it('FR-118 says who logged a meal; pending meals have nobody yet', async () => {
+    const t = planningTestbed();
+    await t.dayPlans.getDay(USER, CHILD, TODAY);
+    const breakfast = [...t.plans.rows.values()].find((m) => m.slot === 'breakfast')!;
+    t.plans.put(PlannedMeal.restore({ ...snapshot(breakfast), status: 'eaten' }));
+    const at = new Date('2026-09-24T00:45:00Z');
+    t.history.logged.set(breakfast.id, { name: 'Ba', at });
+    const day = await t.dayPlans.getDay(USER, CHILD, TODAY);
+    expect(day.meals.find((m) => m.id === breakfast.id)!.loggedBy).toEqual({ name: 'Ba', at });
+    expect(day.meals.filter((m) => m.id !== breakfast.id).every((m) => m.loggedBy === null)).toBe(
+      true,
+    );
+  });
+
   it('lists first tries with their names (FR-024)', async () => {
     const t = planningTestbed();
     t.history.triedIds = new Set(['ing_gao', 'ing_dau_an']);

@@ -14,6 +14,7 @@ import { LoadError } from '../components/LoadError';
 import { ToggleChip } from '../components/ToggleChip';
 import { textureLabel } from '../features/child/format';
 import { useActiveChild } from '../features/child/guards';
+import { invalidateChildData } from '../features/child/invalidate';
 import { exclusionParts, proteinTag, reasonText, repeatNote } from '../features/meals/explain';
 import { isSnackSlot, slotLabel } from '../features/meals/format';
 import { errorCode, messageFor } from '../lib/errors';
@@ -143,7 +144,9 @@ export function SwapPage() {
   async function choose(dishId: string) {
     if (busy.current) return;
     busy.current = true;
-    const done = await swap.mutateAsync({ mealId, data: { dishId, reason } }).then(
+    // BR-77: the dish the parent was looking at; changed by another member meanwhile → refused.
+    const expectedDishId = query.data?.meal.dish.id;
+    const done = await swap.mutateAsync({ mealId, data: { dishId, reason, expectedDishId } }).then(
       () => true,
       () => false,
     );
@@ -153,9 +156,7 @@ export function SwapPage() {
       void query.refetch();
       return;
     }
-    void queryClient.invalidateQueries({
-      predicate: (q) => String(q.queryKey[0]).startsWith(`/api/v1/children/${child.id}/`),
-    });
+    void invalidateChildData(queryClient, child.id);
     void close();
   }
 

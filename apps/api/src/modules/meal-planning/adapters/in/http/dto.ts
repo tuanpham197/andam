@@ -1,15 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsBoolean,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { LIBRARY_CHIPS, type LibraryChip } from '../../../domain/library.js';
 import { SWAP_REASONS, type SwapReason } from '../../../domain/swap.js';
@@ -72,6 +76,13 @@ export class MealDishDto {
   @ApiProperty() cookMin: number;
   @ApiProperty({ enum: PROTEINS, nullable: true, type: String }) mainProtein: string | null;
   @ApiProperty({ enum: GROUPS, isArray: true }) foodGroups: string[];
+  @ApiProperty({ description: 'Món của bạn (F18)' }) custom: boolean;
+}
+
+class LoggedByDto {
+  @ApiProperty({ nullable: true, type: String, description: 'Null nếu tài khoản đã xóa' })
+  name: string | null;
+  @ApiProperty({ format: 'date-time' }) at: Date;
 }
 
 export class MealDto {
@@ -83,6 +94,8 @@ export class MealDto {
   @ApiProperty() portionText: string;
   @ApiProperty({ type: MealDishDto }) dish: MealDishDto;
   @ApiProperty({ type: [NamedIngredientDto] }) newIngredients: NamedIngredientDto[];
+  @ApiProperty({ type: LoggedByDto, nullable: true, description: 'Ai đã ghi nhận (FR-118)' })
+  loggedBy: LoggedByDto | null;
 }
 
 class SlotDto {
@@ -114,8 +127,9 @@ class RecipeVariantDto {
 class RecipeIngredientDto {
   @ApiProperty() ingredientId: string;
   @ApiProperty() name: string;
-  @ApiProperty() qty: number;
-  @ApiProperty() unit: string;
+  @ApiProperty({ nullable: true, type: Number, description: 'Trống với món của bạn không cân đo' })
+  qty: number | null;
+  @ApiProperty({ nullable: true, type: String }) unit: string | null;
   @ApiProperty() isMain: boolean;
   @ApiProperty({ enum: ['carb', 'protein', 'fat', 'veg', 'fruit', 'seasoning'] }) foodGroup: string;
   @ApiProperty({ enum: ALLERGENS, isArray: true }) allergenTags: string[];
@@ -133,6 +147,7 @@ export class RecipeDto {
   @ApiProperty() tool: string;
   @ApiProperty() contentVersion: number;
   @ApiProperty({ nullable: true, type: String }) reviewedBy: string | null;
+  @ApiProperty({ description: 'Món của bạn — chưa qua chuyên gia duyệt (BR-85)' }) custom: boolean;
   @ApiProperty({ type: [Number] }) stages: number[];
   @ApiProperty() selectedStage: number;
   @ApiProperty({ type: [RecipeVariantDto] }) variants: RecipeVariantDto[];
@@ -161,6 +176,15 @@ export class SwapDto {
   @ApiProperty({ enum: SWAP_REASONS })
   @IsIn(SWAP_REASONS)
   reason: SwapReason;
+
+  @ApiPropertyOptional({
+    description:
+      'Món bữa đang có khi phụ huynh mở gợi ý; khác món hiện tại → 409 MEAL_CHANGED (BR-77)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  expectedDishId?: string;
 }
 
 class ExclusionCountsDto {
@@ -267,4 +291,78 @@ export class LibraryDto {
   @ApiProperty({ type: [LibraryDishDto] }) dishes: LibraryDishDto[];
   @ApiProperty({ type: HiddenDishesDto, description: 'Món khớp bộ lọc nhưng không an toàn cho bé' })
   hidden: HiddenDishesDto;
+}
+
+// "Món của bạn" (UC-23). The exact limits (BR-81, BR-87) are the domain's; these only cap payloads.
+class CustomDishIngredientDto {
+  @ApiProperty({ example: 'ing_ga' })
+  @IsString()
+  @MaxLength(100)
+  id: string;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Number,
+    description: '> 0 và ≤ 9 999; trống nếu không cân',
+  })
+  @IsOptional()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  qty?: number | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String, maxLength: 12 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  unit?: string | null;
+}
+
+export class CustomDishInputDto {
+  @ApiProperty({ minLength: 2, maxLength: 60 })
+  @IsString()
+  @MaxLength(200)
+  name: string;
+
+  @ApiProperty({ enum: ['main', 'snack'] })
+  @IsIn(['main', 'snack'])
+  mealType: 'main' | 'snack';
+
+  @ApiProperty({ type: [CustomDishIngredientDto], description: '1–15 nguyên liệu trong danh mục' })
+  @IsArray()
+  @ArrayMaxSize(30)
+  @ValidateNested({ each: true })
+  @Type(() => CustomDishIngredientDto)
+  ingredients: CustomDishIngredientDto[];
+
+  @ApiProperty({ minimum: 0, maximum: 180 })
+  @IsInt()
+  prepMin: number;
+
+  @ApiProperty({ minimum: 0, maximum: 240 })
+  @IsInt()
+  cookMin: number;
+
+  @ApiProperty({ type: [String], description: 'Tối đa 15 bước, mỗi bước ≤ 300 ký tự' })
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({ each: true })
+  @MaxLength(1000, { each: true })
+  steps: string[];
+}
+
+class CustomDishFormIngredientDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: ['carb', 'protein', 'fat', 'veg', 'fruit', 'seasoning'] }) foodGroup: string;
+  @ApiProperty({ nullable: true, type: Number }) qty: number | null;
+  @ApiProperty({ nullable: true, type: String }) unit: string | null;
+}
+
+export class CustomDishFormDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: ['main', 'snack'] }) mealType: string;
+  @ApiProperty({ type: [CustomDishFormIngredientDto] }) ingredients: CustomDishFormIngredientDto[];
+  @ApiProperty() prepMin: number;
+  @ApiProperty() cookMin: number;
+  @ApiProperty({ type: [String] }) steps: string[];
 }

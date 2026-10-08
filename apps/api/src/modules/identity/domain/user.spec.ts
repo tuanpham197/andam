@@ -1,3 +1,4 @@
+import { InvalidDisplayNameError } from './errors.js';
 import { User } from './user.js';
 
 const now = new Date('2026-09-28T10:00:00Z');
@@ -46,10 +47,45 @@ describe('User', () => {
       email: 'bin@example.vn' as never,
       passwordHash: 'h',
       timezone: 'Asia/Bangkok',
+      displayName: 'Bin',
       createdAt: now,
       deletedAt: now,
     });
     expect(user.isActive).toBe(false);
     expect(user.timezone).toBe('Asia/Bangkok');
+  });
+
+  describe('rename (FR-119, TC-FAM-025)', () => {
+    const fresh = () =>
+      User.register({ id: 'u-3', email: 'na@example.vn' as never, passwordHash: 'h', now });
+
+    it('starts without a display name, then keeps a trimmed NFC name with single spaces', () => {
+      const user = fresh();
+      expect(user.displayName).toBeNull();
+      user.rename('  Bà   nội  ');
+      expect(user.displayName).toBe('Bà nội');
+    });
+
+    it('clears the name when empty, blank or null', () => {
+      const user = fresh();
+      for (const blank of ['', '   ', null]) {
+        user.rename('Mẹ');
+        user.rename(blank);
+        expect(user.displayName).toBeNull();
+      }
+    });
+
+    it('accepts 30 characters (emoji count as one) and refuses 31', () => {
+      const user = fresh();
+      user.rename('👨‍👩‍👧'.repeat(30));
+      expect(user.displayName).toBe('👨‍👩‍👧'.repeat(30));
+      expect(() => user.rename('x'.repeat(31))).toThrow(InvalidDisplayNameError);
+    });
+
+    it('keeps markup as plain text', () => {
+      const user = fresh();
+      user.rename('<script>x</script>');
+      expect(user.displayName).toBe('<script>x</script>');
+    });
   });
 });

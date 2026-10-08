@@ -1,3 +1,4 @@
+import type { StageDefault } from '../../../domain/custom-dish.js';
 import type { StageSchedule } from '../../../domain/menu-engine.js';
 import type {
   Allergen,
@@ -21,8 +22,9 @@ export interface Recipe {
   lines: {
     ingredientId: string;
     name: string;
-    qty: number;
-    unit: string;
+    /** Null for a "Món của bạn" line the parent did not weigh (BR-81). */
+    qty: number | null;
+    unit: string | null;
     isMain: boolean;
     foodGroup: FoodGroup;
     allergenTags: Allergen[];
@@ -35,5 +37,7 @@ export interface PlanningCatalog {
   dishes(): Promise<PlanDish[]>;
   ingredients(): Promise<PlanIngredient[]>;
   schedule(stage: StageId): Promise<StageSchedule>;
+  /** Texture and main-meal portion of each stage, for parents' dishes (BR-83). */
+  stageDefaults(): Promise<StageDefault[]>;
   recipe(dishId: string): Promise<Recipe | null>;
 }

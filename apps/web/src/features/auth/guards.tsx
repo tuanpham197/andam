@@ -29,6 +29,11 @@ export function safeNext(value: string | null): string {
   return value && value.startsWith('/') && !value.startsWith('//') ? value : '/';
 }
 
+/** Keeps where to go after signing in when switching between the login and register pages. */
+export function withNext(path: string, next: string | null): string {
+  return next ? `${path}?next=${encodeURIComponent(safeNext(next))}` : path;
+}
+
 export function GuestOnly() {
   const { status } = useSession();
   const [params] = useSearchParams();

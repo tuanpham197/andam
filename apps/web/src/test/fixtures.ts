@@ -1,6 +1,14 @@
 import type {
   ChildDto,
+  CustomDishFormDto,
   DayPlanDto,
+  JournalEntryDto,
+  JournalPageDto,
+  LogFormDto,
+  MembersDto,
+  LoggedMealDto,
+  PausedIngredientDto,
+  UrgentEventDto,
   LibraryDishDto,
   LibraryDto,
   MealDto,
@@ -24,6 +32,7 @@ export function childFixture(overrides: Partial<ChildDto> = {}): ChildDto {
     avoidAllergens: ['egg'],
     avoidIngredients: [{ ingredientId: 'ing_muop_dang', name: 'Mướp đắng', reason: 'dislike' }],
     stageOverride: null,
+    role: 'owner',
     age: { months: 8, days: 12, corrected: false },
     autoStage: 2,
     effectiveStage: 2,
@@ -97,6 +106,7 @@ export function mealFixture(overrides: Partial<MealDto> = {}): MealDto {
     status: 'planned',
     texture: 'lumpy',
     portionText: '120–150 ml tham khảo',
+    loggedBy: null,
     dish: {
       id: 'dish_chao_ca_hoi_rau_ngot',
       name: 'Cháo cá hồi rau ngót',
@@ -104,6 +114,7 @@ export function mealFixture(overrides: Partial<MealDto> = {}): MealDto {
       cookMin: 15,
       mainProtein: 'fish',
       foodGroups: ['carb', 'protein', 'fat', 'veg'],
+      custom: false,
     },
     newIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
     ...overrides,
@@ -128,6 +139,7 @@ export function dayFixture(overrides: Partial<DayPlanDto> = {}): DayPlanDto {
           cookMin: 10,
           mainProtein: null,
           foodGroups: ['carb', 'veg'],
+          custom: false,
         },
         newIngredients: [],
       }),
@@ -143,6 +155,7 @@ export function dayFixture(overrides: Partial<DayPlanDto> = {}): DayPlanDto {
           cookMin: 7,
           mainProtein: null,
           foodGroups: ['veg'],
+          custom: false,
         },
         newIngredients: [],
       }),
@@ -157,6 +170,7 @@ export function dayFixture(overrides: Partial<DayPlanDto> = {}): DayPlanDto {
           cookMin: 20,
           mainProtein: 'chicken',
           foodGroups: ['carb', 'protein', 'fat', 'veg'],
+          custom: false,
         },
         newIngredients: [],
       }),
@@ -207,6 +221,7 @@ export function recipeFixture(overrides: Partial<RecipeDto> = {}): RecipeDto {
     ],
     allergens: ['fish'],
     foodGroups: ['carb', 'protein', 'fat', 'veg'],
+    custom: false,
     exclusion: null,
     ...overrides,
   };
@@ -252,6 +267,7 @@ export function swapFixture(overrides: Partial<SwapSuggestionsDto> = {}): SwapSu
           cookMin: 15,
           mainProtein: 'beef',
           foodGroups: ['carb', 'protein', 'fat', 'veg'],
+          custom: false,
         },
         texture: 'lumpy',
         portionText: '120–150 ml',
@@ -268,6 +284,7 @@ export function swapFixture(overrides: Partial<SwapSuggestionsDto> = {}): SwapSu
           cookMin: 10,
           mainProtein: 'legume',
           foodGroups: ['carb', 'protein', 'veg'],
+          custom: false,
         },
         texture: 'mashed',
         portionText: '120–150 ml',
@@ -284,6 +301,7 @@ export function swapFixture(overrides: Partial<SwapSuggestionsDto> = {}): SwapSu
           cookMin: 15,
           mainProtein: 'fish',
           foodGroups: ['carb', 'protein', 'fat', 'veg'],
+          custom: false,
         },
         texture: 'lumpy',
         portionText: '120–150 ml',
@@ -311,6 +329,7 @@ export function libraryDish(overrides: Partial<LibraryDishDto> = {}): LibraryDis
     cookMin: 15,
     mainProtein: 'fish',
     foodGroups: ['carb', 'protein', 'fat', 'veg'],
+    custom: false,
     mealType: 'main',
     texture: 'lumpy',
     newIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
@@ -342,6 +361,7 @@ export function libraryFixture(overrides: Partial<LibraryDto> = {}): LibraryDto 
         cookMin: 5,
         mainProtein: null,
         foodGroups: ['carb', 'veg'],
+        custom: false,
         mealType: 'snack',
         texture: 'mashed',
         newIngredients: [],
@@ -359,6 +379,139 @@ export function libraryFixture(overrides: Partial<LibraryDto> = {}): LibraryDto 
         { dishId: 'dish_mi_ga', name: 'Mì gà cắt nhỏ', reason: 'age' },
       ],
     },
+    ...overrides,
+  };
+}
+
+/** S07 for today's lunch: salmon porridge, with rau ngót tried for the first time. */
+export function logFormFixture(overrides: Partial<LogFormDto> = {}): LogFormDto {
+  return {
+    meal: {
+      id: LUNCH_ID,
+      date: '2026-09-24',
+      slot: 'lunch',
+      time: '11:00',
+      status: 'planned',
+      dish: { id: 'dish_chao_ca_hoi_rau_ngot', name: 'Cháo cá hồi rau ngót', custom: false },
+    },
+    firstTryIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
+    suspectIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
+    log: null,
+    ...overrides,
+  };
+}
+
+export function loggedFixture(overrides: Partial<LoggedMealDto> = {}): LoggedMealDto {
+  return {
+    log: {
+      id: '30000000-0000-4000-8000-000000000001',
+      mealId: LUNCH_ID,
+      loggedAt: '2026-09-24T04:40:00.000Z',
+      loggedBy: 'Mẹ Na',
+      amount: 'half',
+      liking: 3,
+      outcome: 'eaten',
+      reaction: null,
+    },
+    pausedIngredients: [],
+    ...overrides,
+  };
+}
+
+export const URGENT_ID = '40000000-0000-4000-8000-000000000001';
+
+export function urgentFixture(overrides: Partial<UrgentEventDto> = {}): UrgentEventDto {
+  return {
+    id: URGENT_ID,
+    mealId: LUNCH_ID,
+    openedAt: '2026-09-24T04:45:00.000Z',
+    contactedMedicalAt: null,
+    pausedIngredients: [
+      { id: 'ing_ca_hoi', name: 'Cá hồi' },
+      { id: 'ing_rau_ngot', name: 'Rau ngót' },
+    ],
+    ...overrides,
+  };
+}
+
+export function pausedFixture(overrides: Partial<PausedIngredientDto> = {}): PausedIngredientDto {
+  return {
+    id: '50000000-0000-4000-8000-000000000001',
+    ingredientId: 'ing_rau_ngot',
+    name: 'Rau ngót',
+    reason: 'reaction',
+    pausedAt: '2026-09-24T04:45:00.000Z',
+    meal: { date: '2026-09-24', slot: 'lunch', dishName: 'Cháo cá hồi rau ngót' },
+    ...overrides,
+  };
+}
+
+export function journalEntry(overrides: Partial<JournalEntryDto> = {}): JournalEntryDto {
+  return {
+    kind: 'meal',
+    id: '30000000-0000-4000-8000-000000000001',
+    at: '2026-09-24T04:40:00.000Z',
+    date: '2026-09-24',
+    slot: 'lunch',
+    dish: { id: 'dish_chao_ca_hoi_rau_ngot', name: 'Cháo cá hồi rau ngót', custom: false },
+    amount: 'half',
+    liking: 3,
+    reaction: null,
+    contactedMedicalAt: null,
+    pausedIngredients: [],
+    actorName: 'Mẹ Na',
+    ...overrides,
+  };
+}
+
+export function journalFixture(overrides: Partial<JournalPageDto> = {}): JournalPageDto {
+  return { entries: [journalEntry()], nextCursor: null, ...overrides };
+}
+
+export const CUSTOM_ID = 'custom_60000000-0000-4000-8000-000000000001';
+
+export function customDishFormFixture(
+  overrides: Partial<CustomDishFormDto> = {},
+): CustomDishFormDto {
+  return {
+    id: CUSTOM_ID,
+    name: 'Cháo gà bí đỏ nhà làm',
+    mealType: 'main',
+    ingredients: [
+      { id: 'ing_gao_te', name: 'Gạo tẻ', foodGroup: 'carb', qty: null, unit: null },
+      { id: 'ing_thit_ga', name: 'Thịt gà', foodGroup: 'protein', qty: 30, unit: 'g' },
+    ],
+    prepMin: 10,
+    cookMin: 20,
+    steps: ['Vo gạo', 'Nấu cháo'],
+    ...overrides,
+  };
+}
+
+export const MOM_ID = '00000000-0000-4000-8000-000000000001';
+export const DAD_ID = '00000000-0000-4000-8000-000000000002';
+
+export function membersFixture(overrides: Partial<MembersDto> = {}): MembersDto {
+  return {
+    members: [
+      {
+        userId: MOM_ID,
+        displayName: 'Mẹ Na',
+        email: 'me.na@example.vn',
+        role: 'owner',
+        joinedAt: '2026-09-01T02:00:00.000Z',
+        isMe: true,
+      },
+      {
+        userId: DAD_ID,
+        displayName: 'Ba',
+        email: 'ba.na@example.vn',
+        role: 'caregiver',
+        joinedAt: '2026-09-20T02:00:00.000Z',
+        isMe: false,
+      },
+    ],
+    pendingInvites: [],
     ...overrides,
   };
 }

@@ -202,7 +202,7 @@ describe('POST /meals/:id/swap (FR-045)', () => {
     expect(res.body.code).toBe('MEAL_IN_PAST');
   });
 
-  it('TC-SWP-011 two swaps at once: both recorded, the meal ends on one of them', async () => {
+  it('TC-SWP-011 / TC-FAM-021 two swaps at once: one wins, the other is told the meal changed', async () => {
     const meal = await lunch();
     const targets = ['dish_chao_bo_bi_do', 'dish_chao_heo_ca_rot', 'dish_chao_ga_khoai_tay']
       .filter((id) => id !== meal.dish.id)
@@ -217,9 +217,12 @@ describe('POST /meals/:id/swap (FR-045)', () => {
             .send({ dishId, reason: 'other' }),
         ),
     );
-    expect([a!.status, b!.status]).toEqual([200, 200]);
-    expect(await prisma.swapEvent.count({ where: { mealId: meal.id } })).toBe(2);
-    expect(targets).toContain((await lunch()).dish.id);
+    expect([a!.status, b!.status].sort()).toEqual([200, 409]);
+    const loser = [a!, b!].find((r) => r.status === 409)!;
+    expect(loser.body.code).toBe('MEAL_CHANGED');
+    expect(await prisma.swapEvent.count({ where: { mealId: meal.id } })).toBe(1);
+    const winner = [a!, b!].find((r) => r.status === 200)!;
+    expect((await lunch()).dish.id).toBe(winner.body.dish.id);
   });
 });
 

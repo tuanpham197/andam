@@ -3,14 +3,17 @@ import { JwtModule } from '@nestjs/jwt';
 import { AUTHENTICATOR } from '../../shared/auth/authenticator.port.js';
 import { ENV } from '../../shared/infrastructure/config/config.module.js';
 import type { Env } from '../../shared/infrastructure/config/env.js';
+import { ChildProfileModule } from '../child-profile/child-profile.module.js';
 import { AuthController } from './adapters/in/http/auth.controller.js';
 import { MeController } from './adapters/in/http/me.controller.js';
+import { AccountChildrenAdapter } from './adapters/out/cross-module/account-children.adapter.js';
 import { createMailer } from './adapters/out/mail/nodemailer-mailer.js';
 import { PrismaIdentityModule } from './adapters/out/persistence/prisma-identity.module.js';
 import { Argon2PasswordHasher } from './adapters/out/security/argon2-password-hasher.js';
 import { JwtAccessTokens } from './adapters/out/security/jwt-access-tokens.js';
 import { NodeSecureTokens } from './adapters/out/security/node-secure-tokens.js';
 import { ACCESS_TOKENS } from './application/ports/out/access-tokens.port.js';
+import { ACCOUNT_CHILDREN } from './application/ports/out/account-children.port.js';
 import { IDENTITY_SETTINGS } from './application/ports/out/identity-settings.port.js';
 import { MAILER } from './application/ports/out/mailer.port.js';
 import { PASSWORD_HASHER } from './application/ports/out/password-hasher.port.js';
@@ -29,6 +32,7 @@ import { SessionStarter } from './application/use-cases/session-starter.service.
 @Module({
   imports: [
     PrismaIdentityModule,
+    ChildProfileModule,
     JwtModule.registerAsync({
       inject: [ENV],
       useFactory: (env: Env) => ({ secret: env.JWT_SECRET }),
@@ -49,6 +53,7 @@ import { SessionStarter } from './application/use-cases/session-starter.service.
     { provide: PASSWORD_HASHER, useClass: Argon2PasswordHasher },
     { provide: ACCESS_TOKENS, useClass: JwtAccessTokens },
     { provide: SECURE_TOKENS, useClass: NodeSecureTokens },
+    { provide: ACCOUNT_CHILDREN, useClass: AccountChildrenAdapter },
     {
       provide: MAILER,
       inject: [ENV],

@@ -195,6 +195,13 @@ enum ContentStatus {
   @@map("content_status")
 }
 
+enum MemberRole {
+  owner
+  caregiver
+
+  @@map("member_role")
+}
+
 // ───────────── Identity ─────────────
 
 model User {
@@ -202,6 +209,8 @@ model User {
   // Unique on lower(email) — see migration SQL (TC-AUTH-002).
   email        String
   passwordHash String    @map("password_hash")
+  // What other members of a child see (BR-78, FR-119); falls back to the e-mail name.
+  displayName  String?   @map("display_name") @db.VarChar(30)
   timezone     String    @default("Asia/Ho_Chi_Minh")
   createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
   deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
@@ -210,6 +219,17 @@ model User {
   passwordResetTokens PasswordResetToken[]
   consents            Consent[]
   children            Child[]
+  // Who did what on a child's record (BR-78); the record stays when the account goes.
+  mealLogs            MealLog[]            @relation("MealLogActor")
+  urgentEvents        UrgentEvent[]        @relation("UrgentEventActor")
+  resumedPauses       PausedIngredient[]   @relation("PauseResumedBy")
+  createdDishes       Dish[]               @relation("DishCreator")
+  memberships         ChildMember[]        @relation("Member")
+  invitesSent         ChildInvite[]        @relation("InviteCreator")
+  invitesAccepted     ChildInvite[]        @relation("InviteAcceptor")
+  invitedMembers      ChildMember[]        @relation("MemberInviter")
+  swaps               SwapEvent[]          @relation("SwapActor")
+  healthUpdates       HealthEpisode[]      @relation("HealthActor")
 
   @@map("users")
 }
@@ -300,10 +320,10 @@ model Ingredient {
   minAgeMonths  Int            @map("min_age_months") @db.SmallInt
   chokingRisk   Boolean        @default(false) @map("choking_risk")
 
-  dishes      DishIngredient[]
-  avoidedBy   ChildAvoidIngredient[]
-  exposures   IngredientExposure[]
-  pausedFor   PausedIngredient[]
+  dishes    DishIngredient[]
+  avoidedBy ChildAvoidIngredient[]
+  exposures IngredientExposure[]
+  pausedFor PausedIngredient[]
 
   @@map("ingredients")
 }
@@ -325,20 +345,31 @@ model Dish {
   reviewedAt     DateTime?      @map("reviewed_at") @db.Timestamptz
   status         ContentStatus
   searchText     String         @map("search_text")
+  // "Món của bạn" (F18): a parent's own dish for one child; null for catalog dishes.
+  ownerChildId   String?        @map("owner_child_id") @db.Uuid
+  createdBy      String?        @map("created_by") @db.Uuid
+  // Deleting keeps the row so past meals and the journal still name the dish (BR-86).
+  archivedAt     DateTime?      @map("archived_at") @db.Timestamptz
 
   ingredients  DishIngredient[]
   variants     DishStageVariant[]
   plannedMeals PlannedMeal[]
+  ownerChild   Child?             @relation(fields: [ownerChildId], references: [id], onDelete: Cascade)
+  creator      User?              @relation("DishCreator", fields: [createdBy], references: [id], onDelete: SetNull)
 
+  @@index([ownerChildId])
   @@map("dishes")
 }
 
 model DishIngredient {
-  dishId       String  @map("dish_id")
-  ingredientId String  @map("ingredient_id")
-  qty          Decimal @db.Decimal(6, 1)
-  unit         String
-  isMain       Boolean @default(false) @map("is_main")
+  dishId       String   @map("dish_id")
+  ingredientId String   @map("ingredient_id")
+  // Optional for "Món của bạn": parents may not weigh (BR-81).
+  qty          Decimal? @db.Decimal(6, 1)
+  unit         String?
+  isMain       Boolean  @default(false) @map("is_main")
+  // Order the parent listed the foods in (catalog dishes keep 0).
+  position     Int      @default(0) @db.SmallInt
 
   dish       Dish       @relation(fields: [dishId], references: [id], onDelete: Cascade)
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
@@ -376,15 +407,18 @@ model Child {
   createdAt         DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
-  user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  avoidAllergens     ChildAvoidAllergen[]
-  avoidIngredients   ChildAvoidIngredient[]
-  healthEpisodes     HealthEpisode[]
-  plannedMeals       PlannedMeal[]
-  mealLogs           MealLog[]
-  exposures          IngredientExposure[]
-  pausedIngredients  PausedIngredient[]
-  urgentEvents       UrgentEvent[]
+  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  avoidAllergens    ChildAvoidAllergen[]
+  avoidIngredients  ChildAvoidIngredient[]
+  healthEpisodes    HealthEpisode[]
+  plannedMeals      PlannedMeal[]
+  mealLogs          MealLog[]
+  exposures         IngredientExposure[]
+  pausedIngredients PausedIngredient[]
+  urgentEvents      UrgentEvent[]
+  customDishes      Dish[]
+  members           ChildMember[]
+  invites           ChildInvite[]
 
   @@index([userId])
   @@map("children")
@@ -412,6 +446,44 @@ model ChildAvoidIngredient {
   @@map("child_avoid_ingredients")
 }
 
+// P5b: who may see and change a child (BR-70..79). Exactly one owner per child: partial unique
+// index in the migration. `children.user_id` mirrors the current owner.
+model ChildMember {
+  childId   String     @map("child_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  role      MemberRole
+  invitedBy String?    @map("invited_by") @db.Uuid
+  joinedAt  DateTime   @map("joined_at") @db.Timestamptz
+
+  child   Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  user    User  @relation("Member", fields: [userId], references: [id], onDelete: Cascade)
+  inviter User? @relation("MemberInviter", fields: [invitedBy], references: [id], onDelete: SetNull)
+
+  @@id([childId, userId])
+  @@index([userId])
+  @@map("child_members")
+}
+
+// A link to join a child as a caregiver: single use, 72 hours, only the SHA-256 of the token is kept.
+model ChildInvite {
+  id         String    @id @db.Uuid
+  childId    String    @map("child_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  createdBy  String    @map("created_by") @db.Uuid
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz
+  acceptedBy String?   @map("accepted_by") @db.Uuid
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz
+  createdAt  DateTime  @map("created_at") @db.Timestamptz
+
+  child    Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  creator  User  @relation("InviteCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  acceptor User? @relation("InviteAcceptor", fields: [acceptedBy], references: [id], onDelete: SetNull)
+
+  @@index([childId])
+  @@map("child_invites")
+}
+
 model HealthEpisode {
   id              String          @id @db.Uuid
   childId         String          @map("child_id") @db.Uuid
@@ -421,8 +493,10 @@ model HealthEpisode {
   expectedEndDate DateTime?       @map("expected_end_date") @db.Date
   endedAt         DateTime?       @map("ended_at") @db.Timestamptz
   createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  actorId         String?         @map("actor_id") @db.Uuid
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  actor User? @relation("HealthActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([childId, startDate(sort: Desc)])
   @@map("health_episodes")
@@ -446,10 +520,10 @@ model PlannedMeal {
   generatedAt      DateTime   @map("generated_at") @db.Timestamptz
   updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 
-  child      Child       @relation(fields: [childId], references: [id], onDelete: Cascade)
-  dish       Dish        @relation(fields: [dishId], references: [id])
-  log        MealLog?
-  swapEvents SwapEvent[]
+  child        Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  dish         Dish          @relation(fields: [dishId], references: [id])
+  log          MealLog?
+  swapEvents   SwapEvent[]
   urgentEvents UrgentEvent[]
 
   @@unique([childId, date, slot])
@@ -464,8 +538,10 @@ model SwapEvent {
   toDishId   String     @map("to_dish_id")
   reason     SwapReason
   createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  actorId    String?    @map("actor_id") @db.Uuid
 
-  meal PlannedMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  meal  PlannedMeal @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  actor User?       @relation("SwapActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([mealId])
   @@map("swap_events")
@@ -479,9 +555,11 @@ model MealLog {
   loggedAt DateTime  @map("logged_at") @db.Timestamptz
   amount   EatAmount
   liking   Int       @db.SmallInt
+  actorId  String?   @map("actor_id") @db.Uuid
 
-  meal     PlannedMeal       @relation(fields: [mealId], references: [id], onDelete: Cascade)
-  child    Child             @relation(fields: [childId], references: [id], onDelete: Cascade)
+  meal     PlannedMeal        @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  actor    User?              @relation("MealLogActor", fields: [actorId], references: [id], onDelete: SetNull)
+  child    Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
   reaction Reaction?
   paused   PausedIngredient[]
 
@@ -524,11 +602,13 @@ model PausedIngredient {
   sourceUrgentId String?     @map("source_urgent_id") @db.Uuid
   pausedAt       DateTime    @map("paused_at") @db.Timestamptz
   resumedAt      DateTime?   @map("resumed_at") @db.Timestamptz
+  resumedBy      String?     @map("resumed_by") @db.Uuid
 
-  child      Child        @relation(fields: [childId], references: [id], onDelete: Cascade)
-  ingredient Ingredient   @relation(fields: [ingredientId], references: [id])
-  sourceLog  MealLog?     @relation(fields: [sourceLogId], references: [id], onDelete: SetNull)
+  child        Child        @relation(fields: [childId], references: [id], onDelete: Cascade)
+  ingredient   Ingredient   @relation(fields: [ingredientId], references: [id])
+  sourceLog    MealLog?     @relation(fields: [sourceLogId], references: [id], onDelete: SetNull)
   sourceUrgent UrgentEvent? @relation(fields: [sourceUrgentId], references: [id], onDelete: SetNull)
+  resumer      User?        @relation("PauseResumedBy", fields: [resumedBy], references: [id], onDelete: SetNull)
 
   @@index([childId])
   @@map("paused_ingredients")
@@ -540,9 +620,11 @@ model UrgentEvent {
   mealId             String?   @map("meal_id") @db.Uuid
   openedAt           DateTime  @map("opened_at") @db.Timestamptz
   contactedMedicalAt DateTime? @map("contacted_medical_at") @db.Timestamptz
+  actorId            String?   @map("actor_id") @db.Uuid
 
   child  Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
   meal   PlannedMeal?       @relation(fields: [mealId], references: [id], onDelete: SetNull)
+  actor  User?              @relation("UrgentEventActor", fields: [actorId], references: [id], onDelete: SetNull)
   paused PausedIngredient[]
 
   @@index([childId])

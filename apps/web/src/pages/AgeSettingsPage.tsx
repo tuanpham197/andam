@@ -225,9 +225,13 @@ export function AgeSettingsPage() {
       )}
 
       {update.error && <AlertBox tone="danger">{messageFor(update.error)}</AlertBox>}
-      <Button fullWidth loading={update.isPending} disabled={preview.isError} onClick={save}>
-        {t.save}
-      </Button>
+      {child.role === 'owner' ? (
+        <Button fullWidth loading={update.isPending} disabled={preview.isError} onClick={save}>
+          {t.save}
+        </Button>
+      ) : (
+        <AlertBox tone="info">{vi.profile.readOnly}</AlertBox>
+      )}
       <Disclaimer>{t.who}</Disclaimer>
     </>
   );

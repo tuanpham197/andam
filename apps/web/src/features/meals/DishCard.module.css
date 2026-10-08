@@ -79,3 +79,8 @@
   background: #eae2d5;
   color: var(--text-2);
 }
+
+.custom {
+  background: var(--warn-bg);
+  color: var(--warn-text);
+}

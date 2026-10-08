@@ -32,6 +32,9 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<INest
     });
     configureApp(app);
     await app.init();
+    // Listen once: supertest otherwise opens and closes an ephemeral port per request, and under
+    // heavy parallel load a request occasionally reached a port just reused by another server.
+    await app.listen(0, '127.0.0.1');
     return app;
   } finally {
     for (const [key, value] of Object.entries(previous)) {

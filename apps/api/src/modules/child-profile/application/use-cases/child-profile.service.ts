@@ -18,6 +18,8 @@ import {
 import { ChildNotFoundError, UnknownIngredientError } from '../../domain/errors.js';
 import { CHILD_REPOSITORY, type ChildRepository } from '../ports/out/child.repository.js';
 import { INGREDIENT_LOOKUP, type IngredientLookup } from '../ports/out/ingredient-lookup.port.js';
+import type { MemberRole } from '../../domain/membership.js';
+import { ChildAccessService } from './child-access.service.js';
 
 export type NewChild = Omit<CreateChildInput, 'id' | 'userId'>;
 
@@ -52,6 +54,8 @@ export interface ChildView extends ChildProfile {
   avoidAllergens: Allergen[];
   avoidIngredients: (AvoidIngredient & { name: string | null })[];
   stageOverride: number | null;
+  /** The signed-in user's role for this child (BR-73). */
+  role: MemberRole;
 }
 
 /** Child profile use cases (UC-01..03, NFR-019). Every call is scoped to the signed-in user. */
@@ -63,6 +67,7 @@ export class ChildProfileService {
     @Inject(ID_GENERATOR) private readonly ids: IdGenerator,
     @Inject(CLOCK) private readonly clock: Clock,
     @Inject(EVENT_BUS) private readonly events: EventBus,
+    @Inject(ChildAccessService) private readonly access: ChildAccessService,
   ) {}
 
   /** Lets the planning module refresh future meals (BR-31). */
@@ -87,7 +92,7 @@ export class ChildProfileService {
     if (unknown.length > 0) throw new UnknownIngredientError(unknown);
   }
 
-  private async view(child: Child, today = this.today()): Promise<ChildView> {
+  private async view(child: Child, role: MemberRole, today = this.today()): Promise<ChildView> {
     const names = new Map(
       (await this.ingredients.findByIds(child.avoidIngredients.map((i) => i.ingredientId))).map(
         (i) => [i.id, i.name],
@@ -108,6 +113,7 @@ export class ChildProfileService {
         name: names.get(i.ingredientId) ?? null,
       })),
       stageOverride: child.stageOverride,
+      role,
       ...child.profile(today),
     };
   }
@@ -140,25 +146,31 @@ export class ChildProfileService {
     const child = Child.create({ ...input, id: this.ids.next(), userId }, today, now);
     await this.assertIngredientsExist(child.avoidIngredients);
     await this.children.create(child);
-    return this.view(child, today);
+    return this.view(child, 'owner', today);
   }
 
   async list(userId: string): Promise<ChildView[]> {
     const today = this.today();
-    return Promise.all((await this.children.listOwned(userId)).map((c) => this.view(c, today)));
+    const [children, roles] = await Promise.all([
+      this.children.listOwned(userId),
+      this.access.rolesOf(userId),
+    ]);
+    return Promise.all(children.map((c) => this.view(c, roles.get(c.id)!, today)));
   }
 
   async get(userId: string, childId: string): Promise<ChildView> {
-    return this.view(await this.owned(userId, childId));
+    const role = await this.access.require(userId, childId, 'view');
+    return this.view(await this.owned(userId, childId), role);
   }
 
   async update(userId: string, childId: string, changes: ChildChanges): Promise<ChildView> {
+    await this.access.require(userId, childId, 'edit_profile');
     const child = await this.owned(userId, childId);
     const today = this.today();
     this.applyChanges(child, changes, today);
     await this.children.save(child);
     await this.profileChanged(userId, childId);
-    return this.view(child, today);
+    return this.view(child, 'owner', today);
   }
 
   async replaceAvoidList(
@@ -166,12 +178,13 @@ export class ChildProfileService {
     childId: string,
     lists: { allergens: Allergen[]; ingredients: AvoidIngredient[] },
   ): Promise<ChildView> {
+    await this.access.require(userId, childId, 'edit_profile');
     const child = await this.owned(userId, childId);
     child.replaceAvoidList(lists.allergens, lists.ingredients);
     await this.assertIngredientsExist(child.avoidIngredients);
     await this.children.save(child);
     await this.profileChanged(userId, childId);
-    return this.view(child);
+    return this.view(child, 'owner');
   }
 
   /** Applies birth/stage changes to a copy and returns the resulting profile; nothing is saved. */
@@ -190,6 +203,7 @@ export class ChildProfileService {
   }
 
   async remove(userId: string, childId: string): Promise<void> {
+    await this.access.require(userId, childId, 'delete_child');
     if (!(await this.children.deleteOwned(childId, userId))) throw new ChildNotFoundError();
   }
 }

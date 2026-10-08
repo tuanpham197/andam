@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Inject,
@@ -8,16 +9,27 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { AuthenticatedUser } from '../../../../../shared/auth/authenticator.port.js';
 import { CurrentUser } from '../../../../../shared/auth/current-user.decorator.js';
+import { CustomDishService } from '../../../application/use-cases/custom-dish.service.js';
 import { DayPlanService } from '../../../application/use-cases/day-plan.service.js';
 import { LibraryService } from '../../../application/use-cases/library.service.js';
 import { RecipeService } from '../../../application/use-cases/recipe.service.js';
 import { SwapService } from '../../../application/use-cases/swap.service.js';
 import {
+  CustomDishFormDto,
+  CustomDishInputDto,
   DayPlanDto,
   LibraryDto,
   LibraryQueryDto,
@@ -42,6 +54,7 @@ export class MealPlanningController {
     @Inject(RecipeService) private readonly recipes: RecipeService,
     @Inject(SwapService) private readonly swaps: SwapService,
     @Inject(LibraryService) private readonly library: LibraryService,
+    @Inject(CustomDishService) private readonly customDishes: CustomDishService,
   ) {}
 
   @Get('children/:childId/days/:date')
@@ -116,5 +129,51 @@ export class MealPlanningController {
     @Query() query: RecipeQueryDto,
   ): Promise<RecipeDto> {
     return this.recipes.get(user.userId, childId, dishId, query.stage);
+  }
+
+  @Post('children/:childId/custom-dishes')
+  @ApiOperation({ operationId: 'createCustomDish', summary: 'Tạo món của bạn (UC-23)' })
+  @ApiCreatedResponse({ type: RecipeDto })
+  createCustomDish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Body() dto: CustomDishInputDto,
+  ): Promise<RecipeDto> {
+    return this.customDishes.create(user.userId, childId, dto);
+  }
+
+  @Get('children/:childId/custom-dishes/:dishId')
+  @ApiOperation({ operationId: 'getCustomDish', summary: 'Món của bạn, để sửa (FR-135)' })
+  @ApiOkResponse({ type: CustomDishFormDto })
+  customDish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('dishId') dishId: string,
+  ): Promise<CustomDishFormDto> {
+    return this.customDishes.form(user.userId, childId, dishId);
+  }
+
+  @Put('children/:childId/custom-dishes/:dishId')
+  @ApiOperation({ operationId: 'updateCustomDish', summary: 'Sửa món của bạn (FR-135)' })
+  @ApiOkResponse({ type: RecipeDto })
+  updateCustomDish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('dishId') dishId: string,
+    @Body() dto: CustomDishInputDto,
+  ): Promise<RecipeDto> {
+    return this.customDishes.update(user.userId, childId, dishId, dto);
+  }
+
+  @Delete('children/:childId/custom-dishes/:dishId')
+  @HttpCode(204)
+  @ApiOperation({ operationId: 'deleteCustomDish', summary: 'Xóa món của bạn (FR-136)' })
+  @ApiNoContentResponse()
+  deleteCustomDish(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('dishId') dishId: string,
+  ): Promise<void> {
+    return this.customDishes.archive(user.userId, childId, dishId);
   }
 }

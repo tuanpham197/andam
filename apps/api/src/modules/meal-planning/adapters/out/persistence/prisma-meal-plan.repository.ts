@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import { Prisma } from '../../../../../generated/prisma/client.js';
+import { childrenOf } from '../../../../../shared/infrastructure/persistence/child-access.js';
 import type { PrismaTransactionHost } from '../../../../../shared/infrastructure/persistence/transaction-host.js';
 import type { LocalDate } from '../../../../../shared/kernel/local-date.js';
 import type { MealPlanRepository } from '../../../application/ports/out/meal-plan.repository.js';
@@ -72,7 +73,7 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
 
   async findOwned(mealId: string, userId: string): Promise<PlannedMeal | null> {
     const row = await this.txHost.tx.plannedMeal.findFirst({
-      where: { id: mealId, child: { userId } },
+      where: { id: mealId, child: childrenOf(userId) },
     });
     return row ? toDomain(row) : null;
   }
@@ -94,6 +95,21 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
   async remove(mealIds: string[]): Promise<void> {
     if (mealIds.length === 0) return;
     await this.txHost.tx.plannedMeal.deleteMany({ where: { id: { in: mealIds } } });
+  }
+
+  async saveSwap(meal: PlannedMeal, fromDishId: string): Promise<boolean> {
+    const { count } = await this.txHost.tx.plannedMeal.updateMany({
+      where: { id: meal.id, dishId: fromDishId, status: { in: ['planned', 'prepared'] } },
+      data: {
+        dishId: meal.dishId,
+        texture: meal.texture,
+        portionText: meal.portionText,
+        newIngredientIds: meal.newIngredientIds,
+        source: meal.source,
+        status: meal.status,
+      },
+    });
+    return count === 1;
   }
 
   async recordSwap(event: SwapEvent): Promise<void> {

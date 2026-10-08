@@ -6,6 +6,8 @@ export type DomainErrorKind =
   | 'invalid_input'
   | 'not_found'
   | 'conflict'
+  | 'forbidden'
+  | 'gone'
   | 'rule_violation'
   | 'unauthenticated'
   | 'too_many_requests';
@@ -14,6 +16,11 @@ export abstract class DomainError extends Error {
   /** Stable, machine-readable identifier exposed to clients (e.g. `CHILD_TOO_YOUNG`). */
   abstract readonly code: string;
   abstract readonly kind: DomainErrorKind;
+
+  /** Extra, client-safe facts (e.g. which food is unsafe), sent as Problem Details extensions. */
+  get details(): Record<string, unknown> | undefined {
+    return undefined;
+  }
 
   constructor(message: string) {
     super(message);

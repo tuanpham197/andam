@@ -203,6 +203,41 @@
           "account"
         ]
       },
+      "patch": {
+        "operationId": "updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Đặt tên hiển thị (FR-119)",
+        "tags": [
+          "account"
+        ]
+      },
       "delete": {
         "operationId": "deleteAccount",
         "parameters": [],
@@ -229,77 +264,6 @@
         "summary": "Xóa tài khoản và toàn bộ dữ liệu (UC-19)",
         "tags": [
           "account"
-        ]
-      }
-    },
-    "/api/v1/stages": {
-      "get": {
-        "operationId": "listStages",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/StageDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Các giai đoạn ăn dặm (BR-13)",
-        "tags": [
-          "catalog"
-        ]
-      }
-    },
-    "/api/v1/ingredients": {
-      "get": {
-        "operationId": "searchIngredients",
-        "parameters": [
-          {
-            "name": "q",
-            "required": true,
-            "in": "query",
-            "description": "Tên hoặc tên gọi khác, không cần dấu",
-            "schema": {
-              "maxLength": 100,
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IngredientDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Tìm nguyên liệu (không dấu)",
-        "tags": [
-          "catalog"
         ]
       }
     },
@@ -592,6 +556,329 @@
         ]
       }
     },
+    "/api/v1/children/{childId}/members": {
+      "get": {
+        "operationId": "listMembers",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembersDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thành viên chăm bé (FR-113)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/invites": {
+      "post": {
+        "operationId": "createInvite",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedInviteDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tạo link mời người chăm (UC-20)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/invites/{inviteId}": {
+      "delete": {
+        "operationId": "revokeInvite",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "inviteId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Thu hồi lời mời (FR-114)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/members/{userId}": {
+      "delete": {
+        "operationId": "removeMember",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Gỡ người chăm; gỡ chính mình là rời hồ sơ (FR-114/115)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/transfer-ownership": {
+      "post": {
+        "operationId": "transferOwnership",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferOwnershipDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chuyển quyền chủ hồ sơ (FR-116)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/invites/{token}": {
+      "get": {
+        "operationId": "previewInvite",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Xem trước lời mời, không cần đăng nhập",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/invites/{token}/accept": {
+      "post": {
+        "operationId": "acceptInvite",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInviteDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tham gia chăm bé (FR-112)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/api/v1/stages": {
+      "get": {
+        "operationId": "listStages",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StageDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Các giai đoạn ăn dặm (BR-13)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/v1/ingredients": {
+      "get": {
+        "operationId": "searchIngredients",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Tên hoặc tên gọi khác, không cần dấu",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IngredientDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tìm nguyên liệu (không dấu)",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
     "/api/v1/children/{childId}/days/{date}": {
       "get": {
         "operationId": "getDayPlan",
@@ -815,7 +1102,8 @@
                 "beef",
                 "pork",
                 "legume",
-                "snack"
+                "snack",
+                "custom"
               ]
             }
           },
@@ -903,6 +1191,476 @@
         "summary": "Công thức món theo bé và giai đoạn (UC-05)",
         "tags": [
           "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/custom-dishes": {
+      "post": {
+        "operationId": "createCustomDish",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomDishInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Tạo món của bạn (UC-23)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/custom-dishes/{dishId}": {
+      "get": {
+        "operationId": "getCustomDish",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dishId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomDishFormDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Món của bạn, để sửa (FR-135)",
+        "tags": [
+          "meal-planning"
+        ]
+      },
+      "put": {
+        "operationId": "updateCustomDish",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dishId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomDishInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Sửa món của bạn (FR-135)",
+        "tags": [
+          "meal-planning"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteCustomDish",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dishId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Xóa món của bạn (FR-136)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/urgent-events": {
+      "post": {
+        "operationId": "openUrgentEvent",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenUrgentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrgentEventDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mở “Dấu hiệu nguy hiểm”: ghi nhận và tạm dừng nguyên liệu liên quan (UC-10)",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/urgent-events/{eventId}": {
+      "patch": {
+        "operationId": "updateUrgentEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUrgentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UrgentEventDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Đã liên hệ nhân viên y tế (FR-067)",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/paused-ingredients": {
+      "get": {
+        "operationId": "listPausedIngredients",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PausedIngredientDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Nguyên liệu đang tạm dừng (G08)",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/paused-ingredients/{ingredientId}/resume": {
+      "post": {
+        "operationId": "resumeIngredient",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ingredientId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bác sĩ đã cho phép dùng lại nguyên liệu (UC-14)",
+        "tags": [
+          "safety"
+        ]
+      }
+    },
+    "/api/v1/meals/{mealId}/log": {
+      "get": {
+        "operationId": "getMealLog",
+        "parameters": [
+          {
+            "name": "mealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogFormDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dữ liệu màn ghi nhận bữa ăn (S07)",
+        "tags": [
+          "meal-log"
+        ]
+      },
+      "post": {
+        "operationId": "logMeal",
+        "parameters": [
+          {
+            "name": "mealId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMealDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoggedMealDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Ghi nhận bữa ăn và phản ứng (UC-08/09)",
+        "tags": [
+          "meal-log"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/journal": {
+      "get": {
+        "operationId": "getJournal",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "nextCursor của trang trước",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalPageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Nhật ký bữa ăn, phản ứng (FR-069)",
+        "tags": [
+          "meal-log"
         ]
       }
     }
@@ -1062,6 +1820,11 @@
             "type": "string",
             "example": "Asia/Ho_Chi_Minh"
           },
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tên người nhà thấy (FR-119)"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -1071,7 +1834,22 @@
           "id",
           "email",
           "timezone",
+          "displayName",
           "createdAt"
+        ]
+      },
+      "UpdateMeDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 30,
+            "description": "Trống để bỏ tên hiển thị"
+          }
+        },
+        "required": [
+          "displayName"
         ]
       },
       "DeleteAccountDto": {
@@ -1083,113 +1861,6 @@
         },
         "required": [
           "password"
-        ]
-      },
-      "StageDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number"
-          },
-          "name": {
-            "type": "string"
-          },
-          "ageFromMonths": {
-            "type": "number"
-          },
-          "ageToMonths": {
-            "type": "number"
-          },
-          "texture": {
-            "type": "string",
-            "enum": [
-              "puree_smooth",
-              "mashed",
-              "lumpy",
-              "minced_soft",
-              "family"
-            ]
-          },
-          "portionText": {
-            "type": "string"
-          },
-          "mainMeals": {
-            "type": "number"
-          },
-          "snacksMin": {
-            "type": "number"
-          },
-          "snacksMax": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "ageFromMonths",
-          "ageToMonths",
-          "texture",
-          "portionText",
-          "mainMeals",
-          "snacksMin",
-          "snacksMax"
-        ]
-      },
-      "IngredientDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "foodGroup": {
-            "type": "string",
-            "enum": [
-              "carb",
-              "protein",
-              "fat",
-              "veg",
-              "fruit",
-              "seasoning"
-            ]
-          },
-          "proteinSource": {
-            "type": "string",
-            "enum": [
-              "fish",
-              "chicken",
-              "beef",
-              "pork",
-              "legume",
-              "egg"
-            ],
-            "nullable": true
-          },
-          "allergenTags": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "enum": [
-                "egg",
-                "cow_milk",
-                "peanut",
-                "shellfish",
-                "fish",
-                "wheat",
-                "soy",
-                "sesame",
-                "tree_nut"
-              ]
-            }
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "foodGroup",
-          "allergenTags"
         ]
       },
       "AgeDto": {
@@ -1356,6 +2027,14 @@
           "stageOverride": {
             "type": "number",
             "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "caregiver"
+            ],
+            "description": "Vai trò của bạn với bé (BR-73)"
           }
         },
         "required": [
@@ -1376,7 +2055,8 @@
           "priorReactionNote",
           "avoidAllergens",
           "avoidIngredients",
-          "stageOverride"
+          "stageOverride",
+          "role"
         ]
       },
       "AvoidIngredientDto": {
@@ -1584,6 +2264,267 @@
           "stages"
         ]
       },
+      "MemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "caregiver"
+            ]
+          },
+          "joinedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isMe": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "userId",
+          "displayName",
+          "email",
+          "role",
+          "joinedAt",
+          "isMe"
+        ]
+      },
+      "PendingInviteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "expiresAt"
+        ]
+      },
+      "MembersDto": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberDto"
+            }
+          },
+          "pendingInvites": {
+            "description": "Chỉ chủ hồ sơ nhận được",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendingInviteDto"
+            }
+          }
+        },
+        "required": [
+          "members",
+          "pendingInvites"
+        ]
+      },
+      "CreatedInviteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "type": "string",
+            "description": "Link mời — chỉ trả một lần, server không lưu token"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "TransferOwnershipDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "InvitePreviewDto": {
+        "type": "object",
+        "properties": {
+          "childName": {
+            "type": "string"
+          },
+          "inviterName": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "childName",
+          "inviterName",
+          "expiresAt"
+        ]
+      },
+      "AcceptedInviteDto": {
+        "type": "object",
+        "properties": {
+          "childId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "caregiver"
+            ]
+          }
+        },
+        "required": [
+          "childId",
+          "role"
+        ]
+      },
+      "StageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ageFromMonths": {
+            "type": "number"
+          },
+          "ageToMonths": {
+            "type": "number"
+          },
+          "texture": {
+            "type": "string",
+            "enum": [
+              "puree_smooth",
+              "mashed",
+              "lumpy",
+              "minced_soft",
+              "family"
+            ]
+          },
+          "portionText": {
+            "type": "string"
+          },
+          "mainMeals": {
+            "type": "number"
+          },
+          "snacksMin": {
+            "type": "number"
+          },
+          "snacksMax": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ageFromMonths",
+          "ageToMonths",
+          "texture",
+          "portionText",
+          "mainMeals",
+          "snacksMin",
+          "snacksMax"
+        ]
+      },
+      "IngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "foodGroup": {
+            "type": "string",
+            "enum": [
+              "carb",
+              "protein",
+              "fat",
+              "veg",
+              "fruit",
+              "seasoning"
+            ]
+          },
+          "proteinSource": {
+            "type": "string",
+            "enum": [
+              "fish",
+              "chicken",
+              "beef",
+              "pork",
+              "legume",
+              "egg"
+            ],
+            "nullable": true
+          },
+          "allergenTags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "egg",
+                "cow_milk",
+                "peanut",
+                "shellfish",
+                "fish",
+                "wheat",
+                "soy",
+                "sesame",
+                "tree_nut"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "foodGroup",
+          "allergenTags"
+        ]
+      },
       "MealDishDto": {
         "type": "object",
         "properties": {
@@ -1622,6 +2563,10 @@
                 "veg"
               ]
             }
+          },
+          "custom": {
+            "type": "boolean",
+            "description": "Món của bạn (F18)"
           }
         },
         "required": [
@@ -1630,7 +2575,8 @@
           "prepMin",
           "cookMin",
           "mainProtein",
-          "foodGroups"
+          "foodGroups",
+          "custom"
         ]
       },
       "NamedIngredientDto": {
@@ -1646,6 +2592,24 @@
         "required": [
           "id",
           "name"
+        ]
+      },
+      "LoggedByDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Null nếu tài khoản đã xóa"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "at"
         ]
       },
       "MealDto": {
@@ -1701,6 +2665,16 @@
             "items": {
               "$ref": "#/components/schemas/NamedIngredientDto"
             }
+          },
+          "loggedBy": {
+            "nullable": true,
+            "description": "Ai đã ghi nhận (FR-118)",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoggedByDto"
+              }
+            ]
           }
         },
         "required": [
@@ -1711,7 +2685,8 @@
           "texture",
           "portionText",
           "dish",
-          "newIngredients"
+          "newIngredients",
+          "loggedBy"
         ]
       },
       "SlotDto": {
@@ -2059,6 +3034,10 @@
               "faster",
               "other"
             ]
+          },
+          "expectedDishId": {
+            "type": "string",
+            "description": "Món bữa đang có khi phụ huynh mở gợi ý; khác món hiện tại → 409 MEAL_CHANGED (BR-77)"
           }
         },
         "required": [
@@ -2128,6 +3107,10 @@
               ]
             }
           },
+          "custom": {
+            "type": "boolean",
+            "description": "Món của bạn (F18)"
+          },
           "mealType": {
             "type": "string",
             "enum": [
@@ -2171,6 +3154,7 @@
           "cookMin",
           "mainProtein",
           "foodGroups",
+          "custom",
           "mealType",
           "texture",
           "newIngredients",
@@ -2291,10 +3275,13 @@
             "type": "string"
           },
           "qty": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Trống với món của bạn không cân đo"
           },
           "unit": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isMain": {
             "type": "boolean"
@@ -2382,6 +3369,10 @@
             "type": "string",
             "nullable": true
           },
+          "custom": {
+            "type": "boolean",
+            "description": "Món của bạn — chưa qua chuyên gia duyệt (BR-85)"
+          },
           "stages": {
             "type": "array",
             "items": {
@@ -2468,6 +3459,7 @@
           "tool",
           "contentVersion",
           "reviewedBy",
+          "custom",
           "stages",
           "selectedStage",
           "variants",
@@ -2477,6 +3469,705 @@
           "allergens",
           "foodGroups",
           "exclusion"
+        ]
+      },
+      "CustomDishIngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "ing_ga"
+          },
+          "qty": {
+            "type": "number",
+            "nullable": true,
+            "description": "> 0 và ≤ 9 999; trống nếu không cân"
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 12
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "CustomDishInputDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60
+          },
+          "mealType": {
+            "type": "string",
+            "enum": [
+              "main",
+              "snack"
+            ]
+          },
+          "ingredients": {
+            "description": "1–15 nguyên liệu trong danh mục",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomDishIngredientDto"
+            }
+          },
+          "prepMin": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 180
+          },
+          "cookMin": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 240
+          },
+          "steps": {
+            "description": "Tối đa 15 bước, mỗi bước ≤ 300 ký tự",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "mealType",
+          "ingredients",
+          "prepMin",
+          "cookMin",
+          "steps"
+        ]
+      },
+      "CustomDishFormIngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "foodGroup": {
+            "type": "string",
+            "enum": [
+              "carb",
+              "protein",
+              "fat",
+              "veg",
+              "fruit",
+              "seasoning"
+            ]
+          },
+          "qty": {
+            "type": "number",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "foodGroup",
+          "qty",
+          "unit"
+        ]
+      },
+      "CustomDishFormDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mealType": {
+            "type": "string",
+            "enum": [
+              "main",
+              "snack"
+            ]
+          },
+          "ingredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomDishFormIngredientDto"
+            }
+          },
+          "prepMin": {
+            "type": "number"
+          },
+          "cookMin": {
+            "type": "number"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mealType",
+          "ingredients",
+          "prepMin",
+          "cookMin",
+          "steps"
+        ]
+      },
+      "OpenUrgentDto": {
+        "type": "object",
+        "properties": {
+          "mealId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Bữa vừa ăn: nguyên liệu mới và có tag dị ứng của bữa này sẽ tạm dừng (BR-41)"
+          }
+        }
+      },
+      "UrgentEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mealId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "openedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "contactedMedicalAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pausedIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "mealId",
+          "openedAt",
+          "contactedMedicalAt",
+          "pausedIngredients"
+        ]
+      },
+      "UpdateUrgentDto": {
+        "type": "object",
+        "properties": {
+          "contactedMedical": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "“Tôi đã liên hệ nhân viên y tế” (FR-067)"
+          }
+        },
+        "required": [
+          "contactedMedical"
+        ]
+      },
+      "PauseMealDto": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "slot": {
+            "type": "string"
+          },
+          "dishName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "slot",
+          "dishName"
+        ]
+      },
+      "PausedIngredientDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ingredientId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "reaction",
+              "urgent"
+            ]
+          },
+          "pausedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "meal": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PauseMealDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "ingredientId",
+          "name",
+          "reason",
+          "pausedAt",
+          "meal"
+        ]
+      },
+      "LogDishDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "custom": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "custom"
+        ]
+      },
+      "LogFormMealDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ]
+          },
+          "time": {
+            "type": "string",
+            "example": "11:00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "planned",
+              "prepared",
+              "eaten",
+              "refused",
+              "skipped"
+            ]
+          },
+          "dish": {
+            "$ref": "#/components/schemas/LogDishDto"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "slot",
+          "time",
+          "status",
+          "dish"
+        ]
+      },
+      "ReactionDto": {
+        "type": "object",
+        "properties": {
+          "symptoms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "rash",
+                "vomit",
+                "diarrhea",
+                "swelling",
+                "breathing",
+                "fussy"
+              ]
+            }
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "mild",
+              "moderate",
+              "severe"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "symptoms",
+          "severity",
+          "note"
+        ]
+      },
+      "LogDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mealId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "loggedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "loggedBy": {
+            "type": "string",
+            "nullable": true,
+            "description": "Người ghi nhận (FR-118)"
+          },
+          "amount": {
+            "type": "string",
+            "enum": [
+              "none",
+              "few_spoons",
+              "quarter",
+              "half",
+              "almost_all",
+              "all"
+            ]
+          },
+          "liking": {
+            "type": "number"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "eaten",
+              "refused"
+            ]
+          },
+          "reaction": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReactionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "mealId",
+          "loggedAt",
+          "loggedBy",
+          "amount",
+          "liking",
+          "outcome",
+          "reaction"
+        ]
+      },
+      "LogFormDto": {
+        "type": "object",
+        "properties": {
+          "meal": {
+            "$ref": "#/components/schemas/LogFormMealDto"
+          },
+          "firstTryIngredients": {
+            "description": "Nguyên liệu bé thử lần đầu",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          },
+          "suspectIngredients": {
+            "description": "Sẽ tạm dừng nếu ghi nhận có dấu hiệu bất thường (BR-40)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          },
+          "log": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "meal",
+          "firstTryIngredients",
+          "suspectIngredients",
+          "log"
+        ]
+      },
+      "ReactionInputDto": {
+        "type": "object",
+        "properties": {
+          "symptoms": {
+            "type": "array",
+            "description": "Ít nhất một dấu hiệu",
+            "items": {
+              "type": "string",
+              "enum": [
+                "rash",
+                "vomit",
+                "diarrhea",
+                "swelling",
+                "breathing",
+                "fussy"
+              ]
+            }
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "unknown",
+              "mild",
+              "moderate",
+              "severe"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "symptoms",
+          "severity"
+        ]
+      },
+      "LogMealDto": {
+        "type": "object",
+        "properties": {
+          "loggedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-24T11:40:00+07:00"
+          },
+          "amount": {
+            "type": "string",
+            "enum": [
+              "none",
+              "few_spoons",
+              "quarter",
+              "half",
+              "almost_all",
+              "all"
+            ]
+          },
+          "liking": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "reaction": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReactionInputDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "loggedAt",
+          "amount",
+          "liking"
+        ]
+      },
+      "LoggedMealDto": {
+        "type": "object",
+        "properties": {
+          "log": {
+            "$ref": "#/components/schemas/LogDto"
+          },
+          "pausedIngredients": {
+            "description": "Nguyên liệu đang tạm dừng sau ghi nhận",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          }
+        },
+        "required": [
+          "log",
+          "pausedIngredients"
+        ]
+      },
+      "JournalEntryDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "meal",
+              "urgent"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "slot": {
+            "type": "string",
+            "enum": [
+              "breakfast",
+              "morning_snack",
+              "lunch",
+              "afternoon_snack",
+              "dinner",
+              "extra_snack"
+            ],
+            "nullable": true
+          },
+          "dish": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogDishDto"
+              }
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "enum": [
+              "none",
+              "few_spoons",
+              "quarter",
+              "half",
+              "almost_all",
+              "all"
+            ],
+            "nullable": true
+          },
+          "liking": {
+            "type": "number",
+            "nullable": true
+          },
+          "reaction": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReactionDto"
+              }
+            ]
+          },
+          "contactedMedicalAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "pausedIngredients": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NamedIngredientDto"
+            }
+          },
+          "actorName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Người thực hiện (FR-118)"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "at",
+          "date",
+          "slot",
+          "dish",
+          "amount",
+          "liking",
+          "reaction",
+          "contactedMedicalAt",
+          "pausedIngredients",
+          "actorName"
+        ]
+      },
+      "JournalPageDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalEntryDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "entries",
+          "nextCursor"
         ]
       }
     }

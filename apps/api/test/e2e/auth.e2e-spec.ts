@@ -141,6 +141,7 @@ describe('GET /api/v1/me', () => {
       id: body.userId,
       email: 'na@example.vn',
       timezone: 'Asia/Ho_Chi_Minh',
+      displayName: null,
       createdAt: expect.any(String),
     });
   });

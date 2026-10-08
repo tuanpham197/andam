@@ -19,7 +19,7 @@ import {
   MEAL_PLAN_REPOSITORY,
   type MealPlanRepository,
 } from '../ports/out/meal-plan.repository.js';
-import { PLANNING_CATALOG, type PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import { PlanningDishes } from './planning-dishes.js';
 import { PLAN_AHEAD_DAYS } from './day-plan.service.js';
 import {
   allergenIntroductionsBefore,
@@ -29,21 +29,35 @@ import {
 } from './planning-context.js';
 
 /**
- * BR-31: after a profile change, upcoming meals follow the new profile. Meals already past,
- * prepared or logged stay; a swapped meal stays while it is still safe at the same stage.
+ * - `all`: after a profile change or a food resumed, automatic meals are planned again.
+ * - `unsafe`: after a food is paused or a dish deleted, only meals that became unsafe change.
+ */
+export type RegenerateScope = 'all' | 'unsafe';
+
+/**
+ * BR-31: upcoming meals follow the child's current profile. Past and logged meals never change.
+ * A swapped or prepared meal stays while it is still safe at the same stage; once unsafe it is
+ * replaced, prepared or not — a dish the child must not eat is never left on the plan.
  */
 @Injectable()
 export class RegenerateFutureService {
   constructor(
     @Inject(MEAL_PLAN_REPOSITORY) private readonly plans: MealPlanRepository,
     @Inject(CHILD_PLANNING_READER) private readonly children: ChildPlanningReader,
-    @Inject(PLANNING_CATALOG) private readonly catalog: PlanningCatalog,
+    @Inject(PlanningDishes) private readonly catalog: PlanningDishes,
     @Inject(FOOD_HISTORY_READER) private readonly history: FoodHistoryReader,
     @Inject(ID_GENERATOR) private readonly ids: IdGenerator,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
-  async execute(input: { childId: string; userId: string }): Promise<void> {
+  async execute(input: {
+    childId: string;
+    userId: string;
+    scope?: RegenerateScope;
+    /** A meal being eaten right now (the one the child reacted to) stays as it is. */
+    keepMealId?: string | null;
+  }): Promise<void> {
+    const scope = input.scope ?? 'all';
     const child = await this.children.find(input.childId, input.userId);
     if (!child) return;
 
@@ -55,12 +69,12 @@ export class RegenerateFutureService {
       today,
       addDays(today, PLAN_AHEAD_DAYS),
     );
-    const changeable = upcoming.filter(
-      (m) => m.status === 'planned' && (m.date > today || m.time > nowTime),
+    const future = upcoming.filter(
+      (m) => m.isPending && m.id !== input.keepMealId && (m.date > today || m.time > nowTime),
     );
 
     if (child.stage === null) {
-      await this.plans.remove(changeable.map((m) => m.id));
+      await this.plans.remove(future.filter((m) => m.status === 'planned').map((m) => m.id));
       return;
     }
     const stage = child.stage;
@@ -72,11 +86,14 @@ export class RegenerateFutureService {
       today,
     );
     const byId = dishMap(ctx.dishes);
-    const replaced = changeable.filter(
-      (m) =>
-        m.source === 'auto' ||
-        m.stageId !== stage ||
-        exclusionReason(byId.get(m.dishId)!, ctx, m.date) !== null,
+    const unsafe = (m: PlannedMeal) => {
+      const dish = byId.get(m.dishId)!;
+      return (
+        m.stageId !== stage || dish.archived === true || exclusionReason(dish, ctx, m.date) !== null
+      );
+    };
+    const replaced = future.filter(
+      (m) => unsafe(m) || (scope === 'all' && m.status === 'planned' && m.source === 'auto'),
     );
     await this.plans.remove(replaced.map((m) => m.id));
 

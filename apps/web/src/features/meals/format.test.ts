@@ -7,7 +7,10 @@ import {
   formatQty,
   isSnackSlot,
   mealInstant,
+  namesSentence,
+  shortDate,
   slotLabel,
+  timeInVietnam,
   todayInVietnam,
 } from './format';
 
@@ -95,5 +98,36 @@ describe('avoidSummary', () => {
 describe('firstTryNames', () => {
   it('lists the foods in lower case, as part of a sentence', () => {
     expect(firstTryNames(['Rau ngót', 'Cá hồi'])).toBe('rau ngót, cá hồi');
+  });
+});
+
+describe('formatQty for parents’ dishes (BR-81)', () => {
+  it('says "Tùy ý" without a quantity and shows the number alone without a unit', () => {
+    expect(formatQty(null, null)).toBe('Tùy ý');
+    expect(formatQty(null, 'g')).toBe('Tùy ý');
+    expect(formatQty(2.5, null)).toBe('2,5');
+  });
+});
+
+describe('timeInVietnam / shortDate', () => {
+  it('reads the time in Vietnam whatever the device zone, around midnight too', () => {
+    expect(timeInVietnam('2026-09-24T04:40:00.000Z')).toBe('11:40');
+    expect(timeInVietnam(new Date('2026-09-24T17:05:00Z'))).toBe('00:05');
+  });
+
+  it('writes day/month without leading zeros', () => {
+    expect(shortDate('2026-09-04')).toBe('4/9');
+    expect(shortDate('2026-12-24')).toBe('24/12');
+  });
+});
+
+describe('namesSentence', () => {
+  it('joins foods with "và" and opens with a capital', () => {
+    expect(namesSentence(['Cá hồi', 'Rau ngót'])).toBe('Cá hồi và rau ngót');
+    expect(namesSentence(['đậu phụ', 'Cá', 'Rau ngót'])).toBe('Đậu phụ, cá và rau ngót');
+    expect(namesSentence(['rau ngót'])).toBe('Rau ngót');
+    expect(namesSentence([])).toBe('');
+    expect(namesSentence(['Đậu Hà Lan', 'Bí đỏ'])).toBe('Đậu Hà Lan và bí đỏ');
+    expect(namesSentence(['Bí đỏ', 'Đậu Hà Lan'])).toBe('Bí đỏ và đậu Hà Lan');
   });
 });

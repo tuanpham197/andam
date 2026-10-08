@@ -58,6 +58,11 @@ describe('Icon', () => {
     'pulse',
     'eye',
     'eyeOff',
+    'search',
+    'phone',
+    'plus',
+    'edit',
+    'trash',
   ];
 
   it.each(names)('draws %s as a decorative 24px-grid SVG', (name) => {

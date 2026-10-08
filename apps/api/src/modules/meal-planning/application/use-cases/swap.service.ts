@@ -11,6 +11,7 @@ import {
   MealAlreadyLoggedError,
   MealInPastError,
   MealNotFoundError,
+  MealChangedError,
 } from '../../domain/errors.js';
 import { variantFor } from '../../domain/menu-engine.js';
 import type { MealSlot, ProteinSource, Texture } from '../../domain/model.js';
@@ -27,7 +28,7 @@ import {
   MEAL_PLAN_REPOSITORY,
   type MealPlanRepository,
 } from '../ports/out/meal-plan.repository.js';
-import { PLANNING_CATALOG, type PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import { PlanningDishes } from './planning-dishes.js';
 import {
   allergenIntroductionsBefore,
   dishMap,
@@ -63,7 +64,7 @@ export class SwapService {
   constructor(
     @Inject(MEAL_PLAN_REPOSITORY) private readonly plans: MealPlanRepository,
     @Inject(CHILD_PLANNING_READER) private readonly children: ChildPlanningReader,
-    @Inject(PLANNING_CATALOG) private readonly catalog: PlanningCatalog,
+    @Inject(PlanningDishes) private readonly catalog: PlanningDishes,
     @Inject(FOOD_HISTORY_READER) private readonly history: FoodHistoryReader,
     @Inject(ID_GENERATOR) private readonly ids: IdGenerator,
     @Inject(CLOCK) private readonly clock: Clock,
@@ -147,9 +148,13 @@ export class SwapService {
   async apply(
     userId: string,
     mealId: string,
-    input: { dishId: string; reason: SwapReason },
+    input: { dishId: string; reason: SwapReason; expectedDishId?: string },
   ): Promise<MealView> {
     const { meal, ctx } = await this.swappable(userId, mealId);
+    // BR-77: the parent chose looking at another dish than the one the meal has now.
+    if (input.expectedDishId !== undefined && input.expectedDishId !== meal.dishId) {
+      throw new MealChangedError();
+    }
     const byId = dishMap(ctx.dishes);
     const dish = byId.get(input.dishId);
     if (!dish) throw new DishNotFoundError();
@@ -166,7 +171,8 @@ export class SwapService {
       newIngredientIds: newIngredientIds(dish, ctx),
     });
     await this.uow.run(async () => {
-      await this.plans.save(meal);
+      // A concurrent swap or log by another member wins; this one is refused, not overwritten.
+      if (!(await this.plans.saveSwap(meal, fromDishId))) throw new MealChangedError();
       await this.plans.recordSwap({
         id: this.ids.next(),
         mealId: meal.id,
@@ -174,6 +180,7 @@ export class SwapService {
         toDishId: dish.id,
         reason: input.reason,
         createdAt: this.clock.now(),
+        actorId: userId,
       });
     });
     return toMealView(meal, byId, ctx.ingredients);

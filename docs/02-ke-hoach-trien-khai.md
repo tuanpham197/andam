@@ -2,7 +2,7 @@
 
 | Mục | Nội dung |
 |---|---|
-| Phiên bản | v0.2 — 28/09/2026 |
+| Phiên bản | v0.3 — 07/10/2026 (thêm P5b Nhiều người chăm; món của bạn vào P5) |
 | Căn cứ | [01-phan-tich-he-thong.md](01-phan-tich-he-thong.md) (mã FR / BR / NFR / UC / màn hình S, G tham chiếu từ tài liệu này) |
 | Stack | Frontend **ReactJS 19 + Vite 8** · Backend **NestJS 12 (Hexagonal, ESM)** · ORM **Prisma 7** · DB **PostgreSQL 16** · Test **Vitest 5** (coverage 100% line) |
 | Giả định nguồn lực | 1 backend dev + 1 frontend dev full-time; 1 chuyên gia dinh dưỡng bán thời gian cho nội dung |
@@ -16,10 +16,11 @@
 
 | Trong MVP | Ngoài MVP (phase sau) |
 |---|---|
-| 10 màn hình trong thiết kế (S01–S10) | Danh sách đi chợ (G05) |
+| 10 màn hình trong thiết kế (S01–S10) + món của bạn (F18, G15) | Danh sách đi chợ (G05) |
 | Onboarding đủ 5 bước (G01) | Chế độ nấu từng bước (G07) |
-| Đăng ký / đăng nhập / quên mật khẩu, đồng ý xử lý dữ liệu, cài đặt tài khoản (G10–G12) | Nhiều hồ sơ bé trên UI (G04) — API & DB đã hỗ trợ |
-| Trang Hồ sơ bé (G03) + xác nhận dùng lại nguyên liệu (G08) | Nhiều người chăm cùng 1 bé, đăng nhập Google/Apple |
+| Đăng ký / đăng nhập / quên mật khẩu, đồng ý xử lý dữ liệu, cài đặt tài khoản (G10–G12) | Tạo nhiều hồ sơ bé trên UI (G04 “Thêm bé”) — API & DB đã hỗ trợ |
+| Trang Hồ sơ bé (G03) + xác nhận dùng lại nguyên liệu (G08) | Đăng nhập Google/Apple |
+| Nhiều người chăm cùng 1 bé (F17: lời mời, vai trò chủ / người chăm) + chuyển bé tối giản (G04) — P5b | Thêm bé thứ 2 trên UI |
 | Nhật ký tối giản (G02): timeline, không xuất file | Nhắc giờ ăn / nhắc theo dõi món mới |
 | Chi tiết ngày (G09), Lên tuần sau (G06) | Tùy chỉnh giờ bữa · Xuất nhật ký PDF |
 | Menu engine ở backend, catalog ~60 món seed từ JSON | CMS biên soạn/duyệt nội dung |
@@ -45,10 +46,11 @@
 | P2 | Hồ sơ bé & Độ tuổi | 3 | 4 | 4 ngày | **M1** |
 | P3 | Menu engine · Hôm nay · Công thức | 5 | 4 | 5 ngày | |
 | P4 | Đổi món & Thư viện món | 3 | 3 | 3 ngày | **M2** |
-| P5 | Ghi nhận, phản ứng & an toàn | 4 | 3 | 4 ngày | |
+| P5 | Ghi nhận, phản ứng & an toàn · Món của bạn | 6 | 5 | 6 ngày | |
+| P5b | Nhiều người chăm | 4 | 3 | 4 ngày | |
 | P6 | Sức khỏe & Thực đơn tuần | 3 | 3 | 3 ngày | **M3** |
 | P7 | Hoàn thiện, bảo mật & phát hành | 4 | 3 | 4 ngày | **M4** |
-| | **Tổng MVP** | **28** | **25** | **~29 ngày (~6 tuần)** | |
+| | **Tổng MVP** | **34** | **30** | **~35 ngày (~7 tuần)** | |
 
 > Nếu chỉ có 1 dev fullstack: ~53 ngày công (~11 tuần).
 
@@ -70,8 +72,9 @@ gantt
   P2 Hồ sơ & độ tuổi (M1)  :p2, after p1, 4d
   P3 Engine · Hôm nay      :p3, after p2, 5d
   P4 Đổi món · Thư viện (M2) :p4, after p3, 3d
-  P5 Ghi nhận & an toàn    :p5, after p4, 4d
-  P6 Sức khỏe & tuần (M3)  :p6, after p5, 3d
+  P5 Ghi nhận · an toàn · món của bạn :p5, after p4, 6d
+  P5b Nhiều người chăm     :p5b, after p5, 4d
+  P6 Sức khỏe & tuần (M3)  :p6, after p5b, 3d
   P7 Phát hành (M4)        :p7, after p6, 4d
   section Nội dung (song song)
   Chốt quy tắc dinh dưỡng  :c0, 2026-10-01, 5d
@@ -80,7 +83,7 @@ gantt
   Duyệt nội dung           :c3, after c2, 5d
 ```
 
-**Đường găng:** P1 (schema + identity) → P3 (menu engine) chặn P4–P6. **Rủi ro lớn nhất ngoài code:** 60 công thức đã duyệt phải xong trước P7.
+**Đường găng:** P1 (schema + identity) → P3 (menu engine) chặn P4–P6. P5b đặt sau P5 để đổi quyền truy cập một lần cho cả các module mới của P5 (meal-log, safety); P6 viết thẳng theo mô hình thành viên. **Rủi ro lớn nhất ngoài code:** 60 công thức đã duyệt phải xong trước P7.
 
 ---
 
@@ -233,25 +236,86 @@ gantt
 
 ---
 
-### P5 — Ghi nhận bữa ăn, phản ứng & an toàn (BE 4 · FE 3)
+### P5 — Ghi nhận bữa ăn, phản ứng & an toàn · Món của bạn (BE 6 · FE 5) — ✅ Hoàn thành 07/10/2026
 
-**Phạm vi:** S07, S08, G08, G02 · UC-08/09/10/14/17 · FR-060..069 · BR-40..44.
+**Phạm vi:** S07, S08, G08, G02 · UC-08/09/10/14/17 · FR-060..069 · BR-40..44. Thêm (07/10/2026): **Món của bạn** — G15, S05/S03 · UC-23 · FR-130..137 · BR-80..87.
 
-**Backend**
-- [ ] Module **meal-log**: domain `MealLog` (+ `Reaction`), quy tắc xác định nguyên liệu nghi ngờ (BR-40), cập nhật `IngredientExposure` (BR-44); use cases `LogMeal` (`@Transactional`), `GetJournal` (cursor pagination); endpoint `POST /meals/:id/log`, `GET /children/:id/journal`.
-- [ ] Module **safety**: domain `PausedIngredient`, `UrgentEvent`; use cases `PauseIngredients`, `ResumeIngredient` (BR-42), `PreviewUrgent`, `OpenUrgentEvent` (BR-41), `MarkContactedMedical`, `ListPaused`; phát `IngredientsPaused` / `IngredientResumed`.
-- [ ] Nối `SafetyReader` thật cho meal-planning; handler `IngredientsPaused`/`IngredientResumed` → `RegenerateFuture` **trong cùng transaction** với `LogMeal` / `OpenUrgentEvent`.
-- [ ] Test integration: log có “Nổi mẩn đỏ” sau bữa có rau ngót lần đầu → 1 transaction ghi log + reaction + exposure + paused + bữa tương lai được thay; lỗi giữa chừng → rollback toàn bộ.
-- [ ] Log API không ghi body chứa triệu chứng/ghi chú (kiểm tra redact).
+**Backend** ✅
+- [x] Module **meal-log**: domain `MealLog` (+ `Reaction`), quy tắc xác định nguyên liệu nghi ngờ (BR-40), cập nhật `IngredientExposure` (BR-44); use cases `LogMeal` (`@Transactional`), `GetJournal` (cursor pagination); endpoint `POST /meals/:id/log`, `GET /children/:id/journal`.
+- [x] Module **safety**: domain `PausedIngredient`, `UrgentEvent`; use cases `PauseIngredients`, `ResumeIngredient` (BR-42), `PreviewUrgent`, `OpenUrgentEvent` (BR-41), `MarkContactedMedical`, `ListPaused`; phát `IngredientsPaused` / `IngredientResumed`.
+- [x] Nối `SafetyReader` thật cho meal-planning; handler `IngredientsPaused`/`IngredientResumed` → `RegenerateFuture` **trong cùng transaction** với `LogMeal` / `OpenUrgentEvent`.
+- [x] Test integration: log có “Nổi mẩn đỏ” sau bữa có rau ngót lần đầu → 1 transaction ghi log + reaction + exposure + paused + bữa tương lai được thay; lỗi giữa chừng → rollback toàn bộ.
+- [x] Log API không ghi body chứa triệu chứng/ghi chú (kiểm tra redact).
+- [x] **Món của bạn** (meal-planning): migration `dishes.owner_child_id` / `created_by` / `archived_at`, `dish_ingredients.qty/unit` cho phép trống; catalog chỉ đọc món catalog (`owner_child_id IS NULL`). Domain `CustomDish` (BR-81, BR-84, BR-87 — chuẩn hóa tên NFC, so trùng không dấu); port `CustomDishRepository`; ngữ cảnh lập thực đơn gộp món catalog + món của bạn (món lưu trữ chỉ dùng để hiển thị bữa cũ, không vào ứng viên); use case tạo / sửa (kiểm lọc cứng BR-82 kèm nguyên liệu vi phạm) / lưu trữ (sinh lại bữa tương lai — BR-86); chip thư viện `custom`; cờ `custom` trên món ở mọi response; endpoint `custom-dishes`.
+- [x] Chuẩn bị cho P5b: bảng mới (`meal_logs`, `reactions`, `urgent_events`, `paused_ingredients`) có sẵn cột `actor_id`; repository mới kiểm quyền qua một điều kiện dùng chung (không chép `child: { userId }` ở từng truy vấn) để P5b chỉ đổi một chỗ.
 
-**Frontend**
-- [ ] **S07**: giờ ghi nhận (mặc định hiện tại, sửa được), lượng ăn 6 mức, rating 1–5 (“Từ chối / Rất thích”), phần phản ứng (mở sẵn khi `?focus=reaction`), 6 triệu chứng, 4 mức độ, ghi chú ≤ 500 ký tự, câu thông báo nguyên liệu sẽ tạm dừng; banner đỏ khi chọn Khó thở / Sưng môi mặt / Nặng; link S08 giữ nháp.
-- [ ] Sau khi lưu: hiển thị tên nguyên liệu đã tạm dừng (từ response), invalidate `days`, `dishes`, `journal`.
-- [ ] **S08**: danh sách dấu hiệu, `tel:115` (nút lớn + số hiển thị dạng text), nguyên liệu tạm dừng (từ `urgent-preview`, ghi khi mở màn), “Tôi đã liên hệ nhân viên y tế” → `PATCH`.
-- [ ] **G08** trong Hồ sơ: danh sách nguyên liệu tạm dừng + “Bác sĩ đã cho phép dùng lại” (xác nhận 2 bước).
-- [ ] **G02** Nhật ký: timeline theo ngày, phản ứng nổi bật màu đỏ, sự kiện khẩn cấp, cuộn vô hạn.
+**Frontend** ✅
+- [x] **S07**: giờ ghi nhận (mặc định hiện tại, sửa được), lượng ăn 6 mức, rating 1–5 (“Từ chối / Rất thích”), phần phản ứng (mở sẵn khi `?focus=reaction`), 6 triệu chứng, 4 mức độ, ghi chú ≤ 500 ký tự, câu thông báo nguyên liệu sẽ tạm dừng; banner đỏ khi chọn Khó thở / Sưng môi mặt / Nặng; link S08 giữ nháp.
+- [x] Sau khi lưu: hiển thị tên nguyên liệu đã tạm dừng (từ response), invalidate `days`, `dishes`, `journal`.
+- [x] **S08**: danh sách dấu hiệu, `tel:115` (nút lớn + số hiển thị dạng text), nguyên liệu tạm dừng (từ `urgent-preview`, ghi khi mở màn), “Tôi đã liên hệ nhân viên y tế” → `PATCH`.
+- [x] **G08** trong Hồ sơ: danh sách nguyên liệu tạm dừng + “Bác sĩ đã cho phép dùng lại” (xác nhận 2 bước).
+- [x] **G02** Nhật ký: timeline theo ngày, phản ứng nổi bật màu đỏ, sự kiện khẩn cấp, cuộn vô hạn.
+- [x] **G15** Tạo / sửa món của bạn: form (tên, bữa chính / phụ, nguyên liệu tìm từ danh mục + định lượng tùy chọn, thời gian, các bước), nhóm chất đạt được cập nhật khi thêm nguyên liệu, lỗi lọc cứng chỉ rõ nguyên liệu; giữ nháp khi rời trang. S05: nút *+ Tạo món*, chip “Món của bạn”, nhãn trên card; S03: nhãn “Món của bạn · chưa qua chuyên gia duyệt”, *Sửa món*, *Xóa món* (xác nhận).
 
-**Nghiệm thu:** Tái hiện kịch bản S07 → S08; sau đó rau ngót không xuất hiện ở bữa tương lai, gợi ý đổi món, thư viện (nằm trong khối “Đang ẩn”); dùng lại → xuất hiện trở lại.
+**Khác với dự kiến (đã cập nhật tài liệu phân tích):**
+- Bỏ `GET urgent-preview`: mở S08 là ghi sự kiện và tạm dừng ngay (BR-41), response trả luôn danh sách nguyên liệu đã tạm dừng.
+- Thêm `GET /meals/:id/log` (dữ liệu S07: nguyên liệu lần đầu, nguyên liệu sẽ tạm dừng nếu có phản ứng, bản ghi nếu đã ghi nhận). Nhật ký dùng cursor mờ, 20 dòng/trang.
+- Lỗi nghiệp vụ mang thêm extension members (RFC 9457) — VD danh sách nguyên liệu vi phạm khi tạo món; `ApiError` phía web giữ lại các trường này.
+- Bộ đọc lịch sử ăn của meal-planning đọc qua transaction hiện tại; điều kiện quyền truy cập dữ liệu bé gom về `childrenOf()` (P5b đổi một chỗ).
+
+**Nghiệm thu:** Tái hiện kịch bản S07 → S08; sau đó rau ngót không xuất hiện ở bữa tương lai, gợi ý đổi món, thư viện (nằm trong khối “Đang ẩn”); dùng lại → xuất hiện trở lại. Tạo “Cháo gà bí đỏ nhà làm” → có trong thư viện (chip “Món của bạn”), chọn được khi đổi món; tạo món có trứng cho bé tránh trứng → bị từ chối chỉ rõ “Trứng gà”; xóa món → bữa tương lai đổi sang món khác, bữa đã ăn vẫn hiện tên món.
+
+---
+
+**Kết quả kiểm chứng:** API 941 test (unit + integration + e2e) · web 345 test · api-client 19 test — 100% line cả 3 workspace; domain 100% line + branch; lint + typecheck + Prettier sạch; benchmark engine < 200 ms. Chạy thật trên Chrome 390 px và 320 px: S01 → “Bé đã ăn” → chọn lượng, mức thích, “Nổi mẩn đỏ” → lưu → nguyên liệu lần đầu bị tạm dừng, Nhật ký hiện bản ghi đỏ kèm “Tạm dừng: …”; S08 từ bữa trưa tạm dừng “Đậu Hà Lan và bí đỏ”; Hồ sơ → dùng lại 2 bước; tạo “Cháo gà bí đỏ nhà làm” → công thức có nhãn “Món của bạn”. Không cuộn ngang, vùng chạm ≥ 44 px.
+
+**Lỗi thật được phát hiện và đã sửa trong P5:**
+1. Bữa đã “chuẩn bị” nhưng chứa nguyên liệu vừa bị cấm (đổi hồ sơ, tạm dừng) vẫn nằm trên thực đơn — giờ luôn được thay (BR-31 cập nhật).
+2. Mở “Dấu hiệu nguy hiểm” từ một bữa chưa tới giờ (VD ghi nhận bữa tối sớm) làm chính bữa đó bị sinh lại thành món khác — bữa bé đang ăn biến mất, nháp ghi nhận báo 404. Sự kiện tạm dừng giờ mang `sourceMealId`, bữa đó không bị thay (TC-URG-003 phát hiện).
+3. Sau khi lưu ghi nhận có phản ứng, màn hình tải lại và thay thông báo “nguyên liệu nào vừa bị tạm dừng” bằng bản tóm tắt — phụ huynh không bao giờ thấy thông báo. Unit test không bắt được vì mock trả “chưa ghi nhận”; phát hiện khi chạy thật trên trình duyệt.
+4. Bộ đọc lịch sử ăn dùng kết nối ngoài transaction: trong cùng lần ghi nhận, sinh lại bữa tương lai không thấy nguyên liệu vừa tạm dừng.
+5. Tên riêng bị hạ chữ thường giữa câu (“đậu hà lan”) — chỉ hạ chữ cái đầu.
+6. Liên kết “Xem dấu hiệu nguy hiểm” trong cảnh báo đỏ chỉ cao 35 px; liên kết tên món trong Nhật ký 22 px.
+7. `package-lock.json` thiếu 2 gói, `npm ci` hỏng với npm 11.19 (cũng sẽ hỏng trên CI); test `catalog-files` chập chờn vì đọc 3 file song song.
+8. Một lần chạy coverage đầy đủ mất ~50 phút (hook integration chờ 120 s nhiều lần); chạy lại 2 lần đều ~1 phút, theo dõi `pg_stat_activity` không thấy truy vấn treo — chưa tái hiện được (xem Rủi ro).
+
+### P5b — Nhiều người chăm (BE 4 · FE 3) — ✅ Hoàn thành 08/10/2026
+
+**Phạm vi:** G04 (chuyển bé), G13, G14, G12 (tên hiển thị) · UC-15 (chuyển bé), UC-19 (luồng thay thế), UC-20..22 · FR-012 (một phần), FR-110..120 · BR-70..79. Thiết kế chưa có màn cho tính năng này → dựng theo design system hiện có, PO duyệt trên staging.
+
+**Backend** ✅
+- [x] Migration expand: `member_role`, `child_members` (partial unique 1 chủ / bé), `child_invites`, `users.display_name`, `actor_id` cho `swap_events` / `health_episodes`; điền `owner` từ `children.user_id`. Test migration trên bản sao dữ liệu staging (số chủ = số bé).
+- [x] Domain `child-profile`: `ChildMembership` (vai trò, `can(action)` theo ma trận BR-73 — một bảng duy nhất, test sinh từ bảng), `ChildInvite` (hết hạn, đã dùng, thu hồi, giới hạn BR-71/72); lỗi `OWNER_ONLY`, `INVITE_*`, `ALREADY_MEMBER`, `MEMBER_LIMIT_REACHED`, `OWNER_CANNOT_LEAVE`, `NOT_A_CAREGIVER`.
+- [x] Port `ChildAccess` (`roleOf(userId, childId)`, `require(userId, childId, action)`) do child-profile cung cấp; thay mọi `findOwned` / `child: { userId }` ở child-profile, meal-planning, meal-log, safety bằng kiểm tra thành viên (repository lọc theo `child_members` — phòng thủ 2 lớp).
+- [x] Use case: `CreateInvite`, `RevokeInvite`, `PreviewInvite`, `AcceptInvite` (transaction, khóa dòng lời mời — 2 người cùng bấm thì 1 người thắng), `ListMembers`, `RemoveMember` / rời, `TransferOwnership`, `UpdateDisplayName`; `DeleteAccount` áp BR-76.
+- [x] Đổi món nhận `expectedDishId` → `MEAL_CHANGED`; `MEAL_ALREADY_LOGGED` kèm `loggedBy` + `loggedAt` (BR-77); ghi `actor_id` mọi thao tác ghi (BR-78); `MealView` / journal trả `actor.displayName`.
+- [x] Endpoint: `GET /children/:id/members`, `POST|DELETE /children/:id/invites[/:inviteId]`, `GET /invites/:token`, `POST /invites/:token/accept`, `DELETE /children/:id/members/:userId`, `POST /children/:id/transfer-ownership`, `PATCH /me`; throttle `/invites/*` như `/auth/*`; redact token khỏi log.
+- [x] e2e **ma trận truy cập**: mỗi route có `:childId` / `:mealId` × 3 vai trò (chủ, người chăm, người ngoài) → đúng 2xx / 403 / 404 theo BR-73, sinh tự động từ danh sách route để route mới không lọt (NFR-017).
+
+**Frontend** ✅
+- [x] Tầng chọn bé: `activeChildId` (nhớ theo thiết bị, rơi về bé đầu tiên nếu mất quyền); **G04** bottom sheet từ nút ⌄ trên S01 (tên, tuổi, vai trò) — chỉ hiện khi ≥ 2 bé.
+- [x] **G13** Thành viên (trong Hồ sơ bé): danh sách + vai trò, lời mời đang chờ + thu hồi, *Mời người chăm* (Web Share API, dự phòng sao chép link) kèm cảnh báo BR-79, gỡ / chuyển quyền chủ (xác nhận 2 bước), *Rời hồ sơ bé*.
+- [x] **G14** `/invite/:token` công khai: xem trước, chưa đăng nhập → đăng nhập / đăng ký rồi tự quay lại (giữ token qua luồng đăng ký + onboarding bị bỏ qua), Tham gia, 4 trạng thái lỗi.
+- [x] Ẩn / khóa theo vai trò: người chăm không thấy nút sửa hồ sơ, sửa danh sách tránh, dùng lại nguyên liệu, xóa bé (vẫn xử lý `403` nếu server từ chối).
+- [x] “Ai đã ghi nhận” trên bữa (S01, nhật ký), thông báo `MEAL_ALREADY_LOGGED` / `MEAL_CHANGED` có tên người kia; S01 `refetchInterval` 60 giây + làm mới khi quay lại tab (FR-120).
+- [x] G12: ô Tên hiển thị; xóa tài khoản liệt kê hồ sơ cần chuyển quyền / xóa (BR-76).
+
+**Nghiệm thu:** Mẹ tạo hồ sơ → mời ba qua link → ba đăng ký từ link → thấy đúng thực đơn của bé; ba ghi nhận bữa trưa → S01 của mẹ hiện “Ba · 11:40” trong ≤ 60 giây; mẹ bấm ghi nhận cùng bữa → báo đã được ba ghi nhận; ba không sửa được danh sách tránh; mẹ gỡ ba → request kế tiếp của ba nhận `404`; link mời dùng lần 2 / quá 72 giờ / đã thu hồi bị từ chối đúng thông báo.
+
+**Khác với dự kiến:**
+- `children.user_id` không xóa ở migration sau mà giữ làm con trỏ tới chủ hiện tại, cập nhật khi chuyển quyền (tránh xóa nhầm hồ sơ bé khi xóa cứng tài khoản người tạo).
+- Đổi món chống ghi đè bằng update có điều kiện ngay cả khi client không gửi `expectedDishId` (TC-SWP-011 cũ “cả 2 lần đổi đồng thời đều được ghi” đổi thành “1 thắng, 1 nhận `MEAL_CHANGED`”).
+- Thêm 2 loại lỗi domain `forbidden` (403) và `gone` (410); token mời bị xóa khỏi log request (đường dẫn và params).
+- `actor_id` thêm cho `swap_events` và `health_episodes` (P6 dùng).
+
+**Kết quả kiểm chứng:** API 1 044 test · web 378 test · api-client 19 test — 100% line cả 3 workspace; domain 100% line + branch; lint + typecheck + Prettier sạch. E2e ma trận truy cập: 27 route có dữ liệu bé × 3 vai trò, danh sách route đọc từ `openapi.json` (route mới chưa khai báo quyền → test fail). Chạy thật trên Chrome 390 px: chủ hồ sơ tạo link → đăng xuất → mở link (xem trước không cần đăng nhập) → tạo tài khoản → tự quay lại → Tham gia → vào S01 của bé; Hồ sơ của người chăm không có nút sửa, dùng lại nguyên liệu, xóa bé; nhật ký hiện “bởi …”.
+
+**Lỗi thật được phát hiện và đã sửa trong P5b:**
+1. Thêm thành viên thứ hai vai trò chủ (vi phạm index “1 chủ / bé”) bị báo nhầm “Bạn đã là thành viên” — giờ chỉ trùng khóa chính mới là `ALREADY_MEMBER` (integration TC-FAM-017 phát hiện).
+2. Đổi món đồng thời của 2 người: lần sau ghi đè lần trước không báo gì — giờ lần sau nhận `MEAL_CHANGED`.
+3. Thỉnh thoảng một request e2e nhận 404 khi 3 project test chạy song song (2 lần: auth rate limit, catalog). Giả thuyết: supertest mở/đóng cổng tạm cho mỗi request, cổng bị tái dùng dưới tải. App e2e giờ lắng nghe một lần cho cả vòng đời; 3 lần chạy đầy đủ sau đó không tái hiện.
+4. Test ma trận phụ thuộc dữ liệu: sự kiện khẩn cấp trong setup tạm dừng nguyên liệu bữa trưa (thay đổi theo thực đơn sinh ra) nên đôi khi sửa món có gà bị từ chối đúng BR-82 — món dùng trong ma trận giờ chỉ gồm tinh bột.
+5. Đăng ký từ link mời luôn về `/` thay vì quay lại lời mời; link qua lại giữa Đăng nhập/Đăng ký làm mất `next`.
 
 ---
 
@@ -264,6 +328,7 @@ gantt
 - [ ] Engine đọc `health` qua `ChildContextReader`; handler `HealthChanged` → `RegenerateFuture`.
 - [ ] Domain `MenuEngine.weekStats` (BR-60..62); use cases `GetWeek`, `GenerateWeek` (`overwrite` chỉ thay bữa chưa ghi nhận).
 - [ ] Endpoint: `/children/:id/health*`, `GET /children/:id/weeks/:weekStart`, `POST …/generate`.
+- [ ] Kiểm quyền qua `ChildAccess` ngay từ đầu (cập nhật sức khỏe, lên tuần: cả chủ và người chăm — BR-73); `health_episodes.actor_id`; thêm các route mới vào e2e ma trận truy cập.
 
 **Frontend**
 - [ ] **S09**: 3 `RadioCard`, 6 biểu hiện, ngày bắt đầu / dự kiến kết thúc, khối “Thực đơn sẽ thay đổi” (từ `health/preview`), link S08, Cập nhật thực đơn.
@@ -323,9 +388,9 @@ gantt
 - Module **notification**: Web Push (VAPID), scheduler nhắc giờ ăn & nhắc theo dõi 2 giờ sau món mới (FR-097/098) — iOS cần cài PWA (16.4+).
 - Xuất nhật ký PDF cho bác sĩ (FR-070).
 
-### P9 — Gia đình & đăng nhập mạng xã hội (BE ~6 · FE ~4)
-- Nhiều người chăm cùng 1 bé (FR-099): lời mời qua link, vai trò chủ/người chăm; thay `ChildOwnershipGuard` bằng kiểm tra membership.
+### P9 — Đăng nhập mạng xã hội & gia đình mở rộng (BE ~4 · FE ~3)
 - Đăng nhập Google / Apple.
+- Gia đình mở rộng: thêm bé thứ 2 trên UI (G04 “Thêm bé”), thông báo cho thành viên khi có phản ứng / sự kiện khẩn cấp, cập nhật thời gian thực. (Nhiều người chăm cơ bản đã chuyển vào MVP — P5b.)
 
 ### P10 — CMS nội dung & phân tích (BE ~6 · FE ~6)
 - Module catalog có phía ghi: biên soạn, quy trình duyệt, version công thức (F16); app admin riêng.
@@ -346,6 +411,10 @@ gantt
 | FE bị chặn chờ API | Trung bình | Contract-first + MSW sinh từ OpenAPI. |
 | Kho món ít → lặp món | Trung bình | BR-21 + thông báo minh bạch; mục tiêu ≥ 60 món. |
 | Mở app ở 2 tab cùng lúc → 2 lần refresh cùng cookie → bị coi là đánh cắp, cả 2 tab đăng xuất | Trung bình | Làm ở P2: cho phép dùng lại token vừa xoay vòng trong 10 giây (trả cùng cặp mới), hoặc khóa refresh giữa các tab bằng `BroadcastChannel`/Web Locks. |
+| Chuyển từ “chủ sở hữu” sang “thành viên” làm lọt quyền ở một route nào đó (người ngoài hoặc người chăm làm được việc của chủ) | Cao | Một ma trận quyền duy nhất trong domain (BR-73); repository vẫn lọc theo membership; e2e ma trận truy cập sinh tự động từ danh sách route × 3 vai trò, chạy trong CI. |
+| Link mời bị lộ (gửi nhầm nhóm chat) | Trung bình | 72 giờ, dùng 1 lần, chủ thu hồi được; chủ thấy ngay ai đã tham gia và gỡ được (có hiệu lực ở request kế tiếp). |
+| Chia sẻ dữ liệu sức khỏe trẻ cho người khác (NĐ 13) | Trung bình | Màn xác nhận ở G14, lưu ai mời / lúc nào; hỏi tư vấn pháp lý (Q17) trước P7. |
+| Test API chạy đủ 3 project cùng lúc thỉnh thoảng rất chậm (1 lần ở P4, 1 lần ở P5: ~50 phút, hook integration hết giờ) | Trung bình | Chưa tái hiện; khi gặp lại: xem `pg_stat_activity` trong container test (truy vấn / transaction treo) trước khi chạy lại. Nếu là tranh chấp tài nguyên, chạy 3 project tuần tự trong CI. |
 | Hành vi `tel:` / PWA khác nhau trên iOS | Thấp | Test thiết bị thật ở P7; hiện số 115 dạng text cạnh nút. |
 
 ## 8. Definition of Done (áp dụng mọi phase)

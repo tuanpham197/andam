@@ -1,11 +1,12 @@
 import { useRegister } from '@appandam/api-client';
 import { useId, useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import styles from '../../app/layout.module.css';
 import { AlertBox } from '../../components/AlertBox';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { CONSENT_VERSION } from '../../features/auth/consent';
+import { safeNext, withNext } from '../../features/auth/guards';
 import { PasswordField } from '../../features/auth/PasswordField';
 import { setAuthenticated } from '../../features/auth/session-store';
 import { errorCode, messageFor } from '../../lib/errors';
@@ -22,6 +23,7 @@ export function RegisterPage() {
   const register = useRegister();
   const navigate = useNavigate();
   const legendId = useId();
+  const next = useSearchParams()[0].get('next');
 
   const code = errorCode(register.error);
   const emailError = code && EMAIL_CODES.includes(code) ? messageFor(register.error) : undefined;
@@ -48,7 +50,8 @@ export function RegisterPage() {
       .catch(() => null);
     if (!session) return;
     setAuthenticated(session.accessToken);
-    await navigate('/', { replace: true });
+    // From an invite link: back to it, the child's profile comes from the invite (UC-21).
+    await navigate(safeNext(next), { replace: true });
   }
 
   return (
@@ -110,7 +113,7 @@ export function RegisterPage() {
       </form>
       <div className={styles.links}>
         <span>
-          {vi.auth.hasAccount} <Link to="/login">{vi.auth.loginSubmit}</Link>
+          {vi.auth.hasAccount} <Link to={withNext('/login', next)}>{vi.auth.loginSubmit}</Link>
         </span>
       </div>
     </>

@@ -1,5 +1,9 @@
 import { PASSWORD, identityTestbed, registered } from '../../../../../test/fakes/identity.js';
-import { InvalidAccessTokenError, InvalidCredentialsError } from '../../domain/errors.js';
+import {
+  InvalidAccessTokenError,
+  InvalidCredentialsError,
+  OwnershipTransferRequiredError,
+} from '../../domain/errors.js';
 
 describe('GetMeService', () => {
   it('returns the account profile', async () => {
@@ -9,8 +13,20 @@ describe('GetMeService', () => {
       id: userId,
       email: 'na@example.vn',
       timezone: 'Asia/Ho_Chi_Minh',
+      displayName: null,
       createdAt: t.clock.now(),
     });
+  });
+
+  it('FR-119 sets and clears the display name', async () => {
+    const t = identityTestbed();
+    const { userId } = await registered(t);
+    expect((await t.getMe.rename({ userId, displayName: ' Mẹ Na ' })).displayName).toBe('Mẹ Na');
+    expect((await t.getMe.execute({ userId })).displayName).toBe('Mẹ Na');
+    expect((await t.getMe.rename({ userId, displayName: null })).displayName).toBeNull();
+    await expect(t.getMe.rename({ userId: 'ghost', displayName: 'x' })).rejects.toThrow(
+      InvalidAccessTokenError,
+    );
   });
 
   it.each([
@@ -51,6 +67,28 @@ describe('DeleteAccountService (UC-19)', () => {
     await expect(t.authenticate.execute({ accessToken: session.accessToken })).rejects.toThrow(
       InvalidAccessTokenError,
     );
+  });
+
+  it('TC-FAM-018 an owner whose child is still used by others must hand it over first', async () => {
+    const t = identityTestbed();
+    const { userId } = await registered(t);
+    t.accountChildren.blocking = [{ id: 'c-1', name: 'Na' }];
+    const error = await t.deleteAccount
+      .execute({ userId, password: PASSWORD })
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(OwnershipTransferRequiredError);
+    expect((error as OwnershipTransferRequiredError).details).toEqual({
+      children: [{ id: 'c-1', name: 'Na' }],
+    });
+    expect((await t.users.findById(userId))!.isActive).toBe(true);
+    expect(t.accountChildren.left).toEqual([]);
+  });
+
+  it('TC-FAM-019 a caregiver closing the account leaves every child', async () => {
+    const t = identityTestbed();
+    const { userId } = await registered(t);
+    await t.deleteAccount.execute({ userId, password: PASSWORD });
+    expect(t.accountChildren.left).toEqual([userId]);
   });
 
   it('refuses an account that no longer exists', async () => {

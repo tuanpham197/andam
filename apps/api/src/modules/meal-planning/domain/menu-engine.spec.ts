@@ -422,3 +422,16 @@ describe('generateDay (BR-20..26)', () => {
     expect(history).toHaveLength(28);
   });
 });
+
+describe('deleted "Món của bạn" (BR-86)', () => {
+  it('TC-CUS-013 never plans a deleted dish', () => {
+    const base = catalogContext();
+    const keep = new Set(['dish_ga_0', 'dish_snack_chuoi']);
+    const ctx = {
+      ...base,
+      dishes: base.dishes.map((d) => (keep.has(d.id) ? d : { ...d, archived: true })),
+    };
+    const result = generateDay(ctx, day());
+    expect(new Set(result.meals.map((m) => m.dishId))).toEqual(keep);
+  });
+});

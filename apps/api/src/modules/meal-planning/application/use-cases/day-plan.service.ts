@@ -26,7 +26,7 @@ import {
   MEAL_PLAN_REPOSITORY,
   type MealPlanRepository,
 } from '../ports/out/meal-plan.repository.js';
-import { PLANNING_CATALOG, type PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import { PlanningDishes } from './planning-dishes.js';
 import {
   allergenIntroductionsBefore,
   dishMap,
@@ -52,7 +52,7 @@ export class DayPlanService {
   constructor(
     @Inject(MEAL_PLAN_REPOSITORY) private readonly plans: MealPlanRepository,
     @Inject(CHILD_PLANNING_READER) private readonly children: ChildPlanningReader,
-    @Inject(PLANNING_CATALOG) private readonly catalog: PlanningCatalog,
+    @Inject(PlanningDishes) private readonly catalog: PlanningDishes,
     @Inject(FOOD_HISTORY_READER) private readonly history: FoodHistoryReader,
     @Inject(ID_GENERATOR) private readonly ids: IdGenerator,
     @Inject(CLOCK) private readonly clock: Clock,
@@ -101,9 +101,10 @@ export class DayPlanService {
       }
     }
 
-    const [dishes, ingredients] = await Promise.all([
-      this.catalog.dishes(),
+    const [dishes, ingredients, logged] = await Promise.all([
+      this.catalog.forChild(childId),
       this.catalog.ingredients(),
+      this.history.loggedBy(meals.filter((m) => !m.isPending).map((m) => m.id)),
     ]);
     const byId = dishMap(dishes);
     const ingredientById = new Map(ingredients.map((i) => [i.id, i]));
@@ -112,7 +113,7 @@ export class DayPlanService {
     return {
       date,
       plannable: child.stage !== null,
-      meals: meals.map((m) => toMealView(m, byId, ingredientById)),
+      meals: meals.map((m) => toMealView(m, byId, ingredientById, logged.get(m.id) ?? null)),
       unfilledSlots: slots.filter((s) => !occupied.has(s.slot)),
       nextMealId: nextMealId(meals),
     };

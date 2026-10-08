@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionHost } from '@nestjs-cls/transactional';
 import type { Prisma } from '../../../../../generated/prisma/client.js';
+import { childrenOf } from '../../../../../shared/infrastructure/persistence/child-access.js';
 import type { PrismaTransactionHost } from '../../../../../shared/infrastructure/persistence/transaction-host.js';
 import type { ChildRepository } from '../../../application/ports/out/child.repository.js';
 import { Child } from '../../../domain/child.js';
@@ -54,18 +55,30 @@ export class PrismaChildRepository implements ChildRepository {
         ...scalars(child),
         avoidAllergens: { create: child.avoidAllergens.map((allergen) => ({ allergen })) },
         avoidIngredients: { create: child.avoidIngredients },
+        // BR-70: the creator owns the child.
+        members: {
+          create: { userId: child.userId, role: 'owner', joinedAt: child.createdAt },
+        },
       },
     });
   }
 
+  async findById(childId: string): Promise<Child | null> {
+    const row = await this.txHost.tx.child.findUnique({ where: { id: childId }, include });
+    return row ? toDomain(row) : null;
+  }
+
   async findOwned(childId: string, userId: string): Promise<Child | null> {
-    const row = await this.txHost.tx.child.findFirst({ where: { id: childId, userId }, include });
+    const row = await this.txHost.tx.child.findFirst({
+      where: { id: childId, ...childrenOf(userId) },
+      include,
+    });
     return row ? toDomain(row) : null;
   }
 
   async listOwned(userId: string): Promise<Child[]> {
     const rows = await this.txHost.tx.child.findMany({
-      where: { userId },
+      where: childrenOf(userId),
       include,
       orderBy: { createdAt: 'asc' },
     });
@@ -89,7 +102,9 @@ export class PrismaChildRepository implements ChildRepository {
   }
 
   async deleteOwned(childId: string, userId: string): Promise<boolean> {
-    const { count } = await this.txHost.tx.child.deleteMany({ where: { id: childId, userId } });
+    const { count } = await this.txHost.tx.child.deleteMany({
+      where: { id: childId, ...childrenOf(userId) },
+    });
     return count === 1;
   }
 }

@@ -36,6 +36,7 @@ const snapshotUser = (u: User) =>
     email: u.email,
     passwordHash: u.passwordHash,
     timezone: u.timezone,
+    displayName: u.displayName,
     createdAt: u.createdAt,
     deletedAt: u.deletedAt,
   });
@@ -219,6 +220,18 @@ export class RecordingMailer implements Mailer {
   }
 }
 
+/** BR-76: what the child-profile module answers about the user's children. */
+export class FakeAccountChildren {
+  blocking: { id: string; name: string }[] = [];
+  left: string[] = [];
+  async blockingDeletion() {
+    return this.blocking;
+  }
+  async leaveAll(userId: string) {
+    this.left.push(userId);
+  }
+}
+
 export function identityTestbed() {
   const clock = new FixedClock(new Date('2026-09-28T03:00:00Z'));
   const ids = new SequenceIds();
@@ -232,6 +245,7 @@ export function identityTestbed() {
   const secureTokens = new FakeSecureTokens();
   const mailer = new RecordingMailer();
   const settings = { webBaseUrl: 'https://thucdon.test' };
+  const accountChildren = new FakeAccountChildren();
 
   const sessions = new SessionStarter(refreshTokens, accessTokens, secureTokens, ids, clock);
 
@@ -272,7 +286,15 @@ export function identityTestbed() {
       uow,
     ),
     getMe: new GetMeService(users),
-    deleteAccount: new DeleteAccountService(users, hasher, refreshTokens, clock, uow),
+    deleteAccount: new DeleteAccountService(
+      users,
+      hasher,
+      refreshTokens,
+      clock,
+      uow,
+      accountChildren,
+    ),
+    accountChildren,
     authenticate: new AuthenticateService(accessTokens, users),
   };
 }

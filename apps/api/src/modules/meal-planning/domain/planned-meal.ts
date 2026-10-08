@@ -107,6 +107,17 @@ export class PlannedMeal {
     this.state.status = 'prepared';
   }
 
+  /** UC-08: logging closes the meal; "Không ăn" marks it refused. */
+  markLogged(outcome: 'eaten' | 'refused'): void {
+    if (!this.isPending) throw new MealAlreadyLoggedError();
+    this.state.status = outcome;
+  }
+
+  /** BR-86: after a "Món của bạn" is edited, its first tries are worked out again. */
+  updateNewIngredients(ids: string[]): void {
+    this.state.newIngredientIds = [...ids];
+  }
+
   /** FR-045: the caller has checked the dish is safe and fits the slot. */
   swapTo(target: {
     dishId: string;

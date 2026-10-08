@@ -10,7 +10,7 @@ import {
   type ChildPlanningReader,
 } from '../ports/out/child-planning.reader.js';
 import { FOOD_HISTORY_READER, type FoodHistoryReader } from '../ports/out/food-history.reader.js';
-import { PLANNING_CATALOG, type PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import { PlanningDishes } from './planning-dishes.js';
 import { foodGroupsOf, loadPlanningContext, type ViewGroup } from './planning-context.js';
 
 export interface RecipeView {
@@ -24,14 +24,16 @@ export interface RecipeView {
   tool: string;
   contentVersion: number;
   reviewedBy: string | null;
+  /** "Món của bạn": made by the parents, not reviewed (BR-85). */
+  custom: boolean;
   stages: StageId[];
   selectedStage: StageId;
   variants: { stage: StageId; texture: Texture; portionText: string; portionMl: number | null }[];
   ingredients: {
     ingredientId: string;
     name: string;
-    qty: number;
-    unit: string;
+    qty: number | null;
+    unit: string | null;
     isMain: boolean;
     foodGroup: FoodGroup;
     allergenTags: Allergen[];
@@ -50,7 +52,7 @@ export interface RecipeView {
 export class RecipeService {
   constructor(
     @Inject(CHILD_PLANNING_READER) private readonly children: ChildPlanningReader,
-    @Inject(PLANNING_CATALOG) private readonly catalog: PlanningCatalog,
+    @Inject(PlanningDishes) private readonly catalog: PlanningDishes,
     @Inject(FOOD_HISTORY_READER) private readonly history: FoodHistoryReader,
     @Inject(CLOCK) private readonly clock: Clock,
   ) {}
@@ -58,7 +60,7 @@ export class RecipeService {
   async get(userId: string, childId: string, dishId: string, stage?: number): Promise<RecipeView> {
     const child = await this.children.find(childId, userId);
     if (!child) throw new PlanChildNotFoundError();
-    const recipe = await this.catalog.recipe(dishId);
+    const recipe = await this.catalog.recipe(childId, dishId);
     if (!recipe) throw new DishNotFoundError();
 
     const supported = recipe.dish.stages;
@@ -87,6 +89,7 @@ export class RecipeService {
       tool: recipe.tool,
       contentVersion: recipe.contentVersion,
       reviewedBy: recipe.reviewedBy,
+      custom: recipe.dish.custom === true,
       stages: supported,
       selectedStage,
       variants: recipe.variants,

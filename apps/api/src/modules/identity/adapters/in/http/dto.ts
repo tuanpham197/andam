@@ -80,6 +80,22 @@ export class AccountResponseDto {
   @ApiProperty({ example: 'Asia/Ho_Chi_Minh' })
   timezone: string;
 
+  @ApiProperty({ nullable: true, type: String, description: 'Tên người nhà thấy (FR-119)' })
+  displayName: string | null;
+
   @ApiProperty({ format: 'date-time' })
   createdAt: Date;
+}
+
+export class UpdateMeDto {
+  @ApiProperty({
+    nullable: true,
+    type: String,
+    maxLength: 30,
+    description: 'Trống để bỏ tên hiển thị',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  displayName: string | null;
 }

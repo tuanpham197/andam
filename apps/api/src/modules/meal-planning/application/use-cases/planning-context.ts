@@ -13,7 +13,7 @@ import type {
 import type { MealStatus, PlannedMeal } from '../../domain/planned-meal.js';
 import type { ChildPlanningInfo } from '../ports/out/child-planning.reader.js';
 import type { FoodHistoryReader } from '../ports/out/food-history.reader.js';
-import type { PlanningCatalog } from '../ports/out/planning-catalog.port.js';
+import type { PlanningDishes } from './planning-dishes.js';
 
 const VIEW_GROUPS = ['carb', 'protein', 'fat', 'veg'] as const;
 export type ViewGroup = (typeof VIEW_GROUPS)[number];
@@ -33,14 +33,14 @@ export function foodGroupsOf(
 }
 
 export async function loadPlanningContext(
-  catalog: PlanningCatalog,
+  catalog: PlanningDishes,
   history: FoodHistoryReader,
   child: ChildPlanningInfo,
   stage: StageId,
   date: LocalDate,
 ): Promise<{ ctx: PlanningContext; schedule: StageSchedule }> {
   const [dishes, ingredients, schedule, tried, paused, feedback, health] = await Promise.all([
-    catalog.dishes(),
+    catalog.forChild(child.childId),
     catalog.ingredients(),
     catalog.schedule(stage),
     history.tried(child.childId),
@@ -108,8 +108,11 @@ export interface MealView {
     cookMin: number;
     mainProtein: ProteinSource | null;
     foodGroups: ViewGroup[];
+    custom: boolean;
   };
   newIngredients: { id: string; name: string }[];
+  /** FR-118: who logged the meal, for the other members (null while not logged). */
+  loggedBy: { name: string | null; at: Date } | null;
 }
 
 /** A dish as the meal screens show it: timing, protein and the food groups it covers. */
@@ -121,6 +124,7 @@ export function dishSummary(dish: PlanDish, ingredients: ReadonlyMap<string, Pla
     cookMin: dish.cookMin,
     mainProtein: dish.mainProtein,
     foodGroups: foodGroupsOf(dish.ingredientIds, ingredients),
+    custom: dish.custom === true,
   };
 }
 
@@ -131,6 +135,7 @@ export function toMealView(
   meal: PlannedMeal,
   dishes: ReadonlyMap<string, PlanDish>,
   ingredients: ReadonlyMap<string, PlanIngredient>,
+  loggedBy: MealView['loggedBy'] = null,
 ): MealView {
   return {
     id: meal.id,
@@ -141,5 +146,6 @@ export function toMealView(
     portionText: meal.portionText,
     dish: dishSummary(dishes.get(meal.dishId)!, ingredients),
     newIngredients: namedIngredients(meal.newIngredientIds, ingredients),
+    loggedBy,
   };
 }

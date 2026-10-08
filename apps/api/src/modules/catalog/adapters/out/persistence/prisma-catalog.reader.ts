@@ -37,7 +37,9 @@ export class PrismaCatalogReader implements CatalogReader {
   }
 
   async listDishes(): Promise<DishView[]> {
+    // Catalog dishes only: parents' own dishes ("Món của bạn") belong to meal-planning.
     const rows = await this.prisma.dish.findMany({
+      where: { ownerChildId: null },
       include: { variants: { orderBy: { stageId: 'asc' } }, ingredients: true },
       orderBy: { id: 'asc' },
     });
@@ -84,8 +86,8 @@ export class PrismaCatalogReader implements CatalogReader {
   }
 
   async recipe(dishId: string): Promise<RecipeDetailView | null> {
-    const dish = await this.prisma.dish.findUnique({
-      where: { id: dishId },
+    const dish = await this.prisma.dish.findFirst({
+      where: { id: dishId, ownerChildId: null },
       include: { ingredients: { include: { ingredient: true } } },
     });
     if (!dish) return null;
@@ -99,8 +101,9 @@ export class PrismaCatalogReader implements CatalogReader {
       lines: dish.ingredients.map((line) => ({
         ingredientId: line.ingredientId,
         name: line.ingredient.name,
+        // Catalog lines always carry a quantity (checked when seeding); only parents' dishes omit it.
         qty: Number(line.qty),
-        unit: line.unit,
+        unit: line.unit ?? '',
         isMain: line.isMain,
         foodGroup: line.ingredient.foodGroup,
         allergenTags: line.ingredient.allergenTags,

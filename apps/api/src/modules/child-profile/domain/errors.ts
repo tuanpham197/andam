@@ -87,3 +87,95 @@ export class UnknownIngredientError extends DomainError {
     super(`Nguyên liệu không tồn tại: ${ingredientIds.join(', ')}`);
   }
 }
+
+/** BR-74: a member asking for something only the owner may do. */
+export class OwnerOnlyError extends DomainError {
+  readonly code = 'OWNER_ONLY';
+  readonly kind = 'forbidden';
+  constructor() {
+    super('Chỉ chủ hồ sơ được thực hiện thao tác này');
+  }
+}
+
+export class InviteNotFoundError extends DomainError {
+  readonly code = 'INVITE_NOT_FOUND';
+  readonly kind = 'not_found';
+  constructor() {
+    super('Lời mời không tồn tại');
+  }
+}
+
+export class InviteExpiredError extends DomainError {
+  readonly code = 'INVITE_EXPIRED';
+  readonly kind = 'gone';
+  constructor() {
+    super('Lời mời đã hết hạn');
+  }
+}
+
+export class InviteRevokedError extends DomainError {
+  readonly code = 'INVITE_REVOKED';
+  readonly kind = 'gone';
+  constructor() {
+    super('Lời mời đã bị thu hồi');
+  }
+}
+
+export class InviteUsedError extends DomainError {
+  readonly code = 'INVITE_USED';
+  readonly kind = 'conflict';
+  constructor() {
+    super('Lời mời đã được dùng');
+  }
+}
+
+export class AlreadyMemberError extends DomainError {
+  readonly code = 'ALREADY_MEMBER';
+  readonly kind = 'conflict';
+  constructor(readonly childId: string) {
+    super('Bạn đã là thành viên của hồ sơ bé này');
+  }
+  override get details() {
+    return { childId: this.childId };
+  }
+}
+
+export class MemberLimitError extends DomainError {
+  readonly code = 'MEMBER_LIMIT_REACHED';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Mỗi bé có tối đa 6 người chăm (gồm chủ hồ sơ)');
+  }
+}
+
+export class InviteLimitError extends DomainError {
+  readonly code = 'INVITE_LIMIT_REACHED';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Đã có 5 lời mời đang chờ');
+  }
+}
+
+export class OwnerCannotLeaveError extends DomainError {
+  readonly code = 'OWNER_CANNOT_LEAVE';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Chủ hồ sơ cần chuyển quyền chủ trước khi rời');
+  }
+}
+
+export class NotACaregiverError extends DomainError {
+  readonly code = 'NOT_A_CAREGIVER';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Chỉ chuyển quyền chủ cho người chăm của bé');
+  }
+}
+
+export class MemberNotFoundError extends DomainError {
+  readonly code = 'MEMBER_NOT_FOUND';
+  readonly kind = 'not_found';
+  constructor() {
+    super('Người này không phải thành viên của hồ sơ bé');
+  }
+}

@@ -151,7 +151,13 @@ describe('Swap (S02)', () => {
     const { router } = renderApp(SWAP_URL);
     await user.click(await screen.findByRole('button', { name: 'Chọn món này' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
-    expect(bodies).toEqual([{ dishId: 'dish_chao_bo_cai_bo_xoi', reason: 'missing_ingredient' }]);
+    expect(bodies).toEqual([
+      {
+        dishId: 'dish_chao_bo_cai_bo_xoi',
+        reason: 'missing_ingredient',
+        expectedDishId: 'dish_chao_ca_hoi_rau_ngot',
+      },
+    ]);
     await waitFor(() => expect(dayRequests).toBeGreaterThan(0));
   });
 
@@ -170,7 +176,13 @@ describe('Swap (S02)', () => {
     await user.click(screen.getByRole('button', { name: 'Bé không thích' }));
     await user.click(await screen.findByRole('button', { name: 'Chọn Cháo cá lóc bí xanh' }));
     await waitFor(() =>
-      expect(bodies).toEqual([{ dishId: 'dish_chao_ca_loc_bi_xanh', reason: 'disliked' }]),
+      expect(bodies).toEqual([
+        {
+          dishId: 'dish_chao_ca_loc_bi_xanh',
+          reason: 'disliked',
+          expectedDishId: 'dish_chao_ca_hoi_rau_ngot',
+        },
+      ]),
     );
   });
 
@@ -205,6 +217,16 @@ describe('Swap (S02)', () => {
         'Món này không còn an toàn cho bé. Danh sách gợi ý đã được cập nhật.',
       ),
     ).toBeInTheDocument();
+    await waitFor(() => expect(reasons).toHaveLength(2));
+  });
+
+  it('TC-FAM-021 says another member changed the meal, and reloads', async () => {
+    const reasons = serveSuggestions();
+    server.use(http.post(`${API}/meals/:mealId/swap`, () => problem(409, 'MEAL_CHANGED')));
+    const user = userEvent.setup();
+    renderApp(SWAP_URL);
+    await user.click(await screen.findByRole('button', { name: 'Chọn món này' }));
+    expect(await screen.findByText(/vừa được người nhà đổi sang món khác/)).toBeInTheDocument();
     await waitFor(() => expect(reasons).toHaveLength(2));
   });
 

@@ -78,6 +78,7 @@ describe('Dishes (S05)', () => {
       'Heo',
       'Đậu',
       'Bữa phụ',
+      'Món của bạn',
     ]);
     expect(chips.getByRole('button', { name: 'Tất cả' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(chips.getByRole('button', { name: 'Cá' }));
@@ -251,5 +252,19 @@ describe('Dishes (S05)', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Món ăn' })).toBeVisible();
     await user.click(await screen.findByRole('button', { name: 'Thử lại' }));
     expect(await screen.findByText('3 món phù hợp')).toBeInTheDocument();
+  });
+
+  it('TC-CUS-009 marks the parents’ dishes and offers to create one', async () => {
+    serveLibrary(() =>
+      libraryFixture({
+        dishes: [
+          { ...libraryFixture().dishes[0]!, id: 'custom_1', name: 'Cháo nhà làm', custom: true },
+        ],
+      }),
+    );
+    renderApp('/dishes');
+    await screen.findByText('Cháo nhà làm');
+    expect(card('Cháo nhà làm').getByText('Món của bạn')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Tạo món' })).toHaveAttribute('href', '/dishes/new');
   });
 });

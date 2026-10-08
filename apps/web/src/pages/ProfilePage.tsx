@@ -16,6 +16,8 @@ import { AvoidFoodsEditor } from '../features/child/AvoidFoodsEditor';
 import { formatAge, textureLabel } from '../features/child/format';
 import { useActiveChild } from '../features/child/guards';
 import type { DraftIngredient } from '../features/onboarding/draft';
+import { MembersCard } from '../features/members/MembersCard';
+import { PausedFoods } from '../features/safety/PausedFoods';
 import { messageFor } from '../lib/errors';
 import { vi } from '../strings/vi';
 
@@ -97,9 +99,11 @@ function AvoidList() {
               ))}
             </div>
           )}
-          <Button variant="secondary" onClick={edit}>
-            {t.editAvoid}
-          </Button>
+          {child.role === 'owner' && (
+            <Button variant="secondary" onClick={edit}>
+              {t.editAvoid}
+            </Button>
+          )}
         </>
       )}
     </section>
@@ -184,6 +188,10 @@ export function ProfilePage() {
 
       <AvoidList />
 
+      <PausedFoods childId={child.id} canResume={child.role === 'owner'} />
+
+      <MembersCard />
+
       <nav aria-label={t.settings} className={styles.card} style={{ padding: 0 }}>
         {[
           { to: '/settings/age', label: t.ageLink },
@@ -209,7 +217,7 @@ export function ProfilePage() {
         ))}
       </nav>
 
-      <DeleteChild />
+      {child.role === 'owner' && <DeleteChild />}
     </>
   );
 }

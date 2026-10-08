@@ -8,6 +8,7 @@ import type {
   PlanningCatalog,
   Recipe,
 } from '../../../application/ports/out/planning-catalog.port.js';
+import type { StageDefault } from '../../../domain/custom-dish.js';
 import type { StageSchedule } from '../../../domain/menu-engine.js';
 import type { PlanDish, PlanIngredient, StageId } from '../../../domain/model.js';
 
@@ -39,6 +40,14 @@ export class CatalogPlanningAdapter implements PlanningCatalog {
 
   async ingredients(): Promise<PlanIngredient[]> {
     return (await this.catalog.listIngredients()) as PlanIngredient[];
+  }
+
+  async stageDefaults(): Promise<StageDefault[]> {
+    return (await this.catalog.listStages()).map((s) => ({
+      stage: s.id as StageId,
+      texture: s.texture as StageDefault['texture'],
+      portionText: s.portionText,
+    }));
   }
 
   async schedule(stage: StageId): Promise<StageSchedule> {

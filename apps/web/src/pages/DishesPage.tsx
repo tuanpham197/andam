@@ -181,7 +181,15 @@ export function DishesPage() {
   return (
     <>
       <div className={styles.head}>
-        <h1 className={styles.title}>{t.title}</h1>
+        <div className={styles.titleRow}>
+          <h1 className={styles.title}>{t.title}</h1>
+          {child.plannable && (
+            <Link to="/dishes/new" className={styles.create}>
+              <Icon name="plus" size={18} />
+              {t.create}
+            </Link>
+          )}
+        </div>
         {child.effectiveStage && (
           <div className={styles.filtered}>
             {[

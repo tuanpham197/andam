@@ -34,6 +34,12 @@ const PATHS = {
       <path d="m20 20-4-4" />
     </>
   ),
+  phone: (
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  edit: <path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4" />,
+  trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" />,
   eye: (
     <>
       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />

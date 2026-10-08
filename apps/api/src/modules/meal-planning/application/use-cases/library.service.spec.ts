@@ -17,6 +17,7 @@ describe('LibraryService (UC-07)', () => {
       cookMin: 15,
       mainProtein: 'chicken',
       foodGroups: ['carb', 'protein', 'fat', 'veg'],
+      custom: false,
       mealType: 'main',
       texture: 'lumpy',
       newIngredients: [],

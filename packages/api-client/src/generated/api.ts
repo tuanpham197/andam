@@ -93,85 +93,25 @@ export interface AccountResponseDto {
   id: string;
   email: string;
   timezone: string;
+  /**
+     * Tên người nhà thấy (FR-119)
+     * @nullable
+     */
+  displayName: string | null;
   createdAt: string;
+}
+
+export interface UpdateMeDto {
+  /**
+     * Trống để bỏ tên hiển thị
+     * @maxLength 30
+     * @nullable
+     */
+  displayName: string | null;
 }
 
 export interface DeleteAccountDto {
   password: string;
-}
-
-export type StageDtoTexture = typeof StageDtoTexture[keyof typeof StageDtoTexture];
-
-
-export const StageDtoTexture = {
-  puree_smooth: 'puree_smooth',
-  mashed: 'mashed',
-  lumpy: 'lumpy',
-  minced_soft: 'minced_soft',
-  family: 'family',
-} as const;
-
-export interface StageDto {
-  id: number;
-  name: string;
-  ageFromMonths: number;
-  ageToMonths: number;
-  texture: StageDtoTexture;
-  portionText: string;
-  mainMeals: number;
-  snacksMin: number;
-  snacksMax: number;
-}
-
-export type IngredientDtoFoodGroup = typeof IngredientDtoFoodGroup[keyof typeof IngredientDtoFoodGroup];
-
-
-export const IngredientDtoFoodGroup = {
-  carb: 'carb',
-  protein: 'protein',
-  fat: 'fat',
-  veg: 'veg',
-  fruit: 'fruit',
-  seasoning: 'seasoning',
-} as const;
-
-/**
- * @nullable
- */
-export type IngredientDtoProteinSource = typeof IngredientDtoProteinSource[keyof typeof IngredientDtoProteinSource] | null;
-
-
-export const IngredientDtoProteinSource = {
-  fish: 'fish',
-  chicken: 'chicken',
-  beef: 'beef',
-  pork: 'pork',
-  legume: 'legume',
-  egg: 'egg',
-} as const;
-
-export type IngredientDtoAllergenTagsItem = typeof IngredientDtoAllergenTagsItem[keyof typeof IngredientDtoAllergenTagsItem];
-
-
-export const IngredientDtoAllergenTagsItem = {
-  egg: 'egg',
-  cow_milk: 'cow_milk',
-  peanut: 'peanut',
-  shellfish: 'shellfish',
-  fish: 'fish',
-  wheat: 'wheat',
-  soy: 'soy',
-  sesame: 'sesame',
-  tree_nut: 'tree_nut',
-} as const;
-
-export interface IngredientDto {
-  id: string;
-  name: string;
-  foodGroup: IngredientDtoFoodGroup;
-  /** @nullable */
-  proteinSource?: IngredientDtoProteinSource;
-  allergenTags: IngredientDtoAllergenTagsItem[];
 }
 
 export interface AgeDto {
@@ -250,6 +190,17 @@ export const ChildDtoAvoidAllergensItem = {
   tree_nut: 'tree_nut',
 } as const;
 
+/**
+ * Vai trò của bạn với bé (BR-73)
+ */
+export type ChildDtoRole = typeof ChildDtoRole[keyof typeof ChildDtoRole];
+
+
+export const ChildDtoRole = {
+  owner: 'owner',
+  caregiver: 'caregiver',
+} as const;
+
 export interface ChildDto {
   age: AgeDto;
   /** @nullable */
@@ -274,6 +225,8 @@ export interface ChildDto {
   avoidIngredients: AvoidIngredientViewDto[];
   /** @nullable */
   stageOverride: number | null;
+  /** Vai trò của bạn với bé (BR-73) */
+  role: ChildDtoRole;
 }
 
 export type AvoidIngredientDtoReason = typeof AvoidIngredientDtoReason[keyof typeof AvoidIngredientDtoReason];
@@ -409,6 +362,138 @@ export interface ChildProfileDto {
   stages: StageStateDto[];
 }
 
+export type MemberDtoRole = typeof MemberDtoRole[keyof typeof MemberDtoRole];
+
+
+export const MemberDtoRole = {
+  owner: 'owner',
+  caregiver: 'caregiver',
+} as const;
+
+export interface MemberDto {
+  userId: string;
+  displayName: string;
+  email: string;
+  role: MemberDtoRole;
+  joinedAt: string;
+  isMe: boolean;
+}
+
+export interface PendingInviteDto {
+  id: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface MembersDto {
+  members: MemberDto[];
+  /** Chỉ chủ hồ sơ nhận được */
+  pendingInvites: PendingInviteDto[];
+}
+
+export interface CreatedInviteDto {
+  id: string;
+  /** Link mời — chỉ trả một lần, server không lưu token */
+  url: string;
+  expiresAt: string;
+}
+
+export interface TransferOwnershipDto {
+  userId: string;
+}
+
+export interface InvitePreviewDto {
+  childName: string;
+  inviterName: string;
+  expiresAt: string;
+}
+
+export type AcceptedInviteDtoRole = typeof AcceptedInviteDtoRole[keyof typeof AcceptedInviteDtoRole];
+
+
+export const AcceptedInviteDtoRole = {
+  caregiver: 'caregiver',
+} as const;
+
+export interface AcceptedInviteDto {
+  childId: string;
+  role: AcceptedInviteDtoRole;
+}
+
+export type StageDtoTexture = typeof StageDtoTexture[keyof typeof StageDtoTexture];
+
+
+export const StageDtoTexture = {
+  puree_smooth: 'puree_smooth',
+  mashed: 'mashed',
+  lumpy: 'lumpy',
+  minced_soft: 'minced_soft',
+  family: 'family',
+} as const;
+
+export interface StageDto {
+  id: number;
+  name: string;
+  ageFromMonths: number;
+  ageToMonths: number;
+  texture: StageDtoTexture;
+  portionText: string;
+  mainMeals: number;
+  snacksMin: number;
+  snacksMax: number;
+}
+
+export type IngredientDtoFoodGroup = typeof IngredientDtoFoodGroup[keyof typeof IngredientDtoFoodGroup];
+
+
+export const IngredientDtoFoodGroup = {
+  carb: 'carb',
+  protein: 'protein',
+  fat: 'fat',
+  veg: 'veg',
+  fruit: 'fruit',
+  seasoning: 'seasoning',
+} as const;
+
+/**
+ * @nullable
+ */
+export type IngredientDtoProteinSource = typeof IngredientDtoProteinSource[keyof typeof IngredientDtoProteinSource] | null;
+
+
+export const IngredientDtoProteinSource = {
+  fish: 'fish',
+  chicken: 'chicken',
+  beef: 'beef',
+  pork: 'pork',
+  legume: 'legume',
+  egg: 'egg',
+} as const;
+
+export type IngredientDtoAllergenTagsItem = typeof IngredientDtoAllergenTagsItem[keyof typeof IngredientDtoAllergenTagsItem];
+
+
+export const IngredientDtoAllergenTagsItem = {
+  egg: 'egg',
+  cow_milk: 'cow_milk',
+  peanut: 'peanut',
+  shellfish: 'shellfish',
+  fish: 'fish',
+  wheat: 'wheat',
+  soy: 'soy',
+  sesame: 'sesame',
+  tree_nut: 'tree_nut',
+} as const;
+
+export interface IngredientDto {
+  id: string;
+  name: string;
+  foodGroup: IngredientDtoFoodGroup;
+  /** @nullable */
+  proteinSource?: IngredientDtoProteinSource;
+  allergenTags: IngredientDtoAllergenTagsItem[];
+}
+
 /**
  * @nullable
  */
@@ -442,11 +527,22 @@ export interface MealDishDto {
   /** @nullable */
   mainProtein: MealDishDtoMainProtein;
   foodGroups: MealDishDtoFoodGroupsItem[];
+  /** Món của bạn (F18) */
+  custom: boolean;
 }
 
 export interface NamedIngredientDto {
   id: string;
   name: string;
+}
+
+export interface LoggedByDto {
+  /**
+     * Null nếu tài khoản đã xóa
+     * @nullable
+     */
+  name: string | null;
+  at: string;
 }
 
 export type MealDtoSlot = typeof MealDtoSlot[keyof typeof MealDtoSlot];
@@ -492,6 +588,11 @@ export interface MealDto {
   portionText: string;
   dish: MealDishDto;
   newIngredients: NamedIngredientDto[];
+  /**
+     * Ai đã ghi nhận (FR-118)
+     * @nullable
+     */
+  loggedBy: LoggedByDto | null;
 }
 
 export type SlotDtoSlot = typeof SlotDtoSlot[keyof typeof SlotDtoSlot];
@@ -703,6 +804,8 @@ export const SwapDtoReason = {
 export interface SwapDto {
   dishId: string;
   reason: SwapDtoReason;
+  /** Món bữa đang có khi phụ huynh mở gợi ý; khác món hiện tại → 409 MEAL_CHANGED (BR-77) */
+  expectedDishId?: string;
 }
 
 export type LastEatenDtoSlot = typeof LastEatenDtoSlot[keyof typeof LastEatenDtoSlot];
@@ -774,6 +877,8 @@ export interface LibraryDishDto {
   /** @nullable */
   mainProtein: LibraryDishDtoMainProtein;
   foodGroups: LibraryDishDtoFoodGroupsItem[];
+  /** Món của bạn (F18) */
+  custom: boolean;
   mealType: LibraryDishDtoMealType;
   texture: LibraryDishDtoTexture;
   newIngredients: NamedIngredientDto[];
@@ -861,8 +966,13 @@ export const RecipeIngredientDtoAllergenTagsItem = {
 export interface RecipeIngredientDto {
   ingredientId: string;
   name: string;
-  qty: number;
-  unit: string;
+  /**
+     * Trống với món của bạn không cân đo
+     * @nullable
+     */
+  qty: number | null;
+  /** @nullable */
+  unit: string | null;
   isMain: boolean;
   foodGroup: RecipeIngredientDtoFoodGroup;
   allergenTags: RecipeIngredientDtoAllergenTagsItem[];
@@ -931,6 +1041,8 @@ export interface RecipeDto {
   contentVersion: number;
   /** @nullable */
   reviewedBy: string | null;
+  /** Món của bạn — chưa qua chuyên gia duyệt (BR-85) */
+  custom: boolean;
   stages: number[];
   selectedStage: number;
   variants: RecipeVariantDto[];
@@ -943,13 +1055,383 @@ export interface RecipeDto {
   exclusion: RecipeDtoExclusion;
 }
 
-export type SearchIngredientsParams = {
+export interface CustomDishIngredientDto {
+  id: string;
+  /**
+     * > 0 và ≤ 9 999; trống nếu không cân
+     * @nullable
+     */
+  qty?: number | null;
+  /**
+     * @maxLength 12
+     * @nullable
+     */
+  unit?: string | null;
+}
+
+export type CustomDishInputDtoMealType = typeof CustomDishInputDtoMealType[keyof typeof CustomDishInputDtoMealType];
+
+
+export const CustomDishInputDtoMealType = {
+  main: 'main',
+  snack: 'snack',
+} as const;
+
+export interface CustomDishInputDto {
+  /**
+     * @minLength 2
+     * @maxLength 60
+     */
+  name: string;
+  mealType: CustomDishInputDtoMealType;
+  /** 1–15 nguyên liệu trong danh mục */
+  ingredients: CustomDishIngredientDto[];
+  /**
+     * @minimum 0
+     * @maximum 180
+     */
+  prepMin: number;
+  /**
+     * @minimum 0
+     * @maximum 240
+     */
+  cookMin: number;
+  /** Tối đa 15 bước, mỗi bước ≤ 300 ký tự */
+  steps: string[];
+}
+
+export type CustomDishFormIngredientDtoFoodGroup = typeof CustomDishFormIngredientDtoFoodGroup[keyof typeof CustomDishFormIngredientDtoFoodGroup];
+
+
+export const CustomDishFormIngredientDtoFoodGroup = {
+  carb: 'carb',
+  protein: 'protein',
+  fat: 'fat',
+  veg: 'veg',
+  fruit: 'fruit',
+  seasoning: 'seasoning',
+} as const;
+
+export interface CustomDishFormIngredientDto {
+  id: string;
+  name: string;
+  foodGroup: CustomDishFormIngredientDtoFoodGroup;
+  /** @nullable */
+  qty: number | null;
+  /** @nullable */
+  unit: string | null;
+}
+
+export type CustomDishFormDtoMealType = typeof CustomDishFormDtoMealType[keyof typeof CustomDishFormDtoMealType];
+
+
+export const CustomDishFormDtoMealType = {
+  main: 'main',
+  snack: 'snack',
+} as const;
+
+export interface CustomDishFormDto {
+  id: string;
+  name: string;
+  mealType: CustomDishFormDtoMealType;
+  ingredients: CustomDishFormIngredientDto[];
+  prepMin: number;
+  cookMin: number;
+  steps: string[];
+}
+
+export interface OpenUrgentDto {
+  /**
+     * Bữa vừa ăn: nguyên liệu mới và có tag dị ứng của bữa này sẽ tạm dừng (BR-41)
+     * @nullable
+     */
+  mealId?: string | null;
+}
+
+export interface UrgentEventDto {
+  id: string;
+  /** @nullable */
+  mealId: string | null;
+  openedAt: string;
+  /** @nullable */
+  contactedMedicalAt: string | null;
+  pausedIngredients: NamedIngredientDto[];
+}
+
+export interface UpdateUrgentDto {
+  /** “Tôi đã liên hệ nhân viên y tế” (FR-067) */
+  contactedMedical: true;
+}
+
+export interface PauseMealDto {
+  date: string;
+  slot: string;
+  dishName: string;
+}
+
+export type PausedIngredientDtoReason = typeof PausedIngredientDtoReason[keyof typeof PausedIngredientDtoReason];
+
+
+export const PausedIngredientDtoReason = {
+  reaction: 'reaction',
+  urgent: 'urgent',
+} as const;
+
+export interface PausedIngredientDto {
+  id: string;
+  ingredientId: string;
+  name: string;
+  reason: PausedIngredientDtoReason;
+  pausedAt: string;
+  /** @nullable */
+  meal: PauseMealDto | null;
+}
+
+export interface LogDishDto {
+  id: string;
+  name: string;
+  custom: boolean;
+}
+
+export type LogFormMealDtoSlot = typeof LogFormMealDtoSlot[keyof typeof LogFormMealDtoSlot];
+
+
+export const LogFormMealDtoSlot = {
+  breakfast: 'breakfast',
+  morning_snack: 'morning_snack',
+  lunch: 'lunch',
+  afternoon_snack: 'afternoon_snack',
+  dinner: 'dinner',
+  extra_snack: 'extra_snack',
+} as const;
+
+export type LogFormMealDtoStatus = typeof LogFormMealDtoStatus[keyof typeof LogFormMealDtoStatus];
+
+
+export const LogFormMealDtoStatus = {
+  planned: 'planned',
+  prepared: 'prepared',
+  eaten: 'eaten',
+  refused: 'refused',
+  skipped: 'skipped',
+} as const;
+
+export interface LogFormMealDto {
+  id: string;
+  date: string;
+  slot: LogFormMealDtoSlot;
+  time: string;
+  status: LogFormMealDtoStatus;
+  dish: LogDishDto;
+}
+
+export type ReactionDtoSymptomsItem = typeof ReactionDtoSymptomsItem[keyof typeof ReactionDtoSymptomsItem];
+
+
+export const ReactionDtoSymptomsItem = {
+  rash: 'rash',
+  vomit: 'vomit',
+  diarrhea: 'diarrhea',
+  swelling: 'swelling',
+  breathing: 'breathing',
+  fussy: 'fussy',
+} as const;
+
+export type ReactionDtoSeverity = typeof ReactionDtoSeverity[keyof typeof ReactionDtoSeverity];
+
+
+export const ReactionDtoSeverity = {
+  unknown: 'unknown',
+  mild: 'mild',
+  moderate: 'moderate',
+  severe: 'severe',
+} as const;
+
+export interface ReactionDto {
+  symptoms: ReactionDtoSymptomsItem[];
+  severity: ReactionDtoSeverity;
+  /** @nullable */
+  note: string | null;
+}
+
+export type LogDtoAmount = typeof LogDtoAmount[keyof typeof LogDtoAmount];
+
+
+export const LogDtoAmount = {
+  none: 'none',
+  few_spoons: 'few_spoons',
+  quarter: 'quarter',
+  half: 'half',
+  almost_all: 'almost_all',
+  all: 'all',
+} as const;
+
+export type LogDtoOutcome = typeof LogDtoOutcome[keyof typeof LogDtoOutcome];
+
+
+export const LogDtoOutcome = {
+  eaten: 'eaten',
+  refused: 'refused',
+} as const;
+
+export interface LogDto {
+  id: string;
+  mealId: string;
+  loggedAt: string;
+  /**
+     * Người ghi nhận (FR-118)
+     * @nullable
+     */
+  loggedBy: string | null;
+  amount: LogDtoAmount;
+  liking: number;
+  outcome: LogDtoOutcome;
+  /** @nullable */
+  reaction: ReactionDto | null;
+}
+
+export interface LogFormDto {
+  meal: LogFormMealDto;
+  /** Nguyên liệu bé thử lần đầu */
+  firstTryIngredients: NamedIngredientDto[];
+  /** Sẽ tạm dừng nếu ghi nhận có dấu hiệu bất thường (BR-40) */
+  suspectIngredients: NamedIngredientDto[];
+  /** @nullable */
+  log: LogDto | null;
+}
+
+export type ReactionInputDtoSymptomsItem = typeof ReactionInputDtoSymptomsItem[keyof typeof ReactionInputDtoSymptomsItem];
+
+
+export const ReactionInputDtoSymptomsItem = {
+  rash: 'rash',
+  vomit: 'vomit',
+  diarrhea: 'diarrhea',
+  swelling: 'swelling',
+  breathing: 'breathing',
+  fussy: 'fussy',
+} as const;
+
+export type ReactionInputDtoSeverity = typeof ReactionInputDtoSeverity[keyof typeof ReactionInputDtoSeverity];
+
+
+export const ReactionInputDtoSeverity = {
+  unknown: 'unknown',
+  mild: 'mild',
+  moderate: 'moderate',
+  severe: 'severe',
+} as const;
+
+export interface ReactionInputDto {
+  /** Ít nhất một dấu hiệu */
+  symptoms: ReactionInputDtoSymptomsItem[];
+  severity: ReactionInputDtoSeverity;
+  /**
+     * @maxLength 500
+     * @nullable
+     */
+  note?: string | null;
+}
+
+export type LogMealDtoAmount = typeof LogMealDtoAmount[keyof typeof LogMealDtoAmount];
+
+
+export const LogMealDtoAmount = {
+  none: 'none',
+  few_spoons: 'few_spoons',
+  quarter: 'quarter',
+  half: 'half',
+  almost_all: 'almost_all',
+  all: 'all',
+} as const;
+
+export interface LogMealDto {
+  loggedAt: string;
+  amount: LogMealDtoAmount;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  liking: number;
+  /** @nullable */
+  reaction?: ReactionInputDto | null;
+}
+
+export interface LoggedMealDto {
+  log: LogDto;
+  /** Nguyên liệu đang tạm dừng sau ghi nhận */
+  pausedIngredients: NamedIngredientDto[];
+}
+
+export type JournalEntryDtoKind = typeof JournalEntryDtoKind[keyof typeof JournalEntryDtoKind];
+
+
+export const JournalEntryDtoKind = {
+  meal: 'meal',
+  urgent: 'urgent',
+} as const;
+
 /**
- * Tên hoặc tên gọi khác, không cần dấu
- * @maxLength 100
+ * @nullable
  */
-q: string;
-};
+export type JournalEntryDtoSlot = typeof JournalEntryDtoSlot[keyof typeof JournalEntryDtoSlot] | null;
+
+
+export const JournalEntryDtoSlot = {
+  breakfast: 'breakfast',
+  morning_snack: 'morning_snack',
+  lunch: 'lunch',
+  afternoon_snack: 'afternoon_snack',
+  dinner: 'dinner',
+  extra_snack: 'extra_snack',
+} as const;
+
+/**
+ * @nullable
+ */
+export type JournalEntryDtoAmount = typeof JournalEntryDtoAmount[keyof typeof JournalEntryDtoAmount] | null;
+
+
+export const JournalEntryDtoAmount = {
+  none: 'none',
+  few_spoons: 'few_spoons',
+  quarter: 'quarter',
+  half: 'half',
+  almost_all: 'almost_all',
+  all: 'all',
+} as const;
+
+export interface JournalEntryDto {
+  kind: JournalEntryDtoKind;
+  id: string;
+  at: string;
+  /** @nullable */
+  date: string | null;
+  /** @nullable */
+  slot: JournalEntryDtoSlot;
+  /** @nullable */
+  dish: LogDishDto | null;
+  /** @nullable */
+  amount: JournalEntryDtoAmount;
+  /** @nullable */
+  liking: number | null;
+  /** @nullable */
+  reaction: ReactionDto | null;
+  /** @nullable */
+  contactedMedicalAt: string | null;
+  pausedIngredients: NamedIngredientDto[];
+  /**
+     * Người thực hiện (FR-118)
+     * @nullable
+     */
+  actorName: string | null;
+}
+
+export interface JournalPageDto {
+  entries: JournalEntryDto[];
+  /** @nullable */
+  nextCursor: string | null;
+}
 
 export type PreviewStageParams = {
 birthDate?: string;
@@ -960,6 +1442,14 @@ weeksEarly?: number;
  * @maximum 4
  */
 stage?: number;
+};
+
+export type SearchIngredientsParams = {
+/**
+ * Tên hoặc tên gọi khác, không cần dấu
+ * @maxLength 100
+ */
+q: string;
 };
 
 export type GetSwapSuggestionsParams = {
@@ -1000,6 +1490,7 @@ export const ListDishesChip = {
   pork: 'pork',
   legume: 'legume',
   snack: 'snack',
+  custom: 'custom',
 } as const;
 
 export type GetRecipeParams = {
@@ -1008,6 +1499,13 @@ export type GetRecipeParams = {
  * @maximum 4
  */
 stage?: number;
+};
+
+export type GetJournalParams = {
+/**
+ * nextCursor của trang trước
+ */
+cursor?: string;
 };
 
 type AwaitedInput<T> = PromiseLike<T> | T;
@@ -1736,6 +2234,94 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+export const getUpdateMeUrl = () => {
+
+
+
+
+  return `/api/v1/me`
+}
+
+/**
+ * @summary Đặt tên hiển thị (FR-119)
+ */
+export const updateMe = async (updateMeDto: UpdateMeDto, options?: Parameters<typeof apiFetch>[1]): Promise<AccountResponseDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<AccountResponseDto>(getUpdateMeUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMeDto)
+  }
+);}
+
+
+
+
+
+export const getUpdateMeMutationKey = () => ['updateMe'] as const;
+
+export const getUpdateMeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,UpdateMeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,UpdateMeMutationVariables, TContext> => {
+
+const mutationKey = getUpdateMeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMe>>, UpdateMeMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateMe(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMeMutationResult = NonNullable<Awaited<ReturnType<typeof updateMe>>>
+    export type UpdateMeMutationBody = UpdateMeDto
+    export type UpdateMeMutationError = ErrorType<unknown>
+    export type UpdateMeMutationVariables = {data: UpdateMeDto}
+
+    /**
+ * @summary Đặt tên hiển thị (FR-119)
+ */
+export const useUpdateMe = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMe>>, TError,UpdateMeMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateMe>>,
+        TError,
+        UpdateMeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateMeMutationOptions(options), queryClient);
+    }
+
 export const getDeleteAccountUrl = () => {
 
 
@@ -1823,215 +2409,6 @@ export const useDeleteAccount = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteAccountMutationOptions(options), queryClient);
     }
-
-export const getListStagesUrl = () => {
-
-
-
-
-  return `/api/v1/stages`
-}
-
-/**
- * @summary Các giai đoạn ăn dặm (BR-13)
- */
-export const listStages = async ( options?: Parameters<typeof apiFetch>[1]): Promise<StageDto[]> => {
-
-  return apiFetch<StageDto[]>(getListStagesUrl(),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getListStagesQueryKey = () => {
-    return [
-    `/api/v1/stages`
-    ] as const;
-    }
-
-
-export const getListStagesQueryOptions = <TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListStagesQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStages>>> = ({ signal }) => listStages({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type ListStagesQueryResult = NonNullable<Awaited<ReturnType<typeof listStages>>>
-export type ListStagesQueryError = ErrorType<unknown>
-
-
-export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listStages>>,
-          TError,
-          Awaited<ReturnType<typeof listStages>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listStages>>,
-          TError,
-          Awaited<ReturnType<typeof listStages>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Các giai đoạn ăn dặm (BR-13)
- */
-
-export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getListStagesQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getSearchIngredientsUrl = (params: SearchIngredientsParams,) => {
-  const normalizedParams = new URLSearchParams();
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
-
-  const stringifiedParams = normalizedParams.toString();
-
-  return stringifiedParams.length > 0 ? `/api/v1/ingredients?${stringifiedParams}` : `/api/v1/ingredients`
-}
-
-/**
- * @summary Tìm nguyên liệu (không dấu)
- */
-export const searchIngredients = async (params: SearchIngredientsParams, options?: Parameters<typeof apiFetch>[1]): Promise<IngredientDto[]> => {
-
-  return apiFetch<IngredientDto[]>(getSearchIngredientsUrl(params),
-  {
-    ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
-
-
-
-export const getSearchIngredientsQueryKey = (params?: SearchIngredientsParams,) => {
-    return [
-    `/api/v1/ingredients`, ...(params ? [params] : [])
-    ] as const;
-    }
-
-
-export const getSearchIngredientsQueryOptions = <TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getSearchIngredientsQueryKey(params);
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchIngredients>>> = ({ signal }) => searchIngredients(params, { signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type SearchIngredientsQueryResult = NonNullable<Awaited<ReturnType<typeof searchIngredients>>>
-export type SearchIngredientsQueryError = ErrorType<unknown>
-
-
-export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
- params: SearchIngredientsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchIngredients>>,
-          TError,
-          Awaited<ReturnType<typeof searchIngredients>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
- params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof searchIngredients>>,
-          TError,
-          Awaited<ReturnType<typeof searchIngredients>>
-        > , 'initialData'
-      >, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
- params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * @summary Tìm nguyên liệu (không dấu)
- */
-
-export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
- params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
- , queryClient?: QueryClient
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getSearchIngredientsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 
 export const getListChildrenUrl = () => {
 
@@ -2691,6 +3068,806 @@ export function usePreviewStage<TData = Awaited<ReturnType<typeof previewStage>>
 
 
 
+export const getListMembersUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/members`
+}
+
+/**
+ * @summary Thành viên chăm bé (FR-113)
+ */
+export const listMembers = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<MembersDto> => {
+
+  return apiFetch<MembersDto>(getListMembersUrl(childId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMembersQueryKey = (childId: string,) => {
+    return [
+    `/api/v1/children/${childId}/members`
+    ] as const;
+    }
+
+
+export const getListMembersQueryOptions = <TData = Awaited<ReturnType<typeof listMembers>>, TError = ErrorType<unknown>>(childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMembersQueryKey(childId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMembers>>> = ({ signal }) => listMembers(childId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMembersQueryResult = NonNullable<Awaited<ReturnType<typeof listMembers>>>
+export type ListMembersQueryError = ErrorType<unknown>
+
+
+export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, TError = ErrorType<unknown>>(
+ childId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listMembers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listMembers>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Thành viên chăm bé (FR-113)
+ */
+
+export function useListMembers<TData = Awaited<ReturnType<typeof listMembers>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMembers>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMembersQueryOptions(childId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateInviteUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/invites`
+}
+
+/**
+ * @summary Tạo link mời người chăm (UC-20)
+ */
+export const createInvite = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<CreatedInviteDto> => {
+
+  return apiFetch<CreatedInviteDto>(getCreateInviteUrl(childId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getCreateInviteMutationKey = () => ['createInvite'] as const;
+
+export const getCreateInviteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext> => {
+
+const mutationKey = getCreateInviteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInvite>>, CreateInviteMutationVariables> = (props) => {
+          const {childId} = props ?? {};
+
+          return  createInvite(childId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createInvite>>>
+
+    export type CreateInviteMutationError = ErrorType<unknown>
+    export type CreateInviteMutationVariables = {childId: string}
+
+    /**
+ * @summary Tạo link mời người chăm (UC-20)
+ */
+export const useCreateInvite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createInvite>>,
+        TError,
+        CreateInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateInviteMutationOptions(options), queryClient);
+    }
+
+export const getRevokeInviteUrl = (childId: string,
+    inviteId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/invites/${inviteId}`
+}
+
+/**
+ * @summary Thu hồi lời mời (FR-114)
+ */
+export const revokeInvite = async (childId: string,
+    inviteId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getRevokeInviteUrl(childId,inviteId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevokeInviteMutationKey = () => ['revokeInvite'] as const;
+
+export const getRevokeInviteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,RevokeInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,RevokeInviteMutationVariables, TContext> => {
+
+const mutationKey = getRevokeInviteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeInvite>>, RevokeInviteMutationVariables> = (props) => {
+          const {childId,inviteId} = props ?? {};
+
+          return  revokeInvite(childId,inviteId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeInviteMutationResult = NonNullable<Awaited<ReturnType<typeof revokeInvite>>>
+
+    export type RevokeInviteMutationError = ErrorType<unknown>
+    export type RevokeInviteMutationVariables = {childId: string;inviteId: string}
+
+    /**
+ * @summary Thu hồi lời mời (FR-114)
+ */
+export const useRevokeInvite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeInvite>>, TError,RevokeInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof revokeInvite>>,
+        TError,
+        RevokeInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevokeInviteMutationOptions(options), queryClient);
+    }
+
+export const getRemoveMemberUrl = (childId: string,
+    userId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/members/${userId}`
+}
+
+/**
+ * @summary Gỡ người chăm; gỡ chính mình là rời hồ sơ (FR-114/115)
+ */
+export const removeMember = async (childId: string,
+    userId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getRemoveMemberUrl(childId,userId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveMemberMutationKey = () => ['removeMember'] as const;
+
+export const getRemoveMemberMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext> => {
+
+const mutationKey = getRemoveMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeMember>>, RemoveMemberMutationVariables> = (props) => {
+          const {childId,userId} = props ?? {};
+
+          return  removeMember(childId,userId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveMemberMutationResult = NonNullable<Awaited<ReturnType<typeof removeMember>>>
+
+    export type RemoveMemberMutationError = ErrorType<unknown>
+    export type RemoveMemberMutationVariables = {childId: string;userId: string}
+
+    /**
+ * @summary Gỡ người chăm; gỡ chính mình là rời hồ sơ (FR-114/115)
+ */
+export const useRemoveMember = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof removeMember>>,
+        TError,
+        RemoveMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveMemberMutationOptions(options), queryClient);
+    }
+
+export const getTransferOwnershipUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/transfer-ownership`
+}
+
+/**
+ * @summary Chuyển quyền chủ hồ sơ (FR-116)
+ */
+export const transferOwnership = async (childId: string,
+    transferOwnershipDto: TransferOwnershipDto, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<void>(getTransferOwnershipUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(transferOwnershipDto)
+  }
+);}
+
+
+
+
+
+export const getTransferOwnershipMutationKey = () => ['transferOwnership'] as const;
+
+export const getTransferOwnershipMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transferOwnership>>, TError,TransferOwnershipMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof transferOwnership>>, TError,TransferOwnershipMutationVariables, TContext> => {
+
+const mutationKey = getTransferOwnershipMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof transferOwnership>>, TransferOwnershipMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  transferOwnership(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type TransferOwnershipMutationResult = NonNullable<Awaited<ReturnType<typeof transferOwnership>>>
+    export type TransferOwnershipMutationBody = TransferOwnershipDto
+    export type TransferOwnershipMutationError = ErrorType<unknown>
+    export type TransferOwnershipMutationVariables = {childId: string;data: TransferOwnershipDto}
+
+    /**
+ * @summary Chuyển quyền chủ hồ sơ (FR-116)
+ */
+export const useTransferOwnership = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof transferOwnership>>, TError,TransferOwnershipMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof transferOwnership>>,
+        TError,
+        TransferOwnershipMutationVariables,
+        TContext
+      > => {
+      return useMutation(getTransferOwnershipMutationOptions(options), queryClient);
+    }
+
+export const getPreviewInviteUrl = (token: string,) => {
+
+
+
+
+  return `/api/v1/invites/${token}`
+}
+
+/**
+ * @summary Xem trước lời mời, không cần đăng nhập
+ */
+export const previewInvite = async (token: string, options?: Parameters<typeof apiFetch>[1]): Promise<InvitePreviewDto> => {
+
+  return apiFetch<InvitePreviewDto>(getPreviewInviteUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getPreviewInviteQueryKey = (token: string,) => {
+    return [
+    `/api/v1/invites/${token}`
+    ] as const;
+    }
+
+
+export const getPreviewInviteQueryOptions = <TData = Awaited<ReturnType<typeof previewInvite>>, TError = ErrorType<unknown>>(token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getPreviewInviteQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof previewInvite>>> = ({ signal }) => previewInvite(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type PreviewInviteQueryResult = NonNullable<Awaited<ReturnType<typeof previewInvite>>>
+export type PreviewInviteQueryError = ErrorType<unknown>
+
+
+export function usePreviewInvite<TData = Awaited<ReturnType<typeof previewInvite>>, TError = ErrorType<unknown>>(
+ token: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewInvite>>,
+          TError,
+          Awaited<ReturnType<typeof previewInvite>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewInvite<TData = Awaited<ReturnType<typeof previewInvite>>, TError = ErrorType<unknown>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof previewInvite>>,
+          TError,
+          Awaited<ReturnType<typeof previewInvite>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function usePreviewInvite<TData = Awaited<ReturnType<typeof previewInvite>>, TError = ErrorType<unknown>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Xem trước lời mời, không cần đăng nhập
+ */
+
+export function usePreviewInvite<TData = Awaited<ReturnType<typeof previewInvite>>, TError = ErrorType<unknown>>(
+ token: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof previewInvite>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getPreviewInviteQueryOptions(token,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAcceptInviteUrl = (token: string,) => {
+
+
+
+
+  return `/api/v1/invites/${token}/accept`
+}
+
+/**
+ * @summary Tham gia chăm bé (FR-112)
+ */
+export const acceptInvite = async (token: string, options?: Parameters<typeof apiFetch>[1]): Promise<AcceptedInviteDto> => {
+
+  return apiFetch<AcceptedInviteDto>(getAcceptInviteUrl(token),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getAcceptInviteMutationKey = () => ['acceptInvite'] as const;
+
+export const getAcceptInviteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext> => {
+
+const mutationKey = getAcceptInviteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptInvite>>, AcceptInviteMutationVariables> = (props) => {
+          const {token} = props ?? {};
+
+          return  acceptInvite(token,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof acceptInvite>>>
+
+    export type AcceptInviteMutationError = ErrorType<unknown>
+    export type AcceptInviteMutationVariables = {token: string}
+
+    /**
+ * @summary Tham gia chăm bé (FR-112)
+ */
+export const useAcceptInvite = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof acceptInvite>>,
+        TError,
+        AcceptInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcceptInviteMutationOptions(options), queryClient);
+    }
+
+export const getListStagesUrl = () => {
+
+
+
+
+  return `/api/v1/stages`
+}
+
+/**
+ * @summary Các giai đoạn ăn dặm (BR-13)
+ */
+export const listStages = async ( options?: Parameters<typeof apiFetch>[1]): Promise<StageDto[]> => {
+
+  return apiFetch<StageDto[]>(getListStagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStagesQueryKey = () => {
+    return [
+    `/api/v1/stages`
+    ] as const;
+    }
+
+
+export const getListStagesQueryOptions = <TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStages>>> = ({ signal }) => listStages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListStagesQueryResult = NonNullable<Awaited<ReturnType<typeof listStages>>>
+export type ListStagesQueryError = ErrorType<unknown>
+
+
+export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStages>>,
+          TError,
+          Awaited<ReturnType<typeof listStages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listStages>>,
+          TError,
+          Awaited<ReturnType<typeof listStages>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Các giai đoạn ăn dặm (BR-13)
+ */
+
+export function useListStages<TData = Awaited<ReturnType<typeof listStages>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listStages>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListStagesQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchIngredientsUrl = (params: SearchIngredientsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/ingredients?${stringifiedParams}` : `/api/v1/ingredients`
+}
+
+/**
+ * @summary Tìm nguyên liệu (không dấu)
+ */
+export const searchIngredients = async (params: SearchIngredientsParams, options?: Parameters<typeof apiFetch>[1]): Promise<IngredientDto[]> => {
+
+  return apiFetch<IngredientDto[]>(getSearchIngredientsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchIngredientsQueryKey = (params?: SearchIngredientsParams,) => {
+    return [
+    `/api/v1/ingredients`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchIngredientsQueryOptions = <TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchIngredientsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchIngredients>>> = ({ signal }) => searchIngredients(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchIngredientsQueryResult = NonNullable<Awaited<ReturnType<typeof searchIngredients>>>
+export type SearchIngredientsQueryError = ErrorType<unknown>
+
+
+export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
+ params: SearchIngredientsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchIngredients>>,
+          TError,
+          Awaited<ReturnType<typeof searchIngredients>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
+ params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchIngredients>>,
+          TError,
+          Awaited<ReturnType<typeof searchIngredients>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
+ params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Tìm nguyên liệu (không dấu)
+ */
+
+export function useSearchIngredients<TData = Awaited<ReturnType<typeof searchIngredients>>, TError = ErrorType<unknown>>(
+ params: SearchIngredientsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchIngredientsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetDayPlanUrl = (childId: string,
     date: string,) => {
 
@@ -3322,6 +4499,1032 @@ export function useGetRecipe<TData = Awaited<ReturnType<typeof getRecipe>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetRecipeQueryOptions(childId,dishId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCustomDishUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/custom-dishes`
+}
+
+/**
+ * @summary Tạo món của bạn (UC-23)
+ */
+export const createCustomDish = async (childId: string,
+    customDishInputDto: CustomDishInputDto, options?: Parameters<typeof apiFetch>[1]): Promise<RecipeDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RecipeDto>(getCreateCustomDishUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(customDishInputDto)
+  }
+);}
+
+
+
+
+
+export const getCreateCustomDishMutationKey = () => ['createCustomDish'] as const;
+
+export const getCreateCustomDishMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCustomDish>>, TError,CreateCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCustomDish>>, TError,CreateCustomDishMutationVariables, TContext> => {
+
+const mutationKey = getCreateCustomDishMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCustomDish>>, CreateCustomDishMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  createCustomDish(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCustomDishMutationResult = NonNullable<Awaited<ReturnType<typeof createCustomDish>>>
+    export type CreateCustomDishMutationBody = CustomDishInputDto
+    export type CreateCustomDishMutationError = ErrorType<unknown>
+    export type CreateCustomDishMutationVariables = {childId: string;data: CustomDishInputDto}
+
+    /**
+ * @summary Tạo món của bạn (UC-23)
+ */
+export const useCreateCustomDish = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCustomDish>>, TError,CreateCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCustomDish>>,
+        TError,
+        CreateCustomDishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCustomDishMutationOptions(options), queryClient);
+    }
+
+export const getGetCustomDishUrl = (childId: string,
+    dishId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/custom-dishes/${dishId}`
+}
+
+/**
+ * @summary Món của bạn, để sửa (FR-135)
+ */
+export const getCustomDish = async (childId: string,
+    dishId: string, options?: Parameters<typeof apiFetch>[1]): Promise<CustomDishFormDto> => {
+
+  return apiFetch<CustomDishFormDto>(getGetCustomDishUrl(childId,dishId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCustomDishQueryKey = (childId: string,
+    dishId: string,) => {
+    return [
+    `/api/v1/children/${childId}/custom-dishes/${dishId}`
+    ] as const;
+    }
+
+
+export const getGetCustomDishQueryOptions = <TData = Awaited<ReturnType<typeof getCustomDish>>, TError = ErrorType<unknown>>(childId: string,
+    dishId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCustomDishQueryKey(childId,dishId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCustomDish>>> = ({ signal }) => getCustomDish(childId,dishId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined && dishId !== null && dishId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCustomDishQueryResult = NonNullable<Awaited<ReturnType<typeof getCustomDish>>>
+export type GetCustomDishQueryError = ErrorType<unknown>
+
+
+export function useGetCustomDish<TData = Awaited<ReturnType<typeof getCustomDish>>, TError = ErrorType<unknown>>(
+ childId: string,
+    dishId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomDish>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomDish>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomDish<TData = Awaited<ReturnType<typeof getCustomDish>>, TError = ErrorType<unknown>>(
+ childId: string,
+    dishId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCustomDish>>,
+          TError,
+          Awaited<ReturnType<typeof getCustomDish>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCustomDish<TData = Awaited<ReturnType<typeof getCustomDish>>, TError = ErrorType<unknown>>(
+ childId: string,
+    dishId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Món của bạn, để sửa (FR-135)
+ */
+
+export function useGetCustomDish<TData = Awaited<ReturnType<typeof getCustomDish>>, TError = ErrorType<unknown>>(
+ childId: string,
+    dishId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCustomDish>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCustomDishQueryOptions(childId,dishId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateCustomDishUrl = (childId: string,
+    dishId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/custom-dishes/${dishId}`
+}
+
+/**
+ * @summary Sửa món của bạn (FR-135)
+ */
+export const updateCustomDish = async (childId: string,
+    dishId: string,
+    customDishInputDto: CustomDishInputDto, options?: Parameters<typeof apiFetch>[1]): Promise<RecipeDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RecipeDto>(getUpdateCustomDishUrl(childId,dishId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(customDishInputDto)
+  }
+);}
+
+
+
+
+
+export const getUpdateCustomDishMutationKey = () => ['updateCustomDish'] as const;
+
+export const getUpdateCustomDishMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCustomDish>>, TError,UpdateCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCustomDish>>, TError,UpdateCustomDishMutationVariables, TContext> => {
+
+const mutationKey = getUpdateCustomDishMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCustomDish>>, UpdateCustomDishMutationVariables> = (props) => {
+          const {childId,dishId,data} = props ?? {};
+
+          return  updateCustomDish(childId,dishId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCustomDishMutationResult = NonNullable<Awaited<ReturnType<typeof updateCustomDish>>>
+    export type UpdateCustomDishMutationBody = CustomDishInputDto
+    export type UpdateCustomDishMutationError = ErrorType<unknown>
+    export type UpdateCustomDishMutationVariables = {childId: string;dishId: string;data: CustomDishInputDto}
+
+    /**
+ * @summary Sửa món của bạn (FR-135)
+ */
+export const useUpdateCustomDish = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCustomDish>>, TError,UpdateCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateCustomDish>>,
+        TError,
+        UpdateCustomDishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateCustomDishMutationOptions(options), queryClient);
+    }
+
+export const getDeleteCustomDishUrl = (childId: string,
+    dishId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/custom-dishes/${dishId}`
+}
+
+/**
+ * @summary Xóa món của bạn (FR-136)
+ */
+export const deleteCustomDish = async (childId: string,
+    dishId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getDeleteCustomDishUrl(childId,dishId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCustomDishMutationKey = () => ['deleteCustomDish'] as const;
+
+export const getDeleteCustomDishMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomDish>>, TError,DeleteCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCustomDish>>, TError,DeleteCustomDishMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCustomDishMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCustomDish>>, DeleteCustomDishMutationVariables> = (props) => {
+          const {childId,dishId} = props ?? {};
+
+          return  deleteCustomDish(childId,dishId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCustomDishMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCustomDish>>>
+
+    export type DeleteCustomDishMutationError = ErrorType<unknown>
+    export type DeleteCustomDishMutationVariables = {childId: string;dishId: string}
+
+    /**
+ * @summary Xóa món của bạn (FR-136)
+ */
+export const useDeleteCustomDish = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCustomDish>>, TError,DeleteCustomDishMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCustomDish>>,
+        TError,
+        DeleteCustomDishMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCustomDishMutationOptions(options), queryClient);
+    }
+
+export const getOpenUrgentEventUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/urgent-events`
+}
+
+/**
+ * @summary Mở “Dấu hiệu nguy hiểm”: ghi nhận và tạm dừng nguyên liệu liên quan (UC-10)
+ */
+export const openUrgentEvent = async (childId: string,
+    openUrgentDto: OpenUrgentDto, options?: Parameters<typeof apiFetch>[1]): Promise<UrgentEventDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<UrgentEventDto>(getOpenUrgentEventUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(openUrgentDto)
+  }
+);}
+
+
+
+
+
+export const getOpenUrgentEventMutationKey = () => ['openUrgentEvent'] as const;
+
+export const getOpenUrgentEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openUrgentEvent>>, TError,OpenUrgentEventMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof openUrgentEvent>>, TError,OpenUrgentEventMutationVariables, TContext> => {
+
+const mutationKey = getOpenUrgentEventMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof openUrgentEvent>>, OpenUrgentEventMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  openUrgentEvent(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OpenUrgentEventMutationResult = NonNullable<Awaited<ReturnType<typeof openUrgentEvent>>>
+    export type OpenUrgentEventMutationBody = OpenUrgentDto
+    export type OpenUrgentEventMutationError = ErrorType<unknown>
+    export type OpenUrgentEventMutationVariables = {childId: string;data: OpenUrgentDto}
+
+    /**
+ * @summary Mở “Dấu hiệu nguy hiểm”: ghi nhận và tạm dừng nguyên liệu liên quan (UC-10)
+ */
+export const useOpenUrgentEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof openUrgentEvent>>, TError,OpenUrgentEventMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof openUrgentEvent>>,
+        TError,
+        OpenUrgentEventMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOpenUrgentEventMutationOptions(options), queryClient);
+    }
+
+export const getUpdateUrgentEventUrl = (eventId: string,) => {
+
+
+
+
+  return `/api/v1/urgent-events/${eventId}`
+}
+
+/**
+ * @summary Đã liên hệ nhân viên y tế (FR-067)
+ */
+export const updateUrgentEvent = async (eventId: string,
+    updateUrgentDto: UpdateUrgentDto, options?: Parameters<typeof apiFetch>[1]): Promise<UrgentEventDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<UrgentEventDto>(getUpdateUrgentEventUrl(eventId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateUrgentDto)
+  }
+);}
+
+
+
+
+
+export const getUpdateUrgentEventMutationKey = () => ['updateUrgentEvent'] as const;
+
+export const getUpdateUrgentEventMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUrgentEvent>>, TError,UpdateUrgentEventMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateUrgentEvent>>, TError,UpdateUrgentEventMutationVariables, TContext> => {
+
+const mutationKey = getUpdateUrgentEventMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateUrgentEvent>>, UpdateUrgentEventMutationVariables> = (props) => {
+          const {eventId,data} = props ?? {};
+
+          return  updateUrgentEvent(eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateUrgentEventMutationResult = NonNullable<Awaited<ReturnType<typeof updateUrgentEvent>>>
+    export type UpdateUrgentEventMutationBody = UpdateUrgentDto
+    export type UpdateUrgentEventMutationError = ErrorType<unknown>
+    export type UpdateUrgentEventMutationVariables = {eventId: string;data: UpdateUrgentDto}
+
+    /**
+ * @summary Đã liên hệ nhân viên y tế (FR-067)
+ */
+export const useUpdateUrgentEvent = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateUrgentEvent>>, TError,UpdateUrgentEventMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof updateUrgentEvent>>,
+        TError,
+        UpdateUrgentEventMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateUrgentEventMutationOptions(options), queryClient);
+    }
+
+export const getListPausedIngredientsUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/paused-ingredients`
+}
+
+/**
+ * @summary Nguyên liệu đang tạm dừng (G08)
+ */
+export const listPausedIngredients = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<PausedIngredientDto[]> => {
+
+  return apiFetch<PausedIngredientDto[]>(getListPausedIngredientsUrl(childId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPausedIngredientsQueryKey = (childId: string,) => {
+    return [
+    `/api/v1/children/${childId}/paused-ingredients`
+    ] as const;
+    }
+
+
+export const getListPausedIngredientsQueryOptions = <TData = Awaited<ReturnType<typeof listPausedIngredients>>, TError = ErrorType<unknown>>(childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPausedIngredientsQueryKey(childId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPausedIngredients>>> = ({ signal }) => listPausedIngredients(childId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListPausedIngredientsQueryResult = NonNullable<Awaited<ReturnType<typeof listPausedIngredients>>>
+export type ListPausedIngredientsQueryError = ErrorType<unknown>
+
+
+export function useListPausedIngredients<TData = Awaited<ReturnType<typeof listPausedIngredients>>, TError = ErrorType<unknown>>(
+ childId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPausedIngredients>>,
+          TError,
+          Awaited<ReturnType<typeof listPausedIngredients>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPausedIngredients<TData = Awaited<ReturnType<typeof listPausedIngredients>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPausedIngredients>>,
+          TError,
+          Awaited<ReturnType<typeof listPausedIngredients>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPausedIngredients<TData = Awaited<ReturnType<typeof listPausedIngredients>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Nguyên liệu đang tạm dừng (G08)
+ */
+
+export function useListPausedIngredients<TData = Awaited<ReturnType<typeof listPausedIngredients>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listPausedIngredients>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListPausedIngredientsQueryOptions(childId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getResumeIngredientUrl = (childId: string,
+    ingredientId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/paused-ingredients/${ingredientId}/resume`
+}
+
+/**
+ * @summary Bác sĩ đã cho phép dùng lại nguyên liệu (UC-14)
+ */
+export const resumeIngredient = async (childId: string,
+    ingredientId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getResumeIngredientUrl(childId,ingredientId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getResumeIngredientMutationKey = () => ['resumeIngredient'] as const;
+
+export const getResumeIngredientMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeIngredient>>, TError,ResumeIngredientMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resumeIngredient>>, TError,ResumeIngredientMutationVariables, TContext> => {
+
+const mutationKey = getResumeIngredientMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resumeIngredient>>, ResumeIngredientMutationVariables> = (props) => {
+          const {childId,ingredientId} = props ?? {};
+
+          return  resumeIngredient(childId,ingredientId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResumeIngredientMutationResult = NonNullable<Awaited<ReturnType<typeof resumeIngredient>>>
+
+    export type ResumeIngredientMutationError = ErrorType<unknown>
+    export type ResumeIngredientMutationVariables = {childId: string;ingredientId: string}
+
+    /**
+ * @summary Bác sĩ đã cho phép dùng lại nguyên liệu (UC-14)
+ */
+export const useResumeIngredient = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeIngredient>>, TError,ResumeIngredientMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resumeIngredient>>,
+        TError,
+        ResumeIngredientMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResumeIngredientMutationOptions(options), queryClient);
+    }
+
+export const getGetMealLogUrl = (mealId: string,) => {
+
+
+
+
+  return `/api/v1/meals/${mealId}/log`
+}
+
+/**
+ * @summary Dữ liệu màn ghi nhận bữa ăn (S07)
+ */
+export const getMealLog = async (mealId: string, options?: Parameters<typeof apiFetch>[1]): Promise<LogFormDto> => {
+
+  return apiFetch<LogFormDto>(getGetMealLogUrl(mealId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMealLogQueryKey = (mealId: string,) => {
+    return [
+    `/api/v1/meals/${mealId}/log`
+    ] as const;
+    }
+
+
+export const getGetMealLogQueryOptions = <TData = Awaited<ReturnType<typeof getMealLog>>, TError = ErrorType<unknown>>(mealId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMealLogQueryKey(mealId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMealLog>>> = ({ signal }) => getMealLog(mealId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: mealId !== null && mealId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMealLogQueryResult = NonNullable<Awaited<ReturnType<typeof getMealLog>>>
+export type GetMealLogQueryError = ErrorType<unknown>
+
+
+export function useGetMealLog<TData = Awaited<ReturnType<typeof getMealLog>>, TError = ErrorType<unknown>>(
+ mealId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMealLog>>,
+          TError,
+          Awaited<ReturnType<typeof getMealLog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMealLog<TData = Awaited<ReturnType<typeof getMealLog>>, TError = ErrorType<unknown>>(
+ mealId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMealLog>>,
+          TError,
+          Awaited<ReturnType<typeof getMealLog>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMealLog<TData = Awaited<ReturnType<typeof getMealLog>>, TError = ErrorType<unknown>>(
+ mealId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Dữ liệu màn ghi nhận bữa ăn (S07)
+ */
+
+export function useGetMealLog<TData = Awaited<ReturnType<typeof getMealLog>>, TError = ErrorType<unknown>>(
+ mealId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMealLog>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMealLogQueryOptions(mealId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLogMealUrl = (mealId: string,) => {
+
+
+
+
+  return `/api/v1/meals/${mealId}/log`
+}
+
+/**
+ * @summary Ghi nhận bữa ăn và phản ứng (UC-08/09)
+ */
+export const logMeal = async (mealId: string,
+    logMealDto: LogMealDto, options?: Parameters<typeof apiFetch>[1]): Promise<LoggedMealDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<LoggedMealDto>(getLogMealUrl(mealId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(logMealDto)
+  }
+);}
+
+
+
+
+
+export const getLogMealMutationKey = () => ['logMeal'] as const;
+
+export const getLogMealMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logMeal>>, TError,LogMealMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logMeal>>, TError,LogMealMutationVariables, TContext> => {
+
+const mutationKey = getLogMealMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logMeal>>, LogMealMutationVariables> = (props) => {
+          const {mealId,data} = props ?? {};
+
+          return  logMeal(mealId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogMealMutationResult = NonNullable<Awaited<ReturnType<typeof logMeal>>>
+    export type LogMealMutationBody = LogMealDto
+    export type LogMealMutationError = ErrorType<unknown>
+    export type LogMealMutationVariables = {mealId: string;data: LogMealDto}
+
+    /**
+ * @summary Ghi nhận bữa ăn và phản ứng (UC-08/09)
+ */
+export const useLogMeal = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logMeal>>, TError,LogMealMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logMeal>>,
+        TError,
+        LogMealMutationVariables,
+        TContext
+      > => {
+      return useMutation(getLogMealMutationOptions(options), queryClient);
+    }
+
+export const getGetJournalUrl = (childId: string,
+    params?: GetJournalParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/children/${childId}/journal?${stringifiedParams}` : `/api/v1/children/${childId}/journal`
+}
+
+/**
+ * @summary Nhật ký bữa ăn, phản ứng (FR-069)
+ */
+export const getJournal = async (childId: string,
+    params?: GetJournalParams, options?: Parameters<typeof apiFetch>[1]): Promise<JournalPageDto> => {
+
+  return apiFetch<JournalPageDto>(getGetJournalUrl(childId,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetJournalQueryKey = (childId: string,
+    params?: GetJournalParams,) => {
+    return [
+    `/api/v1/children/${childId}/journal`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetJournalQueryOptions = <TData = Awaited<ReturnType<typeof getJournal>>, TError = ErrorType<unknown>>(childId: string,
+    params?: GetJournalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetJournalQueryKey(childId,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getJournal>>> = ({ signal }) => getJournal(childId,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJournalQueryResult = NonNullable<Awaited<ReturnType<typeof getJournal>>>
+export type GetJournalQueryError = ErrorType<unknown>
+
+
+export function useGetJournal<TData = Awaited<ReturnType<typeof getJournal>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params: undefined |  GetJournalParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJournal>>,
+          TError,
+          Awaited<ReturnType<typeof getJournal>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJournal<TData = Awaited<ReturnType<typeof getJournal>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params?: GetJournalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJournal>>,
+          TError,
+          Awaited<ReturnType<typeof getJournal>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJournal<TData = Awaited<ReturnType<typeof getJournal>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params?: GetJournalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Nhật ký bữa ăn, phản ứng (FR-069)
+ */
+
+export function useGetJournal<TData = Awaited<ReturnType<typeof getJournal>>, TError = ErrorType<unknown>>(
+ childId: string,
+    params?: GetJournalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getJournal>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetJournalQueryOptions(childId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -2,6 +2,7 @@ import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.j
 import { toSearchText } from '../../../shared/kernel/search-text.js';
 import { isLiked, variantFor, WINDOW_DAYS } from './menu-engine.js';
 import type { MealSlot, MealUse, PlanDish, PlanningContext, Texture } from './model.js';
+import { offered } from './model.js';
 import { newIngredientIds } from './novelty.js';
 import {
   exclusionReason,
@@ -10,8 +11,17 @@ import {
   type ExclusionSummary,
 } from './safety-filter.js';
 
-/** S05 chips: proteins with a chip of their own, and snacks. Egg dishes show under "all". */
-export const LIBRARY_CHIPS = ['all', 'chicken', 'fish', 'beef', 'pork', 'legume', 'snack'] as const;
+/** S05 chips: proteins with a chip of their own, snacks and "Món của bạn". Egg dishes show under "all". */
+export const LIBRARY_CHIPS = [
+  'all',
+  'chicken',
+  'fish',
+  'beef',
+  'pork',
+  'legume',
+  'snack',
+  'custom',
+] as const;
 export type LibraryChip = (typeof LIBRARY_CHIPS)[number];
 
 export interface LibraryRequest {
@@ -41,6 +51,7 @@ export interface LibraryResult {
 function matchesChip(dish: PlanDish, chip: LibraryChip): boolean {
   if (chip === 'all') return true;
   if (chip === 'snack') return dish.mealType === 'snack';
+  if (chip === 'custom') return dish.custom === true;
   return dish.mealType === 'main' && dish.mainProtein === chip;
 }
 
@@ -80,7 +91,7 @@ function search(ctx: PlanningContext, dishes: PlanDish[], query: string): PlanDi
 }
 
 export function filterLibrary(ctx: PlanningContext, request: LibraryRequest): LibraryResult {
-  const inChip = ctx.dishes.filter((dish) => matchesChip(dish, request.chip));
+  const inChip = offered(ctx.dishes).filter((dish) => matchesChip(dish, request.chip));
   const matching = request.query.trim() ? search(ctx, inChip, request.query) : inChip;
 
   const visible: PlanDish[] = [];

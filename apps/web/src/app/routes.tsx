@@ -10,13 +10,18 @@ import { OnboardingPage } from '../pages/onboarding/OnboardingPage';
 import { Placeholder } from '../pages/placeholders/Placeholder';
 import { AccountPage } from '../pages/AccountPage';
 import { AgeSettingsPage } from '../pages/AgeSettingsPage';
+import { CustomDishPage } from '../pages/CustomDishPage';
 import { DishesPage } from '../pages/DishesPage';
+import { InvitePage } from '../pages/InvitePage';
+import { JournalPage } from '../pages/JournalPage';
+import { LogPage } from '../pages/LogPage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { PrivacyPage } from '../pages/PrivacyPage';
 import { RecipePage } from '../pages/RecipePage';
 import { StatusPage } from '../pages/StatusPage';
 import { SwapPage } from '../pages/SwapPage';
 import { TodayPage } from '../pages/TodayPage';
+import { UrgentPage } from '../pages/UrgentPage';
 import { vi } from '../strings/vi';
 import { AppShell, BareShell, PlainShell } from './layouts';
 
@@ -30,6 +35,8 @@ export const routes: RouteObject[] = [
           { path: '/privacy', element: <PrivacyPage /> },
           { path: '/status', element: <StatusPage /> },
           { path: '/reset-password', element: <ResetPasswordPage /> },
+          // Open to anyone holding the link; joining asks to sign in first (UC-21).
+          { path: '/invite/:token', element: <InvitePage /> },
           {
             element: <GuestOnly />,
             children: [
@@ -59,12 +66,11 @@ export const routes: RouteObject[] = [
                 element: <PlainShell />,
                 children: [
                   { path: '/settings/age', element: <AgeSettingsPage /> },
-                  // Log (P5) and health (P6) are placeholders until their phase; S01 already links to them.
+                  // Health (P6) is a placeholder until its phase; S01 already links to it.
                   { path: '/meals/:mealId/swap', element: <SwapPage /> },
-                  {
-                    path: '/meals/:mealId/log',
-                    element: <Placeholder title={vi.placeholders.log} back="/" />,
-                  },
+                  { path: '/meals/:mealId/log', element: <LogPage /> },
+                  { path: '/dishes/new', element: <CustomDishPage /> },
+                  { path: '/dishes/:dishId/edit', element: <CustomDishPage /> },
                   {
                     path: '/health',
                     element: <Placeholder title={vi.placeholders.health} back="/" />,
@@ -73,7 +79,10 @@ export const routes: RouteObject[] = [
               },
               {
                 element: <BareShell />,
-                children: [{ path: '/dishes/:dishId', element: <RecipePage /> }],
+                children: [
+                  { path: '/dishes/:dishId', element: <RecipePage /> },
+                  { path: '/urgent', element: <UrgentPage /> },
+                ],
               },
               {
                 element: <AppShell />,
@@ -81,7 +90,7 @@ export const routes: RouteObject[] = [
                   { path: '/', element: <TodayPage /> },
                   { path: '/week', element: <Placeholder title={vi.placeholders.week} /> },
                   { path: '/dishes', element: <DishesPage /> },
-                  { path: '/journal', element: <Placeholder title={vi.placeholders.journal} /> },
+                  { path: '/journal', element: <JournalPage /> },
                   { path: '/profile', element: <ProfilePage /> },
                   { path: '/account', element: <AccountPage /> },
                   { path: '*', element: <NotFoundPage /> },

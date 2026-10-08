@@ -8,6 +8,8 @@ export class ApiError extends Error {
     readonly code: string,
     readonly detail?: string,
     readonly errors: string[] = [],
+    /** Problem Details extension members, e.g. which foods made a dish unsafe. */
+    readonly extensions: Record<string, unknown> = {},
   ) {
     super(detail ?? code);
     this.name = 'ApiError';
@@ -82,12 +84,24 @@ async function toApiError(response: Response): Promise<ApiError> {
     code?: string;
     detail?: string;
     errors?: string[];
+    [extension: string]: unknown;
   };
+  const {
+    type: _t,
+    title: _ti,
+    status: _s,
+    code,
+    detail,
+    errors,
+    instance: _i,
+    ...extensions
+  } = body;
   return new ApiError(
     response.status,
-    body.code ?? `HTTP_${response.status}`,
-    body.detail,
-    body.errors ?? [],
+    code ?? `HTTP_${response.status}`,
+    detail,
+    errors ?? [],
+    extensions,
   );
 }
 

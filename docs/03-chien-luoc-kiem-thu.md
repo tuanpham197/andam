@@ -2,7 +2,7 @@
 
 | Mục | Nội dung |
 |---|---|
-| Phiên bản | v0.1 — 28/09/2026 |
+| Phiên bản | v0.2 — 07/10/2026 (thêm mục 5.13 Nhiều người chăm) |
 | Căn cứ | [01-phan-tich-he-thong.md](01-phan-tich-he-thong.md) (FR / BR / NFR / UC), [02-ke-hoach-trien-khai.md](02-ke-hoach-trien-khai.md) (phase) |
 | Yêu cầu chính | **100% line coverage** (NFR-010) · test case đặc biệt (biên, lỗi, bất thường, bảo mật, đồng thời, thời gian), không chỉ luồng bình thường · responsive mobile (NFR-014) |
 
@@ -40,7 +40,8 @@
 | Phân vùng tương đương (EP) | Enum (dị ứng, lượng ăn, trạng thái sức khỏe), loại email/mật khẩu |
 | Phân tích giá trị biên (BVA) | Tuổi (6/8/10/12/24 tháng), độ dài chuỗi, `weeksEarly` 0/1/16/17, rating 0/1/5/6, cửa sổ 3/7/30 ngày, thời gian hết hạn token |
 | Bảng quyết định | Bộ lọc an toàn (BR-01..07), quy tắc tạm dừng (BR-40/41), điều chỉnh sức khỏe (BR-50..53) |
-| Chuyển trạng thái | `PlannedMeal` (planned → prepared → eaten/refused/skipped), `HealthEpisode`, `PausedIngredient` (paused ↔ resumed), refresh token family |
+| Chuyển trạng thái | `PlannedMeal` (planned → prepared → eaten/refused/skipped), `HealthEpisode`, `PausedIngredient` (paused ↔ resumed), refresh token family, `ChildInvite` (pending → accepted / revoked / expired) |
+| Ma trận quyền | Route × vai trò (chủ, người chăm, người ngoài) theo BR-73 — sinh tự động từ danh sách route |
 | Property-based | `SafetyFilter`, `MenuEngine` (không bao giờ vi phạm lọc cứng; deterministic), `AgeCalculator` (đơn điệu theo ngày) |
 | Đồng thời | Sinh kế hoạch cùng lúc, double-submit ghi nhận, 2 tab refresh token, đổi món song song |
 | Thời gian & múi giờ | Nửa đêm theo `Asia/Ho_Chi_Minh` vs UTC, cuối tháng, năm nhuận, tuần vắt qua tháng/năm |
@@ -63,7 +64,7 @@
 | X5 | Kiểu sai | Số dạng chuỗi, số âm, số thực thay số nguyên, `NaN`, ngày không tồn tại (`2026-02-30`), UUID sai định dạng |
 | X6 | Trường thừa | Field lạ trong body → `400` (whitelist) |
 | X7 | Trùng lặp | Phần tử trùng trong mảng → khử trùng; gửi 2 lần liên tiếp (double-submit) |
-| X8 | Quyền | Không token, token hết hạn, token user khác, id của user khác → `401` / `404` |
+| X8 | Quyền | Không token, token hết hạn, token user khác, id của user khác → `401` / `404`; từ P5b thêm người chăm làm việc của chủ → `403 OWNER_ONLY` |
 | X9 | Không tồn tại | id hợp lệ nhưng không có → `404` Problem Details |
 | X10 | Lỗi hạ tầng | DB timeout/mất kết nối → `503`, không lộ stack/SQL |
 | X11 | Mạng (FE) | Chậm (skeleton), lỗi (thông báo + Thử lại), offline (banner), 401 giữa chừng (refresh trong suốt) |
@@ -283,6 +284,8 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-LOG-015 | Sau tạm dừng, nguyên liệu không xuất hiện ở bữa tương lai / đổi món / thư viện | đúng ở cả 3 nơi | N | E |
 | TC-LOG-016 | Chọn “Khó thở” hoặc “Nặng” | FE hiện banner đỏ mở S08 | N | C |
 | TC-LOG-017 | Mất mạng khi bấm Lưu | nháp được giữ, báo cần kết nối, không mất dữ liệu đã nhập | L | C |
+| TC-LOG-018 | Lưu ghi nhận có phản ứng, bữa tải lại ở trạng thái đã ghi nhận | thông báo “đã lưu” + nguyên liệu vừa tạm dừng vẫn hiển thị | N | C |
+| TC-LOG-019 | Bữa đã “chuẩn bị” chứa nguyên liệu vừa bị tạm dừng | bữa được thay (không để món không an toàn) | S | A |
 
 ### 5.8 An toàn khẩn cấp & dùng lại — FR-065..068, BR-41..43
 
@@ -291,6 +294,7 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-URG-001 | Mở khẩn cấp từ bữa có cá hồi + rau ngót (lần đầu) | tạm dừng cả 2 (BR-41) | N | A |
 | TC-URG-002 | Mở khẩn cấp không có `mealId` | tạo sự kiện, không tạm dừng | B | A |
 | TC-URG-003 | Mở khẩn cấp 2 lần liên tiếp | 2 sự kiện, không tạm dừng trùng | B | I |
+| TC-URG-007 | Mở khẩn cấp từ bữa chưa tới giờ (bữa bé đang ăn) | bữa đó giữ nguyên món; bữa tương lai khác có nguyên liệu bị tạm dừng được thay | B | A |
 | TC-URG-004 | “Đã liên hệ y tế” 2 lần | giữ thời điểm lần đầu | B | A |
 | TC-URG-005 | Nút gọi 115 | `href="tel:115"` và số “115” hiển thị dạng text | N | C |
 | TC-URG-006 | Màn khẩn cấp khi offline | vẫn hiển thị dấu hiệu + nút gọi (precache) | L | S |
@@ -384,6 +388,61 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 
 ---
 
+### 5.12b Món của bạn — FR-130..137, BR-80..87 (P5)
+
+| ID | Kịch bản | Kết quả mong đợi | Loại | Tầng |
+|---|---|---|---|---|
+| TC-CUS-001 | Tạo món chính gạo + gà + bí đỏ, không định lượng | `201`, `custom: true`, nguyên liệu chính = gà, nguồn đạm = gà, nhóm chất đạm / tinh bột / rau | N | U, A, E |
+| TC-CUS-002 | Bé tránh trứng → tạo món có trứng; có nguyên liệu đang tạm dừng; có mật ong cho bé 8 tháng | `422 DISH_NOT_SAFE_FOR_CHILD`, `ingredients` = [{Trứng, allergen}] / [{…, paused}] / [{Mật ong, age}]; không lưu gì | S | U, A |
+| TC-CUS-003 | Tên 1 / 2 / 60 / 61 ký tự, chỉ khoảng trắng, NFD, emoji, `<script>` | lỗi / ok / ok / lỗi / lỗi / chuẩn hóa NFC / ok / lưu & hiển thị như text | B, S | U, E, C |
+| TC-CUS-004 | Tên trùng món của bạn khác (khác hoa thường / dấu: “Cháo gà” vs “chao ga”) | `409 DISH_NAME_TAKEN`; trùng tên món catalog hoặc món của bé khác → cho phép | B | U, A |
+| TC-CUS-005 | 0 / 1 / 15 / 16 nguyên liệu; nguyên liệu trùng; id không có trong danh mục | lỗi / ok / ok / lỗi / khử trùng / `422 UNKNOWN_INGREDIENT` | B, L | U, E |
+| TC-CUS-006 | Định lượng 0 / 0.5 / 9 999 / 10 000 / âm; đơn vị 12 / 13 ký tự | lỗi / ok / ok / lỗi / lỗi; ok / lỗi | B | E |
+| TC-CUS-007 | Sơ chế 0 + nấu 0; 180 / 181; nấu 240 / 241; 15 / 16 bước; bước 300 / 301 ký tự | lỗi; ok / lỗi; ok / lỗi; ok / lỗi; ok / lỗi | B | U, E |
+| TC-CUS-008 | Món thứ 50 / 51 (món đã xóa không tính) | ok / `422 CUSTOM_DISH_LIMIT_REACHED` | B | A |
+| TC-CUS-009 | Món của bạn trong thư viện, chip “Món của bạn”, gợi ý đổi món, thực đơn tự động | xuất hiện cùng quy tắc; chip chỉ trả món của bạn | N | U, A, E |
+| TC-CUS-010 | Món của bé A với bé B / người dùng khác (xem, sửa, xóa, đổi món sang, công thức) | `404` | S | E |
+| TC-CUS-011 | Sửa món thêm nguyên liệu bé chưa ăn → bữa tương lai đang dùng món | `newIngredients` của bữa cập nhật; sửa làm món vi phạm → bị từ chối | N | A |
+| TC-CUS-012 | Hồ sơ đổi (thêm tránh gà) sau khi tạo món gà | món vào khối “Đang ẩn”, bữa tương lai dùng món được sinh lại | B | A |
+| TC-CUS-013 | Xóa món đang có ở bữa tương lai và bữa đã ăn | bữa tương lai đổi món khác; bữa đã ăn, nhật ký vẫn hiện tên món; không còn trong thư viện / gợi ý | N | A, E |
+| TC-CUS-014 | Xóa món 2 lần; sửa món đã xóa | `404` | L | A |
+| TC-CUS-015 | Seed lại catalog sau khi có món của bạn | món của bạn còn nguyên; API catalog không trả món của bạn | B | I |
+| TC-CUS-016 | Công thức món của bạn | nhãn “Món của bạn · chưa qua chuyên gia duyệt”, lưu ý theo tuổi, không có “Công thức vN” | N | C |
+| TC-CUS-017 | G15: thêm nguyên liệu → nhóm chất cập nhật; lỗi lọc cứng chỉ rõ nguyên liệu; rời trang rồi quay lại | đúng; nháp còn nguyên | N | C |
+
+### 5.13 Nhiều người chăm — FR-110..120, BR-70..79 (P5b)
+
+| ID | Kịch bản | Kết quả mong đợi | Loại | Tầng |
+|---|---|---|---|---|
+| TC-FAM-001 | Mẹ mời → ba mở link khi đã đăng nhập → Tham gia | ba là người chăm, `GET /children` của ba có bé với `role = caregiver`, thấy đúng thực đơn hôm nay | N | A, E |
+| TC-FAM-002 | Mở link khi chưa có tài khoản → đăng ký → onboarding bị bỏ qua | quay lại màn lời mời với token còn nguyên, Tham gia xong vào S01 của bé | N | C, S |
+| TC-FAM-003 | Xem trước lời mời không đăng nhập | chỉ trả `childName`, `inviterName`, `expiresAt` — không lộ ngày sinh, dị ứng, email | S | E |
+| TC-FAM-004 | Lời mời ở giây 72 giờ − 1 / đúng 72 giờ / + 1 | còn hiệu lực / hết hạn (`410 INVITE_EXPIRED`) / hết hạn | B, T | U, A |
+| TC-FAM-005 | Dùng lời mời lần 2 (người khác) | `409 INVITE_USED`, không thêm thành viên | L | A |
+| TC-FAM-006 | Lời mời đã thu hồi / token sai / token đúng độ dài nhưng không tồn tại | `410 INVITE_REVOKED` / `404 INVITE_NOT_FOUND` / `404`; thời gian phản hồi không phân biệt được token gần đúng | L, S | A, E |
+| TC-FAM-007 | 2 người bấm Tham gia cùng 1 lời mời đồng thời | đúng 1 người thành thành viên, người còn lại `409 INVITE_USED` | D | I, E |
+| TC-FAM-008 | Chủ mở link của chính mình; thành viên mở lại link khác của cùng bé | `409 ALREADY_MEMBER`, FE mở luôn hồ sơ bé | B | A, C |
+| TC-FAM-009 | Bé đủ 6 thành viên → tạo lời mời; còn 5 → nhận lời mời khi đã có 5 lời mời chờ | `422 MEMBER_LIMIT_REACHED`; nhận lời mời làm đủ 6 thì lời mời khác bị từ chối khi nhận | B | U, A |
+| TC-FAM-010 | 5 lời mời đang chờ → tạo thứ 6; thu hồi 1 → tạo lại | `422 INVITE_LIMIT_REACHED`; sau thu hồi tạo được | B | A |
+| TC-FAM-011 | **Ma trận truy cập**: mọi route có `:childId` / `:mealId` × chủ / người chăm / người ngoài | đúng 2xx / `403 OWNER_ONLY` / `404` theo BR-73; route mới chưa khai báo quyền → test fail | S | E |
+| TC-FAM-012 | Người chăm sửa danh sách tránh, đổi giai đoạn, dùng lại nguyên liệu, xóa bé, mời người khác | `403 OWNER_ONLY`, dữ liệu không đổi | S | A, E |
+| TC-FAM-013 | Người chăm ghi nhận bữa có phản ứng | ghi được, nguyên liệu bị tạm dừng như khi chủ ghi (BR-40), `actor_id` = người chăm | N | A, I |
+| TC-FAM-014 | Chủ gỡ người chăm trong khi người chăm đang mở S01 (access token còn hạn) | request kế tiếp của người chăm → `404`; FE chuyển sang bé khác hoặc onboarding, báo “Bạn không còn quyền xem hồ sơ này” | S | E, C |
+| TC-FAM-015 | Người chăm rời hồ sơ; chủ thử rời | người chăm mất quyền ngay; chủ → `422 OWNER_CANNOT_LEAVE` | N, L | A |
+| TC-FAM-016 | Chuyển quyền chủ cho người chăm / cho người ngoài / cho chính mình | đổi vai trò 2 người trong 1 transaction (luôn đúng 1 chủ); `422 NOT_A_CAREGIVER`; `422` | N, L | U, I |
+| TC-FAM-017 | Chèn thẳng dòng `owner` thứ 2 cho cùng bé ở DB | vi phạm partial unique index | S | I |
+| TC-FAM-018 | Chủ xóa tài khoản khi bé còn người chăm, chưa chọn chuyển quyền / xóa | bị chặn, liệt kê hồ sơ cần xử lý; chọn chuyển quyền → người chăm thành chủ, hồ sơ còn nguyên | N, L | A, E |
+| TC-FAM-019 | Người chăm xóa tài khoản | chỉ mất tư cách thành viên; ghi nhận cũ hiển thị “Người dùng đã xóa” (`actor_id` = null) | B | I, A |
+| TC-FAM-020 | Ba và mẹ cùng ghi nhận 1 bữa đồng thời | 1 ghi nhận; người sau `409 MEAL_ALREADY_LOGGED` kèm `loggedBy`, `loggedAt` | D | I, E |
+| TC-FAM-021 | Mẹ mở S02 → ba đổi món bữa đó → mẹ chọn món | `409 MEAL_CHANGED`, FE báo “Ba vừa đổi bữa này” và tải lại gợi ý | D | A, C |
+| TC-FAM-022 | Migration: DB có 3 bé của 2 user | sau migration đúng 3 dòng `owner`, user cũ vẫn thấy đúng bé của mình, không thấy bé người khác | N | I |
+| TC-FAM-023 | Người dùng thuộc 2 bé → chọn bé B → tải lại trang | vẫn ở bé B; bị gỡ khỏi bé B → rơi về bé A | N, B | C |
+| TC-FAM-024 | S01 của mẹ khi ba vừa ghi nhận | hiển thị “Ba · 11:40” sau khi quay lại tab hoặc ≤ 60 giây | N | C |
+| TC-FAM-025 | Tên hiển thị: rỗng, 30 / 31 ký tự, chỉ khoảng trắng, emoji, `<script>` | rỗng → dùng phần trước `@` của email; 31 → `400`; lưu và hiển thị như text thuần | B, S | A, C |
+| TC-FAM-026 | Token lời mời trong log server | không xuất hiện: bộ serializer request thay token trong `url` và bỏ `params` | S | U |
+| TC-FAM-027 | Gọi `GET /invites/:token` quá giới hạn | `429` như `/auth/*` | S | E |
+| TC-FAM-028 | UI người chăm | không thấy nút sửa hồ sơ, sửa danh sách tránh, dùng lại nguyên liệu, xóa bé, mời; server từ chối `403` thì vẫn báo lỗi đúng | N, S | C |
+
 ## 6. Truy vết
 
 - Mỗi test đặt tên bắt đầu bằng mã TC (VD `it('TC-SAF-009 món vi phạm nhiều quy tắc chỉ đếm lý do allergen', …)`); script `test:trace` liệt kê TC trong tài liệu chưa có test tương ứng → CI cảnh báo từ P3, fail từ P7.
@@ -396,6 +455,7 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | P2 ✅ | TC-AGE-*, TC-STG-*, TC-CHD-*, TC-AUTH-025/029, TC-UI-018 |
 | P3 ✅ | TC-SAF-*, TC-ENG-*, TC-NXT-*, TC-PLN-*, TC-UI-012 (S03), TC-UI-016 (S01), TC-UI-023..026 |
 | P4 ✅ | TC-SWP-*, TC-LIB-* (TC-SWP-001 phần số liệu thật chờ catalog P7) |
-| P5 | TC-LOG-*, TC-URG-*, TC-RES-* |
+| P5 ✅ | TC-LOG-*, TC-URG-*, TC-RES-*, TC-CUS-* (TC-URG-006 offline cần PWA — P7) |
+| P5b ✅ | TC-FAM-* (TC-FAM-011 tự kiểm mọi route mới trong `openapi.json` ở các phase sau) |
 | P6 | TC-HLT-*, TC-WK-* |
 | P7 | TC-API-008..009, TC-UI-001..019 đầy đủ trên 7 viewport, mutation testing |

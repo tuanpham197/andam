@@ -85,12 +85,35 @@ describe('apiFetch', () => {
       });
     });
 
+    it('keeps the extension members of the problem (e.g. which foods are unsafe)', async () => {
+      server.use(
+        http.post('http://api.test/x', () =>
+          HttpResponse.json(
+            {
+              type: 'about:blank',
+              title: 'Unprocessable Entity',
+              status: 422,
+              code: 'DISH_NOT_SAFE_FOR_CHILD',
+              detail: 'x',
+              instance: '/x',
+              ingredients: [{ id: 'ing_trung_ga', name: 'Trứng gà', reason: 'allergen' }],
+            },
+            { status: 422 },
+          ),
+        ),
+      );
+      const error = (await apiFetch('/x', { method: 'POST' }).catch((e: unknown) => e)) as ApiError;
+      expect(error.extensions).toEqual({
+        ingredients: [{ id: 'ing_trung_ga', name: 'Trứng gà', reason: 'allergen' }],
+      });
+    });
+
     it('falls back to HTTP_<status> when the error body is not JSON', async () => {
       server.use(
         http.get('http://api.test/x', () => new HttpResponse('<html>502</html>', { status: 502 })),
       );
       const error = (await apiFetch('/x', {}).catch((e: unknown) => e)) as ApiError;
-      expect(error).toMatchObject({ status: 502, code: 'HTTP_502', errors: [] });
+      expect(error).toMatchObject({ status: 502, code: 'HTTP_502', errors: [], extensions: {} });
       expect(error.detail).toBeUndefined();
       expect(error.message).toBe('HTTP_502');
     });

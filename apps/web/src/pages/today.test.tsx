@@ -4,7 +4,14 @@ import { http, HttpResponse } from 'msw';
 import type { DayPlanDto } from '@appandam/api-client';
 import { API, problem, signedIn } from '../test/api';
 import { renderApp } from '../test/app';
-import { LUNCH_ID, NA_ID, childFixture, dayFixture, mealFixture } from '../test/fixtures';
+import {
+  LUNCH_ID,
+  NA_ID,
+  childFixture,
+  dayFixture,
+  logFormFixture,
+  mealFixture,
+} from '../test/fixtures';
 import { server } from '../test/server';
 
 // 09:40 in Hà Nội on Thursday 24 September 2026.
@@ -94,19 +101,33 @@ describe('Today (S01)', () => {
     );
   });
 
-  it.each([
-    ['Bé đã ăn', 'Ghi nhận bữa ăn'],
-    ['Sức khỏe: Bình thường', 'Tình trạng sức khỏe'],
-  ])('TC-UI-025 "%s" opens its screen (a later phase), with a way back', async (link, title) => {
+  it('"Bé đã ăn" opens the log screen (S07), which closes back to today', async () => {
     serveDay();
+    server.use(http.get(`${API}/meals/:mealId/log`, () => HttpResponse.json(logFormFixture())));
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { router } = renderApp('/');
     await nextMeal();
-    await user.click(screen.getAllByRole('link', { name: link })[0]!);
-    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
-    await user.click(screen.getByRole('link', { name: 'Quay lại' }));
+    await user.click(screen.getAllByRole('link', { name: 'Bé đã ăn' })[0]!);
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Bé đã ăn thế nào?' }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Đóng' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
   });
+
+  it.each([['Sức khỏe: Bình thường', 'Tình trạng sức khỏe']])(
+    'TC-UI-025 "%s" opens its screen (a later phase), with a way back',
+    async (link, title) => {
+      serveDay();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const { router } = renderApp('/');
+      await nextMeal();
+      await user.click(screen.getAllByRole('link', { name: link })[0]!);
+      expect(await screen.findByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+      await user.click(screen.getByRole('link', { name: 'Quay lại' }));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    },
+  );
 
   it('counts down every minute and says when the meal is due (TC-NXT-004)', async () => {
     serveDay();
@@ -432,6 +453,40 @@ describe('Today (S01)', () => {
     act(() => vi.advanceTimersByTime(60_000));
     expect(await screen.findByText('Thứ Sáu, 25 tháng 9')).toBeInTheDocument();
     await nextMeal();
-    expect(requested).toEqual(['2026-09-24', '2026-09-25']);
+    // The old day may refresh once more on the 60 s cycle (FR-120) before the date turns.
+    expect([...new Set(requested)]).toEqual(['2026-09-24', '2026-09-25']);
+  });
+
+  it('TC-FAM-024 picks up another member’s log within a minute, with who and when', async () => {
+    let logged = false;
+    const requested = serveDay(() =>
+      dayFixture({
+        meals: dayFixture().meals.map((m) =>
+          logged && m.slot === 'breakfast'
+            ? { ...m, status: 'eaten', loggedBy: { name: 'Ba', at: '2026-09-24T00:45:00.000Z' } }
+            : m,
+        ),
+      }),
+    );
+    renderApp('/');
+    await nextMeal();
+    logged = true;
+    act(() => vi.advanceTimersByTime(60_000));
+    expect(await screen.findByText('Đã ăn · Ba 07:45')).toBeInTheDocument();
+    expect(requested.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('shows a meal logged by a deleted account without a name', async () => {
+    serveDay(() =>
+      dayFixture({
+        meals: dayFixture().meals.map((m) =>
+          m.slot === 'breakfast'
+            ? { ...m, status: 'refused', loggedBy: { name: null, at: '2026-09-24T00:45:00.000Z' } }
+            : m,
+        ),
+      }),
+    );
+    renderApp('/');
+    expect(await screen.findByText(/Người dùng đã xóa 07:45/)).toBeInTheDocument();
   });
 });

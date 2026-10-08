@@ -68,3 +68,22 @@
   border-radius: var(--radius-card);
   padding: 16px;
 }
+.primaryLink,
+.secondaryLink {
+  min-height: 52px;
+  border-radius: var(--radius-button);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.primaryLink {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.secondaryLink {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}

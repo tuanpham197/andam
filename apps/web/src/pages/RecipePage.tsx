@@ -149,15 +149,27 @@ function Recipe({
           </AlertBox>
         )}
         <div className={styles.intro}>
-          <div className={styles.review}>
-            <span className={recipe.reviewedBy ? styles.reviewed : undefined}>
-              {recipe.reviewedBy ? t.reviewed : t.notReviewed}
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>{t.version(recipe.contentVersion)}</span>
-          </div>
+          {recipe.custom ? (
+            <div className={`${styles.review} ${styles.customReview}`}>
+              <span className={styles.custom}>{t.custom}</span>
+              <span>{t.customNote}</span>
+            </div>
+          ) : (
+            <div className={styles.review}>
+              <span className={recipe.reviewedBy ? styles.reviewed : undefined}>
+                {recipe.reviewedBy ? t.reviewed : t.notReviewed}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{t.version(recipe.contentVersion)}</span>
+            </div>
+          )}
           <h1 className={styles.title}>{recipe.name}</h1>
-          <p className={styles.description}>{recipe.description}</p>
+          {recipe.description && <p className={styles.description}>{recipe.description}</p>}
+          {recipe.custom && (
+            <Link to={`/dishes/${recipe.id}/edit`} className={styles.edit}>
+              {t.edit}
+            </Link>
+          )}
         </div>
         <ul aria-label={t.facts} className={styles.facts}>
           {[
@@ -165,12 +177,14 @@ function Recipe({
             [t.cook, vi.minutes(recipe.cookMin)],
             [t.texture, textureLabel(variant.texture)],
             [t.tool, recipe.tool],
-          ].map(([label, value]) => (
-            <li key={label}>
-              <span className={styles.factLabel}>{label}</span>
-              <span className={styles.factValue}>{value}</span>
-            </li>
-          ))}
+          ]
+            .filter(([, value]) => value !== '')
+            .map(([label, value]) => (
+              <li key={label}>
+                <span className={styles.factLabel}>{label}</span>
+                <span className={styles.factValue}>{value}</span>
+              </li>
+            ))}
         </ul>
         <ByAge recipe={recipe} onStage={onStage} />
         <Ingredients recipe={recipe} />

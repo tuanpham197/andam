@@ -1,4 +1,5 @@
 import type { Email } from './email.js';
+import { InvalidDisplayNameError } from './errors.js';
 
 export const DEFAULT_TIMEZONE = 'Asia/Ho_Chi_Minh';
 
@@ -7,9 +8,14 @@ interface UserState {
   email: Email;
   passwordHash: string;
   timezone: string;
+  /** Shown to the other members of a child (FR-119); null falls back to the e-mail name. */
+  displayName: string | null;
   createdAt: Date;
   deletedAt: Date | null;
 }
+
+const DISPLAY_NAME_MAX = 30;
+const graphemes = new Intl.Segmenter('vi', { granularity: 'grapheme' });
 
 export class User {
   private constructor(private state: UserState) {}
@@ -20,6 +26,7 @@ export class User {
       email: input.email,
       passwordHash: input.passwordHash,
       timezone: DEFAULT_TIMEZONE,
+      displayName: null,
       createdAt: input.now,
       deletedAt: null,
     });
@@ -41,6 +48,9 @@ export class User {
   get timezone() {
     return this.state.timezone;
   }
+  get displayName() {
+    return this.state.displayName;
+  }
   get createdAt() {
     return this.state.createdAt;
   }
@@ -49,6 +59,13 @@ export class User {
   }
   get isActive() {
     return this.state.deletedAt === null;
+  }
+
+  /** NFC, trimmed, inner spaces collapsed; empty clears it; at most 30 characters (TC-FAM-025). */
+  rename(displayName: string | null): void {
+    const name = (displayName ?? '').normalize('NFC').trim().replace(/\s+/g, ' ');
+    if ([...graphemes.segment(name)].length > DISPLAY_NAME_MAX) throw new InvalidDisplayNameError();
+    this.state.displayName = name === '' ? null : name;
   }
 
   changePassword(passwordHash: string): void {

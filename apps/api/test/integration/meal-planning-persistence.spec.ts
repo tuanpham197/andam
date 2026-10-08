@@ -83,6 +83,7 @@ beforeEach(async () => {
       name: 'Na',
       birthDate: new Date('2026-01-12'),
       priorReaction: 'never',
+      members: { create: { userId: ownerId, role: 'owner', joinedAt: new Date() } },
     },
   });
 });
@@ -150,7 +151,9 @@ describe('PrismaMealPlanRepository', () => {
       portionText: '120–150 ml tham khảo',
       newIngredientIds: ['ing_thit_bo'],
     });
-    await plans.save(m);
+    expect(await plans.saveSwap(m, 'dish_chao_ca_hoi_rau_ngot')).toBe(true);
+    // A second swap from the old dish (a concurrent request) finds the meal already changed.
+    expect(await plans.saveSwap(m, 'dish_chao_ca_hoi_rau_ngot')).toBe(false);
     await plans.recordSwap({
       id: randomUUID(),
       mealId: m.id,
@@ -158,6 +161,7 @@ describe('PrismaMealPlanRepository', () => {
       toDishId: 'dish_chao_bo_bi_do',
       reason: 'faster',
       createdAt: new Date('2026-09-24T02:00:00Z'),
+      actorId: ownerId,
     });
     expect(await plans.findOwned(m.id, ownerId)).toMatchObject({
       dishId: 'dish_chao_bo_bi_do',

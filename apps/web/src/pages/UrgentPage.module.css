@@ -1,0 +1,114 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.hero {
+  background: #7e2a1d;
+  color: #ffffff;
+  padding: calc(24px + env(safe-area-inset-top)) var(--gutter) 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.back {
+  width: var(--touch);
+  height: var(--touch);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+}
+.mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #7e2a1d;
+  display: grid;
+  place-items: center;
+}
+.title {
+  font-size: 1.75rem;
+  color: #ffffff;
+}
+.body {
+  padding: 20px var(--gutter) max(24px, env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.signs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.signs li {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.signs li:last-child {
+  border-bottom: none;
+}
+.call {
+  min-height: 60px;
+  border-radius: 16px;
+  background: #7e2a1d;
+  color: #ffffff;
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.contacted {
+  min-height: 50px;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.contacted:disabled {
+  opacity: 0.6;
+}
+.retry {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.paused {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.paused strong {
+  font-size: 0.875rem;
+}
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+.disclaimer {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}

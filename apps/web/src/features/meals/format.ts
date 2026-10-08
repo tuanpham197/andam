@@ -25,6 +25,24 @@ export function dayHeading(date: string): string {
   return `${WEEKDAYS[day.getUTCDay()]}, ${day.getUTCDate()} tháng ${day.getUTCMonth() + 1}`;
 }
 
+const TIME_FORMAT = new Intl.DateTimeFormat('en-GB', {
+  timeZone: TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23',
+});
+
+/** "11:40" in Vietnam, whatever the device's time zone. */
+export function timeInVietnam(at: Date | string): string {
+  return TIME_FORMAT.format(new Date(at));
+}
+
+/** "24/9" */
+export function shortDate(date: string): string {
+  const [, month, day] = date.split('-');
+  return `${Number(day)}/${Number(month)}`;
+}
+
 export function mealInstant(date: string, time: string): Date {
   return new Date(`${date}T${time}:00${OFFSET}`);
 }
@@ -57,8 +75,10 @@ export function daySummary(slots: MealDtoSlot[]): string {
 
 const QTY = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 1 });
 
-export function formatQty(qty: number, unit: string): string {
-  return `${QTY.format(qty)} ${unit}`;
+/** "Món của bạn" may leave the quantity or unit out (BR-81). */
+export function formatQty(qty: number | null, unit: string | null): string {
+  if (qty === null) return vi.recipe.anyQty;
+  return unit ? `${QTY.format(qty)} ${unit}` : QTY.format(qty);
 }
 
 export function avoidSummary(names: string[]): string {
@@ -66,6 +86,17 @@ export function avoidSummary(names: string[]): string {
   return names.length > 2 ? `${shown} +${names.length - 2}` : shown;
 }
 
+/** Only the first letter: "Đậu Hà Lan" reads "đậu Hà Lan" mid-sentence, the place name intact. */
+const lowerFirst = (name: string) => name.charAt(0).toLocaleLowerCase('vi') + name.slice(1);
+
+/** "Cá hồi và rau ngót" — foods in a sentence, joined with "và", capitalised to open it. */
+export function namesSentence(names: string[]): string {
+  const lower = names.map(lowerFirst);
+  const text =
+    lower.length > 1 ? `${lower.slice(0, -1).join(', ')} và ${lower.at(-1)}` : (lower[0] ?? '');
+  return text.charAt(0).toLocaleUpperCase('vi') + text.slice(1);
+}
+
 export function firstTryNames(names: string[]): string {
-  return names.map((n) => n.toLocaleLowerCase('vi')).join(', ');
+  return names.map(lowerFirst).join(', ');
 }

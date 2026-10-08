@@ -1,3 +1,7 @@
+import type {
+  CustomDish,
+  StageDefault,
+} from '../../src/modules/meal-planning/domain/custom-dish.js';
 import type { StageSchedule } from '../../src/modules/meal-planning/domain/menu-engine.js';
 import type {
   DishFeedback,
@@ -10,14 +14,18 @@ import type {
   ChildPlanningInfo,
   ChildPlanningReader,
 } from '../../src/modules/meal-planning/application/ports/out/child-planning.reader.js';
+import type { CustomDishRepository } from '../../src/modules/meal-planning/application/ports/out/custom-dish.repository.js';
 import type { FoodHistoryReader } from '../../src/modules/meal-planning/application/ports/out/food-history.reader.js';
 import type { MealPlanRepository } from '../../src/modules/meal-planning/application/ports/out/meal-plan.repository.js';
 import type {
   PlanningCatalog,
   Recipe,
 } from '../../src/modules/meal-planning/application/ports/out/planning-catalog.port.js';
+import { CustomDishService } from '../../src/modules/meal-planning/application/use-cases/custom-dish.service.js';
 import { DayPlanService } from '../../src/modules/meal-planning/application/use-cases/day-plan.service.js';
 import { LibraryService } from '../../src/modules/meal-planning/application/use-cases/library.service.js';
+import { MealAccessService } from '../../src/modules/meal-planning/application/use-cases/meal-access.service.js';
+import { PlanningDishes } from '../../src/modules/meal-planning/application/use-cases/planning-dishes.js';
 import { RecipeService } from '../../src/modules/meal-planning/application/use-cases/recipe.service.js';
 import { RegenerateFutureService } from '../../src/modules/meal-planning/application/use-cases/regenerate-future.service.js';
 import { SwapService } from '../../src/modules/meal-planning/application/use-cases/swap.service.js';
@@ -71,6 +79,12 @@ export class InMemoryMealPlans implements MealPlanRepository, Snapshotable {
   async remove(mealIds: string[]) {
     for (const id of mealIds) this.rows.delete(id);
   }
+  async saveSwap(meal: PlannedMeal, fromDishId: string) {
+    const stored = this.rows.get(meal.id);
+    if (!stored || stored.dishId !== fromDishId || !stored.isPending) return false;
+    this.rows.set(meal.id, copy(meal));
+    return true;
+  }
   async recordSwap(event: SwapEvent) {
     this.swaps.push({ ...event });
   }
@@ -89,11 +103,50 @@ export class InMemoryMealPlans implements MealPlanRepository, Snapshotable {
   }
 }
 
+const copyDish = (d: CustomDish): CustomDish => ({
+  ...d,
+  lines: d.lines.map((l) => ({ ...l })),
+  steps: [...d.steps],
+});
+
+export class InMemoryCustomDishes implements CustomDishRepository, Snapshotable {
+  rows: CustomDish[] = [];
+  readonly creators = new Map<string, string>();
+  async listForChild(childId: string) {
+    return this.rows.filter((d) => d.childId === childId).map(copyDish);
+  }
+  async create(dish: CustomDish, createdBy: string) {
+    this.rows.push(copyDish(dish));
+    this.creators.set(dish.id, createdBy);
+  }
+  async update(dish: CustomDish) {
+    this.rows = this.rows.map((d) => (d.id === dish.id ? copyDish(dish) : d));
+  }
+  async archive(dishId: string, at: Date) {
+    this.rows = this.rows.map((d) => (d.id === dishId ? { ...d, archivedAt: at } : d));
+  }
+  snapshot() {
+    return this.rows.map(copyDish);
+  }
+  restore(state: unknown) {
+    this.rows = state as CustomDish[];
+  }
+}
+
 export class FakeChildren implements ChildPlanningReader {
-  readonly rows = new Map<string, { userId: string; info: ChildPlanningInfo }>();
-  async find(childId: string, userId: string) {
+  /** `userId` owns the child; `caregivers` are its other members (BR-73). */
+  readonly rows = new Map<
+    string,
+    { userId: string; caregivers?: string[]; info: ChildPlanningInfo }
+  >();
+  roleOf(childId: string, userId: string): 'owner' | 'caregiver' | null {
     const row = this.rows.get(childId);
-    return row && row.userId === userId ? { ...row.info } : null;
+    if (!row) return null;
+    if (row.userId === userId) return 'owner';
+    return row.caregivers?.includes(userId) ? 'caregiver' : null;
+  }
+  async find(childId: string, userId: string) {
+    return this.roleOf(childId, userId) ? { ...this.rows.get(childId)!.info } : null;
   }
 }
 
@@ -150,6 +203,14 @@ export class FakeCatalog implements PlanningCatalog {
   async schedule(stage: StageId) {
     return SCHEDULES[stage];
   }
+  async stageDefaults(): Promise<StageDefault[]> {
+    return [
+      { stage: 1, texture: 'puree_smooth', portionText: '2–3 thìa, tăng dần' },
+      { stage: 2, texture: 'lumpy', portionText: 'Khoảng 125 ml' },
+      { stage: 3, texture: 'minced_soft', portionText: 'Khoảng 125 ml' },
+      { stage: 4, texture: 'family', portionText: '175–250 ml' },
+    ];
+  }
   async recipe(dishId: string): Promise<Recipe | null> {
     const dish = this.data.dishes.find((d) => d.id === dishId);
     if (!dish) return null;
@@ -185,10 +246,10 @@ export class FakeHistory implements FoodHistoryReader {
   dishFeedback = new Map<string, DishFeedback>();
   introductions: string[] = [];
   healthState: HealthState = 'normal';
-  async tried() {
+  async tried(_childId: string) {
     return new Set(this.triedIds);
   }
-  async paused() {
+  async paused(_childId: string) {
     return new Set(this.pausedIds);
   }
   async feedback() {
@@ -199,6 +260,10 @@ export class FakeHistory implements FoodHistoryReader {
   }
   async health() {
     return this.healthState;
+  }
+  logged = new Map<string, { name: string | null; at: Date }>();
+  async loggedBy(mealIds: string[]) {
+    return new Map([...this.logged].filter(([id]) => mealIds.includes(id)));
   }
 }
 
@@ -219,7 +284,11 @@ export function planningTestbed() {
     info: { childId: CHILD, ageMonths: 8, stage: 2, avoidAllergens: [], avoidIngredients: [] },
   });
   plans.owners.set(CHILD, USER);
-  const uow = new ImmediateUnitOfWork().track(plans);
+  const customs = new InMemoryCustomDishes();
+  const dishes = new PlanningDishes(catalog, customs);
+  const uow = new ImmediateUnitOfWork().track(plans, customs);
+  const recipes = new RecipeService(children, dishes, history, clock);
+  const regenerate = new RegenerateFutureService(plans, children, dishes, history, ids, clock);
   return {
     uow,
     clock,
@@ -227,12 +296,27 @@ export function planningTestbed() {
     plans,
     children,
     catalog,
+    customs,
+    dishes,
     history,
-    dayPlans: new DayPlanService(plans, children, catalog, history, ids, clock),
-    recipes: new RecipeService(children, catalog, history, clock),
-    regenerate: new RegenerateFutureService(plans, children, catalog, history, ids, clock),
-    swaps: new SwapService(plans, children, catalog, history, ids, clock, uow),
-    library: new LibraryService(plans, children, catalog, history, clock),
+    dayPlans: new DayPlanService(plans, children, dishes, history, ids, clock),
+    recipes,
+    regenerate,
+    swaps: new SwapService(plans, children, dishes, history, ids, clock, uow),
+    library: new LibraryService(plans, children, dishes, history, clock),
+    customDishes: new CustomDishService(
+      customs,
+      children,
+      dishes,
+      history,
+      plans,
+      recipes,
+      regenerate,
+      ids,
+      clock,
+      uow,
+    ),
+    mealAccess: new MealAccessService(plans, dishes, history),
   };
 }
 
@@ -253,3 +337,7 @@ export function snapshot(m: PlannedMeal) {
     generatedAt: m.generatedAt,
   };
 }
+
+/** A copy of the meal with some fields changed, ready for `plans.put`. */
+export const changedMeal = (m: PlannedMeal, overrides: Partial<ReturnType<typeof snapshot>>) =>
+  PlannedMeal.restore({ ...snapshot(m), ...overrides });

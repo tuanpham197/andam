@@ -1,5 +1,5 @@
 import { useListChildren, type ChildDto } from '@appandam/api-client';
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { Splash } from '../../app/layouts';
 import { LoadError } from '../../components/LoadError';
@@ -15,10 +15,44 @@ export function RequireChild() {
       </div>
     );
   if (children.data.length === 0) return <Navigate to="/onboarding/1" replace />;
+  return <ChildChoiceProvider list={children.data} />;
+}
+
+const STORAGE_KEY = 'active-child';
+
+function remembered(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function remember(childId: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, childId);
+  } catch {
+    // Not kept for the next visit: the first child shows then.
+  }
+}
+
+/**
+ * FR-117: the child shown is the one chosen on this device; when that child is gone (deleted,
+ * or the member was removed) the first remaining one shows.
+ */
+function ChildChoiceProvider({ list }: { list: ChildDto[] }) {
+  const [chosen, setChosen] = useState(remembered);
+  const child = list.find((c) => c.id === chosen) ?? list[0]!;
+  const select = (childId: string) => {
+    remember(childId);
+    setChosen(childId);
+  };
   return (
-    <ActiveChild.Provider value={children.data[0]!}>
-      <Outlet />
-    </ActiveChild.Provider>
+    <ChildChoice.Provider value={{ children: list, select }}>
+      <ActiveChild.Provider value={child}>
+        <Outlet />
+      </ActiveChild.Provider>
+    </ChildChoice.Provider>
   );
 }
 
@@ -37,11 +71,26 @@ export function RequireNoChild() {
 }
 
 /**
- * The profile shown in the app: the first child (MVP has one child per account). Provided by
- * RequireChild, so a screen never sees the list emptied by a deletion before the redirect.
+ * The child shown in the app (FR-117). Provided by RequireChild, so a screen never sees the list
+ * emptied by a deletion before the redirect.
  */
 const ActiveChild = createContext<ChildDto | null>(null);
 
 export function useActiveChild(): ChildDto {
   return useContext(ActiveChild)!;
 }
+
+interface ChildChoiceValue {
+  children: ChildDto[];
+  select: (childId: string) => void;
+}
+
+const ChildChoice = createContext<ChildChoiceValue | null>(null);
+
+/** Every child the user belongs to, and a way to show another one (G04). */
+export function useChildChoice(): ChildChoiceValue {
+  return useContext(ChildChoice)!;
+}
+
+/** For the invite page (outside the guarded tree): show this child next time the app opens. */
+export const chooseChildNextTime = remember;

@@ -18,6 +18,7 @@ const toDomain = (row: UserRow) =>
     email: row.email as Email,
     passwordHash: row.passwordHash,
     timezone: row.timezone,
+    displayName: row.displayName,
     createdAt: row.createdAt,
     deletedAt: row.deletedAt,
   });
@@ -59,7 +60,11 @@ export class PrismaUserRepository implements UserRepository {
   async save(user: User): Promise<void> {
     await this.txHost.tx.user.update({
       where: { id: user.id },
-      data: { passwordHash: user.passwordHash, deletedAt: user.deletedAt },
+      data: {
+        passwordHash: user.passwordHash,
+        displayName: user.displayName,
+        deletedAt: user.deletedAt,
+      },
     });
   }
 }

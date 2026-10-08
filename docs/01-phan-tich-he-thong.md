@@ -3,7 +3,7 @@
 | Mục | Nội dung |
 |---|---|
 | Nguồn phân tích | `App thực đơn ăn dặm.html` (bản export thiết kế, 10 màn hình mobile 390px) |
-| Phiên bản tài liệu | v0.3 — 07/10/2026 |
+| Phiên bản tài liệu | v0.4 — 07/10/2026 |
 | Phạm vi | Toàn bộ tính năng suy ra từ UI + các giả định cần thiết để hệ thống chạy được |
 | Stack đã chốt | Frontend **ReactJS** · Backend **NestJS** · Database **PostgreSQL** |
 | Tài liệu liên quan | [02-ke-hoach-trien-khai.md](02-ke-hoach-trien-khai.md) |
@@ -15,6 +15,7 @@
 | v0.1 | Bản đầu, kiến trúc local-first (không backend). |
 | v0.2 | Chốt stack React + NestJS + PostgreSQL → kiến trúc client–server; thêm tài khoản/đăng nhập & đồng ý xử lý dữ liệu vào MVP; menu engine chuyển về backend; thêm đặc tả API, schema PostgreSQL, bảo mật; cập nhật NFR và ràng buộc. |
 | v0.3 | P4: BR-28/29 dùng nguyên liệu chính (`isMain`) của món; tìm món ưu tiên từ nguyên vẹn và dấu tiếng Việt; chốt dạng response đổi món/thư viện và mã lỗi mới. Chốt Q3 khi làm P3: “nguyên liệu mới” chỉ tính đạm/rau củ/trái cây chưa ăn; BR-24/25 chỉ ràng buộc nguyên liệu mới **có tag dị ứng**. |
+| v0.4 | Đưa F17 **Nhiều người chăm** vào MVP (phase P5b, ngay sau P5): vai trò chủ hồ sơ / người chăm, lời mời qua link, quản lý thành viên, chuyển bé tối giản (G04). Thêm UC-20..22, FR-110..120, BR-70..79, màn G13/G14, bảng `child_members`/`child_invites`, cột `actor_id`, API thành viên & lời mời, mã lỗi mới, Q14–Q18. Thêm F18 **Món của bạn** (phụ huynh tự tạo món, làm trong P5): UC-23, FR-130..137, BR-80..87, màn G15, cột `dishes.owner_child_id`/`archived_at`, API `custom-dishes`, Q19–Q20. |
 
 > Các mục đánh dấu **[Giả định]** là suy luận không có trực tiếp trên UI, cần xác nhận (tổng hợp ở mục 10).
 
@@ -30,7 +31,8 @@
 
 | Vai trò | Mô tả |
 |---|---|
-| Phụ huynh (người chăm bé) | Người dùng chính: tạo hồ sơ bé, xem/đổi thực đơn, nấu theo công thức, ghi nhận bữa ăn và phản ứng. |
+| Phụ huynh — chủ hồ sơ | Người dùng chính: tạo hồ sơ bé, xem/đổi thực đơn, nấu theo công thức, ghi nhận bữa ăn và phản ứng; mời và quản lý người chăm. |
+| Người chăm (được mời) | Ba/mẹ còn lại, ông bà, người giúp việc được chủ hồ sơ mời: xem thực đơn, đổi món, ghi nhận bữa ăn và phản ứng; không sửa hồ sơ bé, danh sách tránh, không mời người khác (BR-73). |
 | Hệ thống (Menu Engine) | Tác nhân tự động: lập thực đơn, lọc an toàn, xoay vòng món, tạm dừng nguyên liệu nghi gây phản ứng. |
 | Người biên soạn nội dung **[Giả định]** | Chuyên gia dinh dưỡng duyệt công thức (UI hiển thị “Đã duyệt nội dung · Công thức v3”). Chưa có màn hình, ngoài phạm vi MVP. |
 
@@ -92,7 +94,7 @@ flowchart LR
 | G01 | Onboarding bước 1, 2, 4, 5 | S06 là “3/5” | B1: tên/giới tính/avatar; B2: ngày sinh + sinh non (tái dùng S10); B4: chi tiết phản ứng trước đây (nếu chọn “Có”); B5: tóm tắt + giờ bữa ăn → tạo thực đơn. **[Giả định]** |
 | G02 | Tab **Nhật ký** | Có trên bottom nav, chưa có màn | Timeline các bữa đã ghi nhận + phản ứng, lọc theo ngày; xem chi tiết để đưa bác sĩ. |
 | G03 | Tab **Hồ sơ bé** | Nav trỏ về Onboarding | Trang tổng quan hồ sơ: thông tin, thực phẩm tránh, nguyên liệu tạm dừng, lối vào S09/S10, quản lý nhiều bé. |
-| G04 | Chọn hồ sơ bé khác | Nút ⌄ trên S01 | Bottom sheet danh sách bé + “Thêm bé”. |
+| G04 | Chọn hồ sơ bé khác | Nút ⌄ trên S01; bắt buộc khi người dùng thuộc ≥ 2 hồ sơ (vd tự tạo 1 bé rồi nhận lời mời) | Bottom sheet danh sách bé (tên, tuổi, vai trò) + “Thêm bé” (sau MVP). |
 | G05 | Danh sách đi chợ | Nút trên S04 | Tổng hợp nguyên liệu theo tuần, gộp định lượng, tick đã mua. |
 | G06 | Lên thực đơn tuần sau | Nút trên S04 | Sinh kế hoạch tuần kế tiếp + xem trước. |
 | G07 | Chế độ nấu (Bắt đầu nấu) | Nút trên S03 | Từng bước toàn màn hình, giữ màn hình sáng, hẹn giờ. |
@@ -100,7 +102,10 @@ flowchart LR
 | G09 | Chi tiết ngày trong tuần | Dòng ngày trên S04 | Tái dùng danh sách bữa của S01 cho ngày bất kỳ. |
 | G10 | Đăng ký / Đăng nhập / Quên mật khẩu | Có backend → dữ liệu gắn với tài khoản | 3 màn đơn giản theo design system hiện có. |
 | G11 | Đồng ý xử lý dữ liệu | Lưu dữ liệu sức khỏe trẻ em trên server (NĐ 13/2023) | Hiển thị khi đăng ký: tóm tắt dữ liệu thu thập, mục đích, checkbox đồng ý bắt buộc, link chính sách. |
-| G12 | Cài đặt tài khoản | Đăng xuất, đổi mật khẩu, xóa tài khoản | Truy cập từ trang Hồ sơ bé. |
+| G12 | Cài đặt tài khoản | Đăng xuất, đổi mật khẩu, xóa tài khoản | Truy cập từ trang Hồ sơ bé. Thêm “Tên hiển thị” (FR-119). |
+| G15 | Tạo / sửa món của bạn | F18 — thiết kế chưa có | Mở từ S05 (*+ Tạo món*) và S03 của món tự tạo (*Sửa món*): tên, bữa chính / bữa phụ, tìm & thêm nguyên liệu (tái dùng ô tìm của onboarding), định lượng (không bắt buộc), thời gian sơ chế / nấu, các bước; hiển thị nhóm chất đạt được; *Xóa món* (xác nhận). |
+| G13 | Thành viên chăm bé | F17 — thiết kế chưa có | Mục trong Hồ sơ bé: danh sách thành viên (tên hiển thị, vai trò, ngày tham gia), lời mời đang chờ (chủ), nút Mời người chăm (share sheet / sao chép link), Gỡ, Chuyển quyền chủ, Rời hồ sơ. |
+| G14 | Nhận lời mời | Mở link mời | Màn công khai `/invite/:token`: ai mời, tên bé, quyền sẽ có, cảnh báo dữ liệu sức khỏe; Đăng nhập/Đăng ký → quay lại → Tham gia; trạng thái hết hạn / đã dùng / bị thu hồi. |
 
 ---
 
@@ -124,7 +129,8 @@ flowchart LR
 | F14 | Nhắc nhở / thông báo | Nhắc giờ ăn, nhắc theo dõi sau món mới | — | ❌ sau MVP |
 | F15 | Tài khoản & dữ liệu cá nhân | Đăng ký, đăng nhập, đồng ý xử lý dữ liệu, xóa tài khoản; dữ liệu tự có trên mọi thiết bị | G10, G11, G12 | ✅ |
 | F16 | Quản trị nội dung (CMS) | Biên soạn, duyệt, version công thức | — | ❌ sau MVP |
-| F17 | Nhiều người chăm | Mời ông bà/người giúp việc cùng xem & ghi nhận cho 1 bé | — | ❌ sau MVP |
+| F18 | Món của bạn | Phụ huynh tự tạo món nhà hay nấu từ nguyên liệu trong danh mục; vẫn qua lọc an toàn; dùng trong thực đơn, đổi món, thư viện | S05, S03, G15 | ✅ (P5) |
+| F17 | Nhiều người chăm | Mời ba/mẹ, ông bà, người giúp việc cùng xem & ghi nhận cho 1 bé; vai trò chủ / người chăm; chuyển bé tối giản | G04, G13, G14 | ✅ (P5b) |
 
 ---
 
@@ -156,10 +162,18 @@ flowchart LR
     UC17[UC-17 Tạm dừng nguyên liệu]
     UC18[UC-18 Đăng ký / đăng nhập]
     UC19[UC-19 Xóa tài khoản & dữ liệu]
+    UC20[UC-20 Mời người chăm]
+    UC21[UC-21 Nhận lời mời]
+    UC22[UC-22 Quản lý thành viên]
+    UC23[UC-23 Tạo / sửa / xóa món của bạn]
   end
+  C((Người chăm))
   P --- UC01 & UC02 & UC03 & UC04 & UC05 & UC06 & UC07
   P --- UC08 & UC09 & UC10 & UC11 & UC12 & UC13 & UC14 & UC15
-  P --- UC18 & UC19
+  P --- UC18 & UC19 & UC20 & UC22 & UC23
+  C --- UC04 & UC05 & UC06 & UC07 & UC08 & UC09 & UC10 & UC11
+  C --- UC21 & UC22 & UC15 & UC23
+  UC23 -. include .-> UC16
   E --- UC16 & UC17
   UC01 -. include .-> UC02
   UC01 -. include .-> UC16
@@ -189,11 +203,15 @@ flowchart LR
 | UC-12 | Xem thực đơn tuần | Phụ huynh | S04 | ✅ |
 | UC-13 | Lên thực đơn tuần sau | Phụ huynh | S04, G06 | ✅ |
 | UC-14 | Xác nhận dùng lại nguyên liệu tạm dừng | Phụ huynh | G08 | ✅ |
-| UC-15 | Chuyển / thêm hồ sơ bé | Phụ huynh | G04 | ❌ |
+| UC-15 | Chuyển / thêm hồ sơ bé | Phụ huynh, Người chăm | G04 | ⚠️ chuyển bé (P5b); thêm bé sau MVP |
 | UC-16 | Sinh thực đơn (ngày/tuần/thay thế) | Menu Engine | — | ✅ |
 | UC-17 | Tạm dừng nguyên liệu nghi gây phản ứng | Menu Engine | — | ✅ |
 | UC-18 | Đăng ký / đăng nhập | Phụ huynh | G10, G11 | ✅ |
 | UC-19 | Xóa tài khoản & dữ liệu | Phụ huynh | G12 | ✅ |
+| UC-20 | Mời người chăm | Chủ hồ sơ | G13 | ✅ (P5b) |
+| UC-21 | Nhận lời mời | Người chăm | G14 | ✅ (P5b) |
+| UC-22 | Quản lý thành viên (gỡ, rời, chuyển quyền chủ) | Chủ hồ sơ, Người chăm | G13 | ✅ (P5b) |
+| UC-23 | Tạo / sửa / xóa món của bạn | Phụ huynh | S05, S03, G15 | ✅ (P5) |
 
 ### 4.3 Đặc tả use case chính
 
@@ -205,6 +223,33 @@ flowchart LR
 
 #### UC-19 Xóa tài khoản & dữ liệu
 - **Luồng chính:** Cài đặt tài khoản → Xóa tài khoản → nhập lại mật khẩu → xác nhận → hệ thống đăng xuất mọi thiết bị, dữ liệu không truy cập được ngay, xóa vĩnh viễn trong ≤ 30 ngày.
+- **Luồng thay thế (P5b):** Tài khoản là chủ của hồ sơ bé đang có người chăm khác → với từng hồ sơ phải chọn chuyển quyền chủ cho một người chăm hoặc xóa hồ sơ (cảnh báo N người sẽ mất quyền truy cập) trước khi xóa tài khoản (BR-76). Người chăm xóa tài khoản → chỉ mất tư cách thành viên.
+
+#### UC-23 Tạo / sửa / xóa món của bạn
+- **Luồng chính (tạo):** S05 → *+ Tạo món* (G15) → nhập tên, chọn bữa chính / bữa phụ → tìm và thêm nguyên liệu từ danh mục (định lượng không bắt buộc) → thời gian sơ chế / nấu → các bước (không bắt buộc) → app hiện nhóm chất món đạt được → *Lưu món* → hệ thống kiểm tra lọc cứng với bé (BR-82), lưu, mở công thức (S03) của món. Món có nhãn “Món của bạn”, từ đó xuất hiện trong thư viện, gợi ý đổi món và thực đơn tự động.
+- **Luồng thay thế:**
+  - Món chứa nguyên liệu bé cần tránh / đang tạm dừng / chưa hợp tuổi → báo rõ nguyên liệu nào và lý do, không lưu.
+  - Trùng tên với món của bạn khác của bé → `DISH_NAME_TAKEN`. Đủ 50 món → `CUSTOM_DISH_LIMIT_REACHED`.
+  - Tìm không thấy nguyên liệu → “Không tìm thấy” (không nhập tự do, như UC-02).
+- **Sửa:** S03 của món tự tạo → *Sửa món* → như luồng tạo → bữa tương lai đang dùng món được kiểm tra lại (BR-86).
+- **Xóa:** *Xóa món* (xác nhận) → món ngừng xuất hiện ở thư viện, gợi ý, thực đơn; bữa tương lai đang dùng món được sinh lại; bữa đã qua và nhật ký vẫn hiện tên món.
+- **Quy tắc:** BR-80..87.
+
+#### UC-20 Mời người chăm
+- **Tiền điều kiện:** Chủ hồ sơ đã đăng nhập; bé chưa đủ 6 thành viên.
+- **Luồng chính:** Hồ sơ bé → Thành viên (G13) → *Mời người chăm* → hệ thống tạo link (hiệu lực 72 giờ, dùng 1 lần) → mở share sheet của điện thoại (Zalo, Messenger…) hoặc sao chép link. Lời mời xuất hiện trong mục “Đang chờ”.
+- **Luồng thay thế:** Đủ 6 thành viên → `MEMBER_LIMIT_REACHED`; đã có 5 lời mời đang chờ → `INVITE_LIMIT_REACHED`, gợi ý thu hồi lời mời cũ. Chủ thu hồi lời mời bất kỳ lúc nào trước khi được dùng.
+- **Quy tắc:** BR-71, BR-72, BR-79.
+
+#### UC-21 Nhận lời mời
+- **Luồng chính:** Mở link `/invite/<token>` → xem trước (người mời, tên bé, quyền của người chăm theo BR-73, nhắc đây là dữ liệu sức khỏe của trẻ) → chưa đăng nhập thì đăng nhập / đăng ký (G10, G11) rồi tự quay lại màn lời mời → *Tham gia* → vào S01 của bé; nếu đã có hồ sơ khác, bé mới thành bé đang chọn, chuyển qua lại bằng G04.
+- **Luồng thay thế:** Link sai / hết hạn / đã dùng / bị thu hồi → thông báo tương ứng, gợi ý xin link mới. Đã là thành viên → mở luôn hồ sơ bé. Người nhận từng tự tạo hồ sơ trùng cho cùng bé → app không gộp dữ liệu, gợi ý xóa hồ sơ trùng ở G03 **[Giả định]**.
+- **Hậu điều kiện:** Người nhận là thành viên vai trò người chăm; lời mời ở trạng thái đã dùng.
+
+#### UC-22 Quản lý thành viên
+- **Chủ hồ sơ:** xem thành viên + lời mời đang chờ; gỡ người chăm (xác nhận 2 bước, mất quyền ngay); chuyển quyền chủ cho một người chăm (xác nhận 2 bước) → chủ cũ thành người chăm.
+- **Người chăm:** xem danh sách thành viên; *Rời hồ sơ bé* (xác nhận) → mất quyền ngay, chuyển sang bé khác hoặc onboarding nếu không còn bé nào.
+- **Quy tắc:** BR-73..76.
 
 #### UC-01 Tạo hồ sơ bé
 - **Tiền điều kiện:** Đã đăng nhập (UC-18); chưa có hồ sơ bé nào hoặc người dùng chọn “Thêm bé”.
@@ -310,7 +355,7 @@ flowchart LR
 | FR-009 | Chặn giai đoạn cao hơn | Là PH, tôi muốn thấy giai đoạn cao hơn bị khóa kèm mốc mở khóa để không cho bé ăn kết cấu quá sớm. | High | Open |
 | FR-010 | Xem trước áp dụng | Là PH, tôi muốn xem trước kết cấu, khẩu phần, số bữa chính/phụ của giai đoạn đang chọn để hiểu thay đổi trước khi lưu. | Medium | Open |
 | FR-011 | Dưới 6 tháng | Là PH có bé dưới 6 tháng, tôi muốn được thông báo app không lập thực đơn để tránh cho bé ăn dặm quá sớm. | High | Open |
-| FR-012 | Nhiều hồ sơ | Là PH có nhiều con, tôi muốn chuyển giữa các hồ sơ bé để quản lý thực đơn riêng từng bé. | Low | Deferred |
+| FR-012 | Nhiều hồ sơ | Là PH có nhiều con, tôi muốn chuyển giữa các hồ sơ bé để quản lý thực đơn riêng từng bé. | Medium | Một phần — chuyển bé ở P5b (FR-117); thêm bé thứ 2 sau MVP |
 | FR-013 | Trang hồ sơ | Là PH, tôi muốn xem và sửa thông tin hồ sơ, thực phẩm cần tránh sau khi onboarding để cập nhật khi bé thay đổi. | High | Open |
 
 ### 5.2 Thực đơn hôm nay & công thức (F03, F04)
@@ -364,6 +409,19 @@ flowchart LR
 | FR-069 | Nhật ký | Là PH, tôi muốn xem lại lịch sử bữa ăn và phản ứng theo ngày để đưa bác sĩ xem. | Medium | Open |
 | FR-070 | Xuất nhật ký | Là PH, tôi muốn xuất nhật ký phản ứng (PDF/ảnh) để gửi bác sĩ. | Low | Deferred |
 
+### 5.4b Món của bạn (F18)
+
+| ID | Tiêu đề | User story | Ưu tiên | Trạng thái |
+|---|---|---|---|---|
+| FR-130 | Tạo món | Là PH, tôi muốn tự thêm món nhà hay nấu từ các nguyên liệu trong danh mục để app lập thực đơn với cả món quen của bé. | High | Open |
+| FR-131 | Kiểm tra an toàn khi tạo | Là PH, tôi muốn được báo ngay nếu món tôi tạo chứa thứ bé cần tránh, đang tạm dừng hoặc chưa hợp tuổi để không vô tình cho bé ăn. | High | Open |
+| FR-132 | Nhóm chất của món | Là PH, tôi muốn thấy món tôi tạo đạt những nhóm chất nào để cân đối thêm nguyên liệu. | Medium | Open |
+| FR-133 | Dùng món của bạn | Là PH, tôi muốn món tôi tạo xuất hiện trong thư viện, gợi ý đổi món và thực đơn tự động như món khác. | High | Open |
+| FR-134 | Lọc món của bạn | Là PH, tôi muốn lọc nhanh các món mình đã tạo trong thư viện (chip “Món của bạn”). | Medium | Open |
+| FR-135 | Sửa món | Là PH, tôi muốn sửa tên, nguyên liệu, thời gian, các bước của món đã tạo. | Medium | Open |
+| FR-136 | Xóa món | Là PH, tôi muốn xóa món không còn nấu mà lịch sử ăn vẫn còn nguyên. | Medium | Open |
+| FR-137 | Phân biệt món chưa duyệt | Là PH, tôi muốn thấy rõ món nào do tôi tạo, chưa qua chuyên gia duyệt. | High | Open |
+
 ### 5.5 Sức khỏe (F09)
 
 | ID | Tiêu đề | User story | Ưu tiên | Trạng thái |
@@ -387,7 +445,7 @@ flowchart LR
 | FR-096 | Danh sách đi chợ | Là PH, tôi muốn có danh sách nguyên liệu gộp cho cả tuần để đi chợ một lần. | Low | Deferred |
 | FR-097 | Nhắc giờ ăn | Là PH, tôi muốn được nhắc trước giờ bữa ăn để chuẩn bị kịp. | Low | Deferred |
 | FR-098 | Nhắc theo dõi món mới | Là PH, tôi muốn được nhắc kiểm tra bé vài giờ sau bữa có món mới để phát hiện phản ứng sớm. | Low | Deferred |
-| FR-099 | Nhiều người chăm | Là PH, tôi muốn mời người thân cùng xem và ghi nhận cho bé để cả nhà cùng chăm bé theo 1 thực đơn. | Low | Deferred |
+| FR-099 | Nhiều người chăm | Là PH, tôi muốn mời người thân cùng xem và ghi nhận cho bé để cả nhà cùng chăm bé theo 1 thực đơn. | High | Tách thành FR-110..120 (mục 5.8) |
 
 ### 5.7 Tài khoản & dữ liệu cá nhân (F15)
 
@@ -400,6 +458,22 @@ flowchart LR
 | FR-104 | Quên mật khẩu | Là PH, tôi muốn đặt lại mật khẩu qua email để lấy lại tài khoản khi quên. | Medium | Open |
 | FR-105 | Đăng xuất | Là PH, tôi muốn đăng xuất để bảo vệ dữ liệu khi dùng chung thiết bị. | Medium | Open |
 | FR-106 | Xóa tài khoản | Là PH, tôi muốn xóa tài khoản và toàn bộ dữ liệu của bé để thực hiện quyền xóa dữ liệu cá nhân. | High | Open |
+
+### 5.8 Nhiều người chăm (F17)
+
+| ID | Tiêu đề | User story | Ưu tiên | Trạng thái |
+|---|---|---|---|---|
+| FR-110 | Mời người chăm | Là chủ hồ sơ, tôi muốn tạo link mời và gửi qua Zalo/Messenger để người nhà cùng chăm bé theo một thực đơn. | High | Open |
+| FR-111 | Xem trước lời mời | Là người được mời, tôi muốn thấy ai mời, tên bé và quyền mình sẽ có trước khi tham gia. | High | Open |
+| FR-112 | Nhận lời mời | Là người được mời, tôi muốn đăng nhập hoặc đăng ký rồi tham gia ngay, không phải mở lại link. | High | Open |
+| FR-113 | Danh sách thành viên | Là thành viên, tôi muốn xem ai đang cùng chăm bé; là chủ hồ sơ, tôi muốn thấy cả lời mời đang chờ. | High | Open |
+| FR-114 | Thu hồi lời mời / gỡ thành viên | Là chủ hồ sơ, tôi muốn thu hồi link đã gửi nhầm và gỡ người không còn chăm bé, có hiệu lực ngay. | High | Open |
+| FR-115 | Rời hồ sơ | Là người chăm, tôi muốn rời hồ sơ bé khi không còn chăm bé. | Medium | Open |
+| FR-116 | Chuyển quyền chủ | Là chủ hồ sơ, tôi muốn chuyển quyền chủ cho người chăm khác (vd trước khi xóa tài khoản). | Medium | Open |
+| FR-117 | Chuyển bé | Là thành viên của nhiều hồ sơ, tôi muốn chuyển giữa các bé từ S01 để xem đúng thực đơn. | High | Open |
+| FR-118 | Ai đã ghi nhận | Là thành viên, tôi muốn thấy ai đã ghi nhận bữa, đổi món, báo phản ứng (vd “Mẹ Na · 11:40”) để không làm trùng. | Medium | Open |
+| FR-119 | Tên hiển thị | Là người dùng, tôi muốn đặt tên hiển thị (vd “Bà nội”) để người nhà nhận ra tôi. | Medium | Open |
+| FR-120 | Thấy thay đổi của người khác | Là thành viên, tôi muốn S01 tự cập nhật khi người nhà vừa ghi nhận hay đổi món (khi quay lại app, và định kỳ ≤ 60 giây). | Medium | Open |
 
 ---
 
@@ -454,7 +528,7 @@ flowchart LR
 | BR-28 | Lý do đổi “Thiếu nguyên liệu” → loại món có chung **nguyên liệu chính** (`dish_ingredients.is_main`) với món đang thay. Cùng nguồn đạm nhưng khác nguyên liệu (cá hồi → cá lóc) vẫn được gợi ý. |
 | BR-29 | Lý do đổi “Bé không thích” → loại món có chung nguyên liệu chính như BR-28; tín hiệu không thích là bản ghi `swap_events.reason = disliked` (không tự thêm vào `avoidIngredients`). |
 | BR-30 | **Bữa tiếp theo** = bữa sớm nhất hôm nay có trạng thái `planned` hoặc `prepared`. Đếm ngược = giờ bữa − hiện tại; nếu đã quá giờ hiển thị “đã tới giờ”. |
-| BR-31 | Khi hồ sơ / giai đoạn / sức khỏe / nguyên liệu tạm dừng thay đổi → chỉ sinh lại các bữa **tương lai** chưa ghi nhận; bữa người dùng đã tự đổi được giữ nếu vẫn hợp lệ với lọc cứng. |
+| BR-31 | Khi hồ sơ / giai đoạn / sức khỏe / nguyên liệu tạm dừng thay đổi → chỉ sinh lại các bữa **tương lai** chưa ghi nhận; bữa người dùng đã tự đổi hoặc đã chuẩn bị được giữ nếu vẫn hợp lệ với lọc cứng, vi phạm thì **luôn** bị thay (không để món bé không được ăn trên thực đơn). Đổi hồ sơ / dùng lại nguyên liệu: sinh lại mọi bữa tự động; tạm dừng / xóa món của bạn: chỉ thay bữa trở nên không an toàn. Bữa bé đang phản ứng (nguồn của tạm dừng) không bị thay. |
 
 ### 6.4 Phản ứng & tạm dừng
 
@@ -482,6 +556,47 @@ flowchart LR
 | BR-60 | “Món khác nhau” = số món distinct / tổng số bữa (chính + phụ) trong tuần. VD GĐ2: 7 × 4 = 28. |
 | BR-61 | “Ngày đạt 4 nhóm”: ngày mà hợp các nhóm chất của các bữa chính = 4/4 **[Giả định — UI chưa rõ tính theo bữa hay theo ngày]**. |
 | BR-62 | Xoay vòng đạm: đếm số bữa chính theo `proteinSource` (cá, gà, bò, heo, đậu, trứng). Nguồn thuộc danh sách tránh hiển thị 0 kèm “Đang tránh theo hồ sơ”. |
+
+### 6.8 Món của bạn
+
+| ID | Quy tắc |
+|---|---|
+| BR-80 | Món của bạn thuộc **một hồ sơ bé** (từ P5b mọi thành viên của bé dùng chung); không hiện cho bé hay tài khoản khác. |
+| BR-81 | Nguyên liệu chỉ chọn từ danh mục: 1–15 nguyên liệu, không trùng; định lượng (> 0, ≤ 9 999) và đơn vị (≤ 12 ký tự) không bắt buộc. |
+| BR-82 | Lọc cứng BR-01..05 áp dụng theo nguyên liệu như món catalog. Khi tạo / sửa, món vi phạm với bé tại thời điểm đó bị từ chối `DISH_NOT_SAFE_FOR_CHILD` kèm nguyên liệu và lý do; về sau hồ sơ đổi khiến món vi phạm → món bị ẩn như món catalog (vào khối “Đang ẩn”). BR-06/07 (đã từ chối, đang ốm) không chặn lúc tạo. |
+| BR-83 | Món dùng được ở mọi giai đoạn (trừ khi nguyên liệu có tuổi tối thiểu cao hơn — BR-05); kết cấu và khẩu phần lấy theo thông số giai đoạn đang áp dụng. |
+| BR-84 | Suy ra từ nguyên liệu: nhóm chất (FR-023); nguyên liệu chính (BR-28/29) = nguyên liệu nhóm đạm, không có thì rau củ / trái cây, không có thì tất cả; nguồn đạm chính = nguồn đạm của nguyên liệu đạm đầu tiên. |
+| BR-85 | Món của bạn tham gia lập thực đơn tự động, đổi món, thư viện với cùng quy tắc và điểm như món catalog; luôn có nhãn “Món của bạn”; công thức ghi “Chưa qua chuyên gia duyệt” và lưu ý an toàn chung theo tuổi (dưới 12 tháng: không muối, nước mắm, đường). |
+| BR-86 | Xóa = lưu trữ (`archived_at`), không xóa cứng: bữa đã qua, nhật ký vẫn hiện món; bữa tương lai chưa ghi nhận đang dùng món được sinh lại. Sửa món: bữa tương lai đang dùng món được kiểm tra lại lọc cứng và cập nhật nguyên liệu lần đầu; vi phạm → sinh lại (BR-31). |
+| BR-87 | Tối đa 50 món (đang dùng) mỗi bé **[Giả định]**; tên 2–60 ký tự, không trùng (không phân biệt hoa thường, dấu) với món của bạn khác của bé; sơ chế 0–180 phút, nấu 0–240 phút, tổng ≥ 1; tối đa 15 bước, mỗi bước 1–300 ký tự. |
+
+### 6.7 Nhiều người chăm
+
+| ID | Quy tắc |
+|---|---|
+| BR-70 | Mỗi hồ sơ bé có **đúng 1** chủ hồ sơ; người tạo hồ sơ là chủ. Một tài khoản có thể là thành viên của nhiều bé. |
+| BR-71 | Tối đa 6 thành viên mỗi bé (gồm chủ) và 5 lời mời đang chờ **[Giả định]**. |
+| BR-72 | Lời mời: token ngẫu nhiên 256-bit, chỉ lưu hash SHA-256; hiệu lực 72 giờ **[Giả định]**; dùng 1 lần; chủ thu hồi được; tạo lời mời mới không vô hiệu lời mời cũ. |
+| BR-73 | Ma trận quyền — xem bảng dưới. |
+| BR-74 | Không phải thành viên → `404` (không lộ hồ sơ tồn tại, giữ quy tắc cũ); thành viên thiếu quyền → `403 OWNER_ONLY`. |
+| BR-75 | Quyền được kiểm tra ở mỗi request từ `child_members`, không nằm trong JWT → gỡ thành viên / rời / chuyển quyền có hiệu lực ngay ở request kế tiếp. |
+| BR-76 | Chủ xóa tài khoản: mỗi hồ sơ bé còn người chăm phải được chuyển quyền chủ hoặc xóa trước (UC-19). Người chăm xóa tài khoản → chỉ xóa tư cách thành viên; ghi nhận họ đã tạo vẫn giữ, hiển thị “Người dùng đã xóa”. |
+| BR-77 | Ghi đồng thời: mỗi bữa 1 ghi nhận (`UNIQUE(meal_id)`), người đến sau nhận `MEAL_ALREADY_LOGGED` kèm ai đã ghi và lúc nào. Đổi món gửi `expectedDishId`; bữa đã bị người khác đổi → `409 MEAL_CHANGED`, FE tải lại gợi ý. |
+| BR-78 | Mọi thao tác ghi trên dữ liệu bé lưu người thực hiện (`actor_id`): ghi nhận bữa, phản ứng, đổi món, sự kiện khẩn cấp, sức khỏe, dùng lại nguyên liệu, sửa hồ sơ. |
+| BR-79 | Lời mời không gắn email — ai có link đều tham gia được trong thời hạn; UI nhắc chỉ gửi qua kênh riêng. Đã là thành viên → `ALREADY_MEMBER`; chủ mở link của chính mình → `ALREADY_MEMBER`. |
+
+**Ma trận quyền (BR-73)**
+
+| Thao tác | Chủ hồ sơ | Người chăm |
+|---|---|---|
+| Xem hồ sơ, thực đơn, công thức, thư viện, nhật ký, sức khỏe, thành viên | ✅ | ✅ |
+| Đánh dấu chuẩn bị, đổi món, lên thực đơn tuần | ✅ | ✅ |
+| Ghi nhận bữa + phản ứng, mở “Dấu hiệu nguy hiểm”, cập nhật sức khỏe (người đang cho bé ăn phải ghi được ngay) | ✅ | ✅ |
+| Dùng lại nguyên liệu tạm dừng (G08) | ✅ | ❌ **[Giả định]** |
+| Sửa thông tin bé, giai đoạn, danh sách tránh | ✅ | ❌ |
+| Mời / thu hồi lời mời, gỡ thành viên, chuyển quyền chủ, xóa hồ sơ bé | ✅ | ❌ |
+| Tạo / sửa / xóa món của bạn | ✅ | ✅ |
+| Rời hồ sơ | ❌ (chuyển quyền chủ trước) | ✅ |
 
 ---
 
@@ -610,10 +725,10 @@ flowchart LR
 | Module | Trách nhiệm | Aggregate / entity chính | Phụ thuộc (qua port) |
 |---|---|---|---|
 | `identity` | Đăng ký, đăng nhập, refresh token, quên mật khẩu, đồng ý xử lý dữ liệu, xóa tài khoản | `User`, `RefreshToken`, `Consent` | `PasswordHasher`, `TokenIssuer`, `Mailer` |
-| `child-profile` | Hồ sơ bé, danh sách tránh, ngày sinh/sinh non, tính tuổi & giai đoạn, override | `Child` (aggregate root: `AvoidList`, `BirthInfo`, `StageOverride`) | `CatalogReader` (validate nguyên liệu) |
+| `child-profile` | Hồ sơ bé, danh sách tránh, ngày sinh/sinh non, tính tuổi & giai đoạn, override; thành viên & lời mời (P5b) — cung cấp port `ChildAccess` (vai trò của user với bé) cho các module khác | `Child` (aggregate root: `AvoidList`, `BirthInfo`, `StageOverride`), `ChildMembership`, `ChildInvite` | `CatalogReader` (validate nguyên liệu), `SecureTokens` |
 | `catalog` | Đọc món, nguyên liệu, giai đoạn (read-only ở MVP) | `Dish`, `Ingredient`, `StageDefinition` | — |
 | `health` | Giai đoạn sức khỏe (ốm/hồi phục), xem trước thay đổi | `HealthEpisode` | — |
-| `meal-planning` | Sinh thực đơn ngày/tuần, bữa tiếp theo, đổi món, thư viện đã lọc, chỉ số tuần | `DayPlan` (aggregate: `PlannedMeal[]`), `SwapEvent`; domain service `MenuEngine` | `ChildContextReader`, `CatalogReader`, `MealHistoryReader`, `SafetyReader`, `Clock` |
+| `meal-planning` | Sinh thực đơn ngày/tuần, bữa tiếp theo, đổi món, thư viện đã lọc, chỉ số tuần; món của bạn (F18) | `DayPlan` (aggregate: `PlannedMeal[]`), `SwapEvent`; domain service `MenuEngine` | `ChildContextReader`, `CatalogReader`, `MealHistoryReader`, `SafetyReader`, `Clock` |
 | `meal-log` | Ghi nhận bữa ăn, phản ứng, exposure nguyên liệu, nhật ký | `MealLog` (+ `Reaction`), `IngredientExposure` | `PlanReader`, `SafetyCommands` |
 | `safety` | Nguyên liệu tạm dừng, sự kiện khẩn cấp, dùng lại nguyên liệu | `PausedIngredient`, `UrgentEvent` | `PlanRegenerator` |
 | `shared/kernel` | `Result<T,E>`, `DomainError`, `Clock`, `IdGenerator`, `UnitOfWork`, `DomainEvent` | | |
@@ -735,13 +850,15 @@ Kiểm tra bằng `eslint-plugin-boundaries` (hoặc `dependency-cruiser`) chạ
 
 **Quy ước:** tên bảng/cột `snake_case` (Prisma `@@map`/`@map`), model `PascalCase`; khóa chính dữ liệu người dùng là UUID; khóa chính catalog là slug `text` (VD `ing_ca_hoi`, `dish_chao_ca_hoi_rau_ngot`); thời điểm dùng `timestamptz`, ngày dùng `date`; giờ bữa lưu `varchar(5)` `HH:mm`; mọi bảng có `created_at`, bảng sửa được có `updated_at`.
 
-**Enum PostgreSQL:** `allergen` (egg, cow_milk, peanut, shellfish, fish, wheat, soy, sesame, tree_nut) · `food_group` (carb, protein, fat, veg, fruit) · `protein_source` (fish, chicken, beef, pork, legume, egg) · `texture` (puree_smooth, mashed, lumpy, minced_soft, family) · `meal_type` (main, snack) · `meal_slot` (breakfast, morning_snack, lunch, afternoon_snack, dinner, extra_snack) · `meal_status` (planned, prepared, eaten, refused, skipped) · `plan_source` (auto, swap, manual) · `swap_reason` (missing_ingredient, disliked, faster, other) · `eat_amount` (none, few_spoons, quarter, half, almost_all, all) · `symptom` (rash, vomit, diarrhea, swelling, breathing, fussy) · `severity` (unknown, mild, moderate, severe) · `health_status` (normal, sick, recovering) · `health_symptom` (fever, poor_appetite, cough, diarrhea, vomit, teething) · `avoid_reason` (not_eat, dislike) · `prior_reaction` (never, yes, unsure) · `exposure_status` (new, tried, paused) · `pause_reason` (reaction, urgent) · `content_status` (draft, published).
+**Enum PostgreSQL:** `allergen` (egg, cow_milk, peanut, shellfish, fish, wheat, soy, sesame, tree_nut) · `food_group` (carb, protein, fat, veg, fruit) · `protein_source` (fish, chicken, beef, pork, legume, egg) · `texture` (puree_smooth, mashed, lumpy, minced_soft, family) · `meal_type` (main, snack) · `meal_slot` (breakfast, morning_snack, lunch, afternoon_snack, dinner, extra_snack) · `meal_status` (planned, prepared, eaten, refused, skipped) · `plan_source` (auto, swap, manual) · `swap_reason` (missing_ingredient, disliked, faster, other) · `eat_amount` (none, few_spoons, quarter, half, almost_all, all) · `symptom` (rash, vomit, diarrhea, swelling, breathing, fussy) · `severity` (unknown, mild, moderate, severe) · `health_status` (normal, sick, recovering) · `health_symptom` (fever, poor_appetite, cough, diarrhea, vomit, teething) · `avoid_reason` (not_eat, dislike) · `prior_reaction` (never, yes, unsure) · `exposure_status` (new, tried, paused) · `pause_reason` (reaction, urgent) · `content_status` (draft, published) · `member_role` (owner, caregiver).
 
 ```mermaid
 erDiagram
   users ||--o{ refresh_tokens : ""
   users ||--o{ consents : ""
-  users ||--o{ children : "sở hữu"
+  users ||--o{ child_members : "thành viên"
+  children ||--|{ child_members : ""
+  children ||--o{ child_invites : ""
   children ||--o{ child_avoid_allergens : ""
   children ||--o{ child_avoid_ingredients : ""
   children ||--o{ health_episodes : ""
@@ -765,7 +882,7 @@ erDiagram
 
 | Bảng | Cột chính | Ràng buộc / index |
 |---|---|---|
-| `users` | `id uuid`, `email text` (lưu lowercase), `password_hash text`, `timezone text` = `Asia/Ho_Chi_Minh`, `created_at`, `deleted_at?` | `UNIQUE(email)` |
+| `users` | `id uuid`, `email text` (lưu lowercase), `password_hash text`, `display_name varchar(30)?` (P5b), `timezone text` = `Asia/Ho_Chi_Minh`, `created_at`, `deleted_at?` | `UNIQUE(email)` |
 | `refresh_tokens` | `id uuid`, `user_id`, `family_id uuid`, `token_hash text`, `expires_at`, `revoked_at?`, `user_agent?` | `INDEX(user_id)`, `UNIQUE(token_hash)` |
 | `password_reset_tokens` | `id`, `user_id`, `token_hash`, `expires_at`, `used_at?` | |
 | `consents` | `id`, `user_id`, `version text`, `accepted_at`, `ip?` | `INDEX(user_id)` |
@@ -776,8 +893,8 @@ erDiagram
 |---|---|---|
 | `stages` | `id smallint` (1–4), `name`, `age_from_months`, `age_to_months`, `texture`, `portion_text`, `main_meals smallint`, `snacks_min`, `snacks_max`, `default_schedule jsonb` | |
 | `ingredients` | `id text`, `name`, `aliases text[]`, `search_text text` (bỏ dấu), `food_group`, `protein_source?`, `allergen_tags allergen[]`, `min_age_months smallint`, `choking_risk bool` | GIN trigram trên `search_text` (`pg_trgm`) |
-| `dishes` | `id text`, `name`, `description`, `image_url?`, `meal_type`, `prep_min`, `cook_min`, `tool`, `main_protein protein_source?`, `steps jsonb`, `safety_notes text[]`, `content_version int`, `reviewed_by?`, `reviewed_at?`, `status content_status`, `search_text` | GIN trigram trên `search_text` |
-| `dish_ingredients` | `dish_id`, `ingredient_id`, `qty numeric(6,1)`, `unit text`, `is_main bool` | `PK(dish_id, ingredient_id)` |
+| `dishes` | `id text`, `name`, `description`, `image_url?`, `meal_type`, `prep_min`, `cook_min`, `tool`, `main_protein protein_source?`, `steps jsonb`, `safety_notes text[]`, `content_version int`, `reviewed_by?`, `reviewed_at?`, `status content_status`, `search_text`; P5: `owner_child_id uuid?` (món của bạn — null là món catalog), `created_by uuid?`, `archived_at?` | GIN trigram trên `search_text`; `INDEX(owner_child_id)`; FK `owner_child_id` → `children ON DELETE CASCADE`. Id món của bạn = `custom_<uuid>`; seeder chỉ upsert theo id catalog nên không chạm món của bạn |
+| `dish_ingredients` | `dish_id`, `ingredient_id`, `qty numeric(6,1)?`, `unit text?` (P5: cho phép trống với món của bạn), `is_main bool` | `PK(dish_id, ingredient_id)` |
 | `dish_stage_variants` | `dish_id`, `stage_id`, `texture`, `portion_text`, `portion_ml?` | `PK(dish_id, stage_id)` |
 
 **Nhóm Child profile & Health**
@@ -788,6 +905,10 @@ erDiagram
 | `child_avoid_allergens` | `child_id`, `allergen` | `PK(child_id, allergen)` |
 | `child_avoid_ingredients` | `child_id`, `ingredient_id`, `reason avoid_reason` | `PK(child_id, ingredient_id)` |
 | `health_episodes` | `id`, `child_id`, `status`, `symptoms health_symptom[]`, `start_date date`, `expected_end_date date?`, `ended_at?`, `created_at` | `INDEX(child_id, start_date DESC)` |
+| `child_members` (P5b) | `child_id`, `user_id`, `role member_role`, `invited_by?`, `joined_at` | `PK(child_id, user_id)`, `INDEX(user_id)`, **partial unique** `(child_id) WHERE role = 'owner'` (BR-70, viết SQL trong migration) |
+| `child_invites` (P5b) | `id uuid`, `child_id`, `token_hash text`, `created_by`, `expires_at`, `accepted_by?`, `accepted_at?`, `revoked_at?`, `created_at` | `UNIQUE(token_hash)`, `INDEX(child_id)` |
+
+**Chuyển sang thành viên (P5b):** migration tạo `child_members` và điền 1 dòng `owner` cho mỗi `children.user_id`; mọi truy vấn lọc theo `child_members` (`childrenOf()`). `children.user_id` **giữ lại làm con trỏ tới chủ hiện tại** (cập nhật khi chuyển quyền chủ) — để khi xóa cứng tài khoản người tạo ban đầu, `ON DELETE CASCADE` không kéo theo hồ sơ bé đã chuyển cho người khác. Các bảng ghi dữ liệu bé (`swap_events`, `meal_logs`, `reactions`, `urgent_events`, `health_episodes`, `paused_ingredients` cho cả người tạm dừng / dùng lại) có `actor_id uuid?` → `users ON DELETE SET NULL` (BR-78); bảng của P5 tạo sẵn cột này.
 
 **Nhóm Meal planning & Log & Safety**
 
@@ -805,7 +926,7 @@ erDiagram
 
 ### 7.6 Đặc tả API (REST, `/api/v1`)
 
-**Quy ước:** JSON `camelCase`; ngày `YYYY-MM-DD`, thời điểm ISO 8601 có offset; lỗi theo **RFC 9457 Problem Details** (`type`, `title`, `status`, `detail`, `code`); xác thực `Authorization: Bearer <access token>`; mọi route có `:childId` / `:mealId` đi qua `ChildOwnershipGuard` (không phải chủ → `404` để không lộ sự tồn tại).
+**Quy ước:** JSON `camelCase`; ngày `YYYY-MM-DD`, thời điểm ISO 8601 có offset; lỗi theo **RFC 9457 Problem Details** (`type`, `title`, `status`, `detail`, `code`); xác thực `Authorization: Bearer <access token>`; mọi route có `:childId` / `:mealId` kiểm tra quyền qua port `ChildAccess`: không phải thành viên → `404` để không lộ sự tồn tại, thành viên thiếu quyền theo BR-73 → `403 OWNER_ONLY` (P5b; trước P5b là kiểm tra chủ sở hữu).
 
 | Module | Method & path | Mô tả | UC / FR |
 |---|---|---|---|
@@ -815,35 +936,49 @@ erDiagram
 | identity | `POST /auth/logout` | Thu hồi refresh token hiện tại | FR-105 |
 | identity | `POST /auth/forgot-password` · `POST /auth/reset-password` | Luôn trả `202` (không lộ email tồn tại) | FR-104 |
 | identity | `GET /me` · `DELETE /me` | Thông tin tài khoản · xóa tài khoản (`{password}`) | UC-19, FR-106 |
+| identity | `PATCH /me` | `{displayName}` (P5b) | FR-119 |
 | catalog | `GET /stages` | 4 giai đoạn + thông số | BR-13 |
 | catalog | `GET /ingredients?q=` | Tìm nguyên liệu (bỏ dấu, trigram), tối đa 20 | FR-003 |
-| child-profile | `GET /children` · `POST /children` | Danh sách / tạo hồ sơ (payload đủ 5 bước onboarding) | UC-01 |
+| child-profile | `GET /children` · `POST /children` | Danh sách hồ sơ mình là thành viên (kèm `role`) / tạo hồ sơ (payload đủ 5 bước onboarding; người tạo là chủ) | UC-01, FR-117 |
 | child-profile | `GET /children/:childId` | Hồ sơ + `age` (`months`, `days`, `corrected`), `autoStage`, `effectiveStage`, `stages[]` (state: selected/open/locked, unlockAt) | FR-005..010 |
 | child-profile | `PATCH /children/:childId` | Sửa tên, ngày sinh, sinh non, `stageOverride` → phát `ProfileChanged` | UC-03 |
 | child-profile | `PUT /children/:childId/avoid-list` | `{allergens[], ingredients[{id, reason}]}` → phát `ProfileChanged` | UC-02 |
 | child-profile | `GET /children/:childId/stage-preview?premature=&weeksEarly=&stage=` | Xem trước tuổi/giai đoạn trên S10 trước khi lưu | FR-010 |
-| child-profile | `DELETE /children/:childId` | Xóa dữ liệu bé | NFR-013 |
+| child-profile | `DELETE /children/:childId` | Xóa dữ liệu bé (chủ) | NFR-013 |
+| child-profile | `GET /children/:childId/members` | `{members[]: {userId, displayName, email, role, joinedAt, isMe}, pendingInvites[]}` — `pendingInvites` chỉ trả cho chủ | FR-113 |
+| child-profile | `POST /children/:childId/invites` | (chủ) → `{id, url, expiresAt}`; token chỉ xuất hiện trong response này | UC-20, FR-110 |
+| child-profile | `DELETE /children/:childId/invites/:inviteId` | (chủ) thu hồi lời mời | FR-114 |
+| child-profile | `GET /invites/:token` | Công khai, throttle như `/auth/*` → `{childName, inviterName, expiresAt}` hoặc lỗi trạng thái lời mời | UC-21, FR-111 |
+| child-profile | `POST /invites/:token/accept` | `200 {childId, role}` (cần đăng nhập; đã là thành viên → `409 ALREADY_MEMBER` kèm `childId`) | UC-21, FR-112 |
+| child-profile | `DELETE /children/:childId/members/:userId` | Chủ gỡ người chăm; người chăm gỡ chính mình = rời hồ sơ | UC-22, FR-114/115 |
+| child-profile | `POST /children/:childId/transfer-ownership` | (chủ) `{userId}` → người đó thành chủ, chủ cũ thành người chăm | UC-22, FR-116 |
 | meal-planning | `GET /children/:childId/days/:date` | Kế hoạch ngày (tự sinh nếu chưa có) + `nextMealId` + chip trạng thái | UC-04, FR-020..026 |
 | meal-planning | `GET /children/:childId/weeks/:weekStart` | 7 ngày + `stats` (distinct, totalMeals, daysFullGroups, proteinRotation) | UC-12, FR-090..093 |
 | meal-planning | `POST /children/:childId/weeks/:weekStart/generate` | `{overwrite: boolean}` — lên thực đơn tuần | UC-13, FR-094 |
 | meal-planning | `PATCH /meals/:mealId` | `{status: 'prepared'}` | FR-025 |
 | meal-planning | `GET /meals/:mealId/swap-suggestions?reason=` (mặc định `missing_ingredient`) | `{meal, reason, ranked[≤5]: {dish, texture, portionText, newIngredients, reasons[≤3], fasterByMin, repeatInDays}, otherMains[], excluded: {total, byReason}, relaxedWindowDays}` — `ranked[0]` là “Phù hợp nhất” | UC-06, FR-040..044 |
-| meal-planning | `POST /meals/:mealId/swap` | `{dishId, reason}` → `MealDto`; kiểm tra lại lọc cứng + loại bữa phía server, ghi `swap_events` cùng transaction | FR-045 |
+| meal-planning | `POST /meals/:mealId/swap` | `{dishId, reason, expectedDishId?}` → `MealDto`; kiểm tra lại lọc cứng + loại bữa phía server, ghi `swap_events` cùng transaction; `expectedDishId` khác món hiện tại → `409 MEAL_CHANGED` (BR-77) | FR-045 |
 | meal-planning | `GET /children/:childId/dishes?q=&chip=&fresh=` (`chip` ∈ all, chicken, fish, beef, pork, legume, snack) | `{dishes[]: {…, texture, newIngredients, liked, lastEaten}, hidden: {total, byReason, items[]}}` — `hidden` chỉ tính món khớp từ khóa/chip | UC-07, FR-046..051 |
-| meal-planning | `GET /children/:childId/dishes/:dishId?stage=` | Công thức + cờ theo bé (nguyên liệu lần đầu, dị ứng, biến thể giai đoạn) | UC-05, FR-027..030 |
-| meal-log | `POST /meals/:mealId/log` | `{loggedAt, amount, liking, reaction?: {symptoms[], severity, note}}` → `{log, pausedIngredients[]}` | UC-08/09, FR-060..064 |
-| meal-log | `GET /children/:childId/journal?from=&to=&cursor=` | Timeline bữa + phản ứng + sự kiện khẩn cấp | FR-069 |
-| safety | `GET /children/:childId/urgent-preview?mealId=` | Nguyên liệu sẽ bị tạm dừng (hiển thị trên S08) | FR-065 |
-| safety | `POST /children/:childId/urgent-events` | `{mealId?}` → tạm dừng theo BR-41 | UC-10 |
+| meal-planning | `GET /children/:childId/dishes/:dishId?stage=` | Công thức + cờ theo bé (nguyên liệu lần đầu, dị ứng, biến thể giai đoạn); món của bạn có `custom: true`, `reviewedBy = null` | UC-05, FR-027..030 |
+| meal-planning | `POST /children/:childId/custom-dishes` | `{name, mealType, ingredients[{id, qty?, unit?}], prepMin, cookMin, steps[]}` → `201` công thức của món | UC-23, FR-130..132 |
+| meal-planning | `GET /children/:childId/custom-dishes/:dishId` | Dữ liệu để sửa (đúng như đã nhập) | FR-135 |
+| meal-planning | `PUT /children/:childId/custom-dishes/:dishId` | Sửa (cùng payload) → kiểm tra lại bữa tương lai (BR-86) | FR-135 |
+| meal-planning | `DELETE /children/:childId/custom-dishes/:dishId` | Lưu trữ → `204`; sinh lại bữa tương lai dùng món | FR-136 |
+| meal-log | `GET /meals/:mealId/log` | Dữ liệu S07: `{meal, firstTryIngredients[], suspectIngredients[] (sẽ tạm dừng nếu có phản ứng — BR-40), log | null}` | UC-08 |
+| meal-log | `POST /meals/:mealId/log` | `{loggedAt (ISO có offset), amount, liking, reaction?: {symptoms[], severity, note}}` → `201 {log, pausedIngredients[]}`; log + exposure + trạng thái bữa + tạm dừng + sinh lại bữa tương lai trong **một transaction** | UC-08/09, FR-060..064 |
+| meal-log | `GET /children/:childId/journal?cursor=` | `{entries[] (kind meal / urgent, mới nhất trước), nextCursor}` — 20 dòng/trang, cursor mờ (thời điểm + id) | FR-069 |
+| safety | `POST /children/:childId/urgent-events` | `{mealId?}` → `201 {id, openedAt, contactedMedicalAt, pausedIngredients[]}`; tạm dừng theo BR-41 ngay khi mở S08 (bỏ `urgent-preview`: response đã có danh sách). Bữa nguồn không bị sinh lại dù chưa tới giờ | UC-10, FR-065 |
 | safety | `PATCH /urgent-events/:id` | `{contactedMedical: true}` | FR-067 |
-| safety | `GET /children/:childId/paused-ingredients` | Danh sách đang tạm dừng | G08 |
-| safety | `POST /children/:childId/paused-ingredients/:ingredientId/resume` | Dùng lại nguyên liệu → phát `IngredientResumed` | UC-14, FR-068 |
+| safety | `GET /children/:childId/paused-ingredients` | Danh sách đang tạm dừng (lý do, thời điểm, bữa gây ra) | G08 |
+| safety | `POST /children/:childId/paused-ingredients/:ingredientId/resume` | `204`; dùng lại nguyên liệu → phát `IngredientResumed` → sinh lại bữa tự động tương lai | UC-14, FR-068 |
 | health | `GET /children/:childId/health` | Giai đoạn sức khỏe hiện tại | UC-11 |
 | health | `GET /children/:childId/health/preview?status=` | Danh sách thay đổi thực đơn | FR-083 |
 | health | `POST /children/:childId/health` | Tạo/cập nhật giai đoạn → phát `HealthChanged` | FR-080..084 |
 | system | `GET /health` | Health check (DB ping) | |
 
-**Mã lỗi nghiệp vụ tiêu biểu** (`code` trong Problem Details): `CHILD_TOO_YOUNG` (422), `STAGE_ABOVE_AGE` (422), `MEAL_ALREADY_LOGGED` (409), `DISH_NOT_SAFE_FOR_CHILD` (422 — khi swap tới món vi phạm lọc cứng), `DISH_NOT_FOR_SLOT` (422), `SAME_DISH` (422), `MEAL_IN_PAST` (422), `CHILD_NOT_PLANNABLE` (422), `INGREDIENT_NOT_PAUSED` (409), `INVALID_CREDENTIALS` (401), `TOO_MANY_ATTEMPTS` (429).
+**Thông tin kèm lỗi:** lỗi nghiệp vụ có thể mang extension members theo RFC 9457 §3.2 (VD `ingredients`, `field`, `ingredientIds`, `reason`); các trường chuẩn (`type`, `status`, `code`…) luôn thắng.
+
+**Mã lỗi nghiệp vụ tiêu biểu** (`code` trong Problem Details): `CHILD_TOO_YOUNG` (422), `STAGE_ABOVE_AGE` (422), `MEAL_ALREADY_LOGGED` (409), `DISH_NOT_SAFE_FOR_CHILD` (422 — khi swap tới món vi phạm lọc cứng), `DISH_NOT_FOR_SLOT` (422), `SAME_DISH` (422), `MEAL_IN_PAST` (422), `CHILD_NOT_PLANNABLE` (422), `INGREDIENT_NOT_PAUSED` (409), `INVALID_CREDENTIALS` (401), `TOO_MANY_ATTEMPTS` (429). P5 (ghi nhận, an toàn): `MEAL_IN_FUTURE` (422), `LOGGED_AT_OUT_OF_RANGE` (422 — quá 5 phút tương lai hoặc trước ngày bữa > 1 ngày), `REACTION_WITHOUT_SYMPTOM` (422), `NOTE_TOO_LONG` (400 — đếm theo ký tự), `INVALID_LIKING` (400), `URGENT_EVENT_NOT_FOUND` (404), `INVALID_CURSOR` (400). P5 (món của bạn): `DISH_NAME_TAKEN` (409), `INVALID_CUSTOM_DISH` (400, kèm `field`), `CUSTOM_DISH_LIMIT_REACHED` (422), `UNKNOWN_INGREDIENT` (422), `DISH_NOT_SAFE_FOR_CHILD` (422, kèm `ingredients[{id, name, reason}]`). P5b: `OWNER_ONLY` (403), `INVITE_NOT_FOUND` (404), `INVITE_EXPIRED` (410), `INVITE_REVOKED` (410), `INVITE_USED` (409), `ALREADY_MEMBER` (409), `MEMBER_LIMIT_REACHED` (422), `INVITE_LIMIT_REACHED` (422), `OWNER_CANNOT_LEAVE` (422), `NOT_A_CAREGIVER` (422 — chuyển quyền cho người không phải thành viên), `MEMBER_NOT_FOUND` (404), `MEAL_CHANGED` (409 — đổi món được ghi bằng update có điều kiện “bữa vẫn đang là món cũ”, nên 2 người đổi cùng lúc không ghi đè nhau), `INVALID_DISPLAY_NAME` (400), `OWNERSHIP_TRANSFER_REQUIRED` (409, kèm `children[]`); `MEAL_ALREADY_LOGGED` kèm `loggedBy`, `loggedAt`.
 
 ### 7.7 Menu Engine (domain service trong `meal-planning/domain`)
 
@@ -900,7 +1035,8 @@ MenuEngine.weekStats(input, weekStart): WeekStats
 | Mật khẩu | `argon2id`; tối thiểu 8 ký tự; kiểm tra danh sách mật khẩu phổ biến |
 | Access token | JWT 15 phút, giữ trong bộ nhớ FE (không lưu localStorage) |
 | Refresh token | Chuỗi ngẫu nhiên 256-bit, lưu **hash** trong DB, cookie `HttpOnly; Secure; SameSite=Lax; Path=/api/v1/auth`, hạn 30 ngày, **xoay vòng** mỗi lần refresh; phát hiện dùng lại token cũ → thu hồi cả `family_id` |
-| Phân quyền | Mọi dữ liệu thuộc `user_id`; `ChildOwnershipGuard` kiểm tra ở adapter HTTP, repository luôn lọc theo `userId` (phòng thủ 2 lớp) |
+| Phân quyền | Dữ liệu bé thuộc các thành viên trong `child_members` (P5b; trước đó thuộc `user_id`). Use case kiểm tra vai trò qua port `ChildAccess` (BR-73), repository luôn lọc theo membership (phòng thủ 2 lớp). Vai trò không nằm trong JWT nên gỡ thành viên có hiệu lực ngay (BR-75). |
+| Lời mời | Token 256-bit, chỉ lưu hash, 72 giờ, dùng 1 lần, thu hồi được; `GET/POST /invites/*` chịu throttle như `/auth/*`; không log token (pino redact đường dẫn `/invites/*`). |
 | Chống dò | Throttle: `/auth/*` 5 req/phút/IP, API chung 120 req/phút/user |
 | HTTP | `helmet`, CORS allowlist theo domain web, TLS 1.2+ |
 | Validation | `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })` |
@@ -1031,3 +1167,10 @@ MenuEngine.weekStats(input, weekStart): WeekStats
 | Q11 | Phương thức đăng nhập? | Email + mật khẩu ở MVP; Google/Apple/OTP điện thoại để sau. |
 | Q12 | Hosting API & DB đặt ở đâu (trong nước hay nước ngoài)? | Chưa chốt — ảnh hưởng hồ sơ NĐ 13 (C-007). |
 | Q13 | Nhà cung cấp email (quên mật khẩu)? | SMTP bất kỳ (VD Amazon SES / Resend); local dùng mailpit. |
+| Q14 | Người chăm có được dùng lại nguyên liệu tạm dừng, sửa danh sách tránh không? | Không — chỉ chủ hồ sơ (BR-73). Người chăm vẫn ghi phản ứng nên vẫn kích hoạt tạm dừng được. |
+| Q15 | Hạn, số lần dùng của lời mời; có gắn email người nhận không? | 72 giờ, 1 lần, không gắn email (BR-72, BR-79). |
+| Q16 | Chủ hồ sơ xóa tài khoản khi bé còn người chăm? | Bắt buộc chuyển quyền chủ hoặc xóa hồ sơ trước (BR-76). |
+| Q17 | Chia sẻ dữ liệu sức khỏe trẻ cho người chăm có cần đồng ý riêng (NĐ 13)? | Chủ tạo lời mời = chủ động chia sẻ, lưu `invited_by` + thời điểm; người nhận đã đồng ý G11 khi đăng ký và xem màn xác nhận quyền (G14). Cần tư vấn pháp lý xác nhận (C-007). |
+| Q18 | Có cần cập nhật thời gian thực giữa các thành viên? | Không ở MVP: làm mới khi quay lại app và mỗi 60 giây trên S01 (FR-120). |
+| Q19 | Món của bạn có tự vào thực đơn tự động không, hay chỉ khi phụ huynh tự chọn? | Có, cùng quy tắc với món catalog (BR-85). |
+| Q20 | Món tự tạo không qua chuyên gia — có cần cảnh báo thêm, giới hạn số món? | Nhãn “Chưa qua chuyên gia duyệt” + lưu ý an toàn theo tuổi; tối đa 50 món mỗi bé (BR-85, BR-87). |

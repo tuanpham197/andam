@@ -14,6 +14,7 @@ import {
   Min,
   ValidateIf,
   ValidateNested,
+  IsUUID,
 } from 'class-validator';
 import { ALLERGENS } from '../../../domain/child.js';
 
@@ -216,4 +217,50 @@ export class ChildDto extends ChildProfileDto {
   @ApiProperty({ enum: ALLERGENS, isArray: true }) avoidAllergens: (typeof ALLERGENS)[number][];
   @ApiProperty({ type: [AvoidIngredientViewDto] }) avoidIngredients: AvoidIngredientViewDto[];
   @ApiProperty({ nullable: true, type: Number }) stageOverride: number | null;
+  @ApiProperty({ enum: ['owner', 'caregiver'], description: 'Vai trò của bạn với bé (BR-73)' })
+  role: 'owner' | 'caregiver';
+}
+
+class MemberDto {
+  @ApiProperty({ format: 'uuid' }) userId: string;
+  @ApiProperty() displayName: string;
+  @ApiProperty() email: string;
+  @ApiProperty({ enum: ['owner', 'caregiver'] }) role: string;
+  @ApiProperty({ format: 'date-time' }) joinedAt: Date;
+  @ApiProperty() isMe: boolean;
+}
+
+class PendingInviteDto {
+  @ApiProperty({ format: 'uuid' }) id: string;
+  @ApiProperty({ format: 'date-time' }) createdAt: Date;
+  @ApiProperty({ format: 'date-time' }) expiresAt: Date;
+}
+
+export class MembersDto {
+  @ApiProperty({ type: [MemberDto] }) members: MemberDto[];
+  @ApiProperty({ type: [PendingInviteDto], description: 'Chỉ chủ hồ sơ nhận được' })
+  pendingInvites: PendingInviteDto[];
+}
+
+export class CreatedInviteDto {
+  @ApiProperty({ format: 'uuid' }) id: string;
+  @ApiProperty({ description: 'Link mời — chỉ trả một lần, server không lưu token' }) url: string;
+  @ApiProperty({ format: 'date-time' }) expiresAt: Date;
+}
+
+export class InvitePreviewDto {
+  @ApiProperty() childName: string;
+  @ApiProperty() inviterName: string;
+  @ApiProperty({ format: 'date-time' }) expiresAt: Date;
+}
+
+export class AcceptedInviteDto {
+  @ApiProperty({ format: 'uuid' }) childId: string;
+  @ApiProperty({ enum: ['caregiver'] }) role: string;
+}
+
+export class TransferOwnershipDto {
+  @ApiProperty({ format: 'uuid' })
+  @IsUUID('4')
+  userId: string;
 }

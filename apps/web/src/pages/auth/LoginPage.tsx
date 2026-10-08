@@ -6,7 +6,7 @@ import { AlertBox } from '../../components/AlertBox';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { PasswordField } from '../../features/auth/PasswordField';
-import { safeNext } from '../../features/auth/guards';
+import { safeNext, withNext } from '../../features/auth/guards';
 import { setAuthenticated } from '../../features/auth/session-store';
 import { messageFor } from '../../lib/errors';
 import { vi } from '../../strings/vi';
@@ -55,7 +55,8 @@ export function LoginPage() {
       <div className={styles.links}>
         <Link to="/forgot-password">{vi.auth.forgotLink}</Link>
         <span>
-          {vi.auth.noAccount} <Link to="/register">{vi.auth.registerLink}</Link>
+          {vi.auth.noAccount}{' '}
+          <Link to={withNext('/register', params.get('next'))}>{vi.auth.registerLink}</Link>
         </span>
       </div>
     </>
