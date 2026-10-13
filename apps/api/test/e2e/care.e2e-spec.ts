@@ -474,6 +474,60 @@ describe('"Món của bạn" (UC-23)', () => {
     });
   });
 
+  async function swapTomorrowDinnerTo(dishId: string): Promise<string> {
+    const dinner = (await day(TOMORROW)).find((m) => m.slot === 'dinner')!;
+    // On a sick day with few safe dishes the engine may already have picked it.
+    if (dinner.dish.id !== dishId)
+      await api()
+        .post(`/api/v1/meals/${dinner.id}/swap`)
+        .set('Authorization', owner)
+        .send({ dishId, reason: 'other' })
+        .expect(200);
+    return dinner.id;
+  }
+
+  it('TC-CUS-018 a dish edited into a snack leaves the main meals it was planned for', async () => {
+    const { body } = await api()
+      .post(`/api/v1/children/${childId}/custom-dishes`)
+      .set('Authorization', owner)
+      .send(dish())
+      .expect(201);
+    await swapTomorrowDinnerTo(body.id);
+    await api()
+      .put(`/api/v1/children/${childId}/custom-dishes/${body.id}`)
+      .set('Authorization', owner)
+      .send(dish({ mealType: 'snack' }))
+      .expect(200);
+    const tomorrow = await day(TOMORROW);
+    expect(tomorrow.find((m) => m.slot === 'dinner')!.dish.id).not.toBe(body.id);
+  });
+
+  it('TC-CUS-019 adding a food the child has not tried replaces the dish on sick days', async () => {
+    const tried = ['ing_gao_te', 'ing_thit_ga', 'ing_bi_do'];
+    await prisma.ingredientExposure.createMany({
+      data: tried.map((ingredientId) => ({ childId, ingredientId, status: 'tried' as const })),
+    });
+    const { body } = await api()
+      .post(`/api/v1/children/${childId}/custom-dishes`)
+      .set('Authorization', owner)
+      .send(dish())
+      .expect(201);
+    await api()
+      .post(`/api/v1/children/${childId}/health`)
+      .set('Authorization', owner)
+      .send({ status: 'sick', symptoms: ['fever'] })
+      .expect(200);
+    await swapTomorrowDinnerTo(body.id);
+
+    await api()
+      .put(`/api/v1/children/${childId}/custom-dishes/${body.id}`)
+      .set('Authorization', owner)
+      .send(dish({ ingredients: [...dish().ingredients, { id: 'ing_ca_rot' }] }))
+      .expect(200);
+    const dinner = (await day(TOMORROW)).find((m) => m.slot === 'dinner');
+    expect(dinner?.dish.id).not.toBe(body.id);
+  });
+
   it('TC-CUS-002 refuses an egg dish for a child avoiding eggs, naming the food', async () => {
     const res = await api()
       .post(`/api/v1/children/${childId}/custom-dishes`)

@@ -2,6 +2,7 @@ import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.j
 import type {
   HealthState,
   MealSlot,
+  MealType,
   MealUse,
   PlanDish,
   PlanningContext,
@@ -21,6 +22,9 @@ export interface StageSchedule {
 }
 
 const isSnack = (slot: MealSlot) => slot.endsWith('snack');
+
+/** The kind of dish a slot takes: snacks in snack slots, main dishes elsewhere. */
+export const mealTypeOf = (slot: MealSlot): MealType => (isSnack(slot) ? 'snack' : 'main');
 
 // When a stage schedule lacks a snack slot that is needed (sick GĐ1), these times are used.
 const SNACK_PREFERENCE: { slot: MealSlot; time: string }[] = [

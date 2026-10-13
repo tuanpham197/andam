@@ -9,7 +9,7 @@ import {
   type LocalDate,
 } from '../../../../shared/kernel/local-date.js';
 import { servingFor } from '../../domain/health-adjustment.js';
-import { generateDay, slotsForDay } from '../../domain/menu-engine.js';
+import { generateDay, mealTypeOf, slotsForDay } from '../../domain/menu-engine.js';
 import type { PlanningContext } from '../../domain/model.js';
 import { PlannedMeal } from '../../domain/planned-meal.js';
 import { exclusionReason } from '../../domain/safety-filter.js';
@@ -33,7 +33,8 @@ import {
 
 /**
  * - `all`: after a profile, health or resumed-food change, automatic meals are planned again.
- * - `unsafe`: after a food is paused or a dish deleted, only meals that became unsafe change.
+ * - `unsafe`: after a food is paused or a dish edited or deleted, only meals that became unsafe
+ *   (or no longer fit their slot) change.
  */
 export type RegenerateScope = 'all' | 'unsafe';
 
@@ -100,6 +101,8 @@ export class RegenerateFutureService {
       return (
         m.stageId !== stage ||
         dish.archived === true ||
+        // A parent's own dish may have been edited into the other kind (main ↔ snack).
+        dish.mealType !== mealTypeOf(m.slot) ||
         exclusionReason(dish, contexts.get(m.date)!, m.date) !== null
       );
     };

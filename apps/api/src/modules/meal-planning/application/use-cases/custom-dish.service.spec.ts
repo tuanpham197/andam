@@ -152,6 +152,41 @@ describe('CustomDishService.form / update (FR-135)', () => {
     expect(t.uow.runs).toBe(1);
   });
 
+  it('TC-CUS-018 an edit into a snack takes the dish off the main meals ahead', async () => {
+    const t = planningTestbed();
+    await t.dayPlans.getDay(USER, CHILD, TODAY);
+    const { id } = await t.customDishes.create(USER, CHILD, input());
+    const dinner = [...t.plans.rows.values()].find((m) => m.slot === 'dinner')!;
+    t.plans.put(PlannedMeal.restore({ ...snapshot(dinner), dishId: id, source: 'swap' }));
+
+    await t.customDishes.update(USER, CHILD, id, input({ mealType: 'snack' }));
+    const after = [...t.plans.rows.values()].find((m) => m.slot === 'dinner');
+    expect(after?.dishId).not.toBe(id);
+  });
+
+  it('TC-CUS-019 a new food added to a dish planned on a sick day replaces that meal', async () => {
+    const t = planningTestbed();
+    t.history.healthOn.set('2026-09-25', 'sick');
+    await t.dayPlans.getDay(USER, CHILD, '2026-09-25');
+    const { id } = await t.customDishes.create(USER, CHILD, input());
+    const dinner = [...t.plans.rows.values()].find(
+      (m) => m.date === '2026-09-25' && m.slot === 'dinner',
+    )!;
+    t.plans.put(PlannedMeal.restore({ ...snapshot(dinner), dishId: id, source: 'swap' }));
+    t.history.triedIds.delete('ing_bo');
+
+    await t.customDishes.update(
+      USER,
+      CHILD,
+      id,
+      input({ ingredients: [...input().ingredients, { id: 'ing_bo' }] }),
+    );
+    const after = [...t.plans.rows.values()].find(
+      (m) => m.date === '2026-09-25' && m.slot === 'dinner',
+    );
+    expect(after?.dishId).not.toBe(id);
+  });
+
   it('keeps its own name when renamed to the same words', async () => {
     const t = planningTestbed();
     const { id } = await t.customDishes.create(USER, CHILD, input());
