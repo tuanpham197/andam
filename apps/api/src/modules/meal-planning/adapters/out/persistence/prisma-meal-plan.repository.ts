@@ -5,6 +5,7 @@ import { childrenOf } from '../../../../../shared/infrastructure/persistence/chi
 import type { PrismaTransactionHost } from '../../../../../shared/infrastructure/persistence/transaction-host.js';
 import type { LocalDate } from '../../../../../shared/kernel/local-date.js';
 import type { MealPlanRepository } from '../../../application/ports/out/meal-plan.repository.js';
+import type { ReasonCode } from '../../../domain/menu-engine.js';
 import type { StageId } from '../../../domain/model.js';
 import { PlannedMeal } from '../../../domain/planned-meal.js';
 import type { SwapEvent } from '../../../domain/swap.js';
@@ -27,6 +28,8 @@ const toDomain = (row: Row) =>
     status: row.status,
     newIngredientIds: row.newIngredientIds,
     source: row.source,
+    reasons: row.reasons as ReasonCode[],
+    replanCause: row.replanCause,
     generatedAt: row.generatedAt,
   });
 
@@ -64,6 +67,8 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
           status: m.status,
           newIngredientIds: m.newIngredientIds,
           source: m.source,
+          reasons: m.reasons,
+          replanCause: m.replanCause,
           generatedAt: m.generatedAt,
         })),
       });
@@ -95,6 +100,8 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
         portionText: meal.portionText,
         newIngredientIds: meal.newIngredientIds,
         source: meal.source,
+        reasons: meal.reasons,
+        replanCause: meal.replanCause,
       },
     });
   }
@@ -113,6 +120,8 @@ export class PrismaMealPlanRepository implements MealPlanRepository {
         portionText: meal.portionText,
         newIngredientIds: meal.newIngredientIds,
         source: meal.source,
+        reasons: meal.reasons,
+        replanCause: meal.replanCause,
         status: meal.status,
       },
     });

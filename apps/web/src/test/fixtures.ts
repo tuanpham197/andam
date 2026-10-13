@@ -120,6 +120,9 @@ export function mealFixture(overrides: Partial<MealDto> = {}): MealDto {
       custom: false,
     },
     newIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
+    source: 'auto',
+    reasons: ['NOT_USED_7D', 'DIFFERENT_PROTEIN', 'FOUR_GROUPS'],
+    replanCause: null,
     ...overrides,
   };
 }
@@ -161,6 +164,8 @@ export function dayFixture(overrides: Partial<DayPlanDto> = {}): DayPlanDto {
           custom: false,
         },
         newIngredients: [],
+        // Snacks never get protein or food-group reasons from the engine.
+        reasons: ['LIKED', 'NOT_USED_7D'],
       }),
       mealFixture({
         id: '20000000-0000-4000-8000-000000000004',

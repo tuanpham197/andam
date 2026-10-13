@@ -2992,6 +2992,42 @@
                 "$ref": "#/components/schemas/LoggedByDto"
               }
             ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "swap",
+              "manual"
+            ],
+            "description": "manual = phụ huynh lấp bữa trống"
+          },
+          "reasons": {
+            "type": "array",
+            "description": "Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93)",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NOT_USED_7D",
+                "DIFFERENT_PROTEIN",
+                "LIKED",
+                "FOUR_GROUPS",
+                "LEAST_USED_PROTEIN",
+                "NEW_INGREDIENT"
+              ]
+            }
+          },
+          "replanCause": {
+            "type": "string",
+            "enum": [
+              "profile",
+              "health",
+              "food_paused",
+              "food_resumed",
+              "dish_changed"
+            ],
+            "nullable": true,
+            "description": "Thực đơn tự đổi bữa này vì đâu (BR-94)"
           }
         },
         "required": [
@@ -3003,7 +3039,10 @@
           "portionText",
           "dish",
           "newIngredients",
-          "loggedBy"
+          "loggedBy",
+          "source",
+          "reasons",
+          "replanCause"
         ]
       },
       "SlotDto": {

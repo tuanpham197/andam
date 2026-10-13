@@ -642,6 +642,45 @@ export const MealDtoTexture = {
   family: 'family',
 } as const;
 
+/**
+ * manual = phụ huynh lấp bữa trống
+ */
+export type MealDtoSource = typeof MealDtoSource[keyof typeof MealDtoSource];
+
+
+export const MealDtoSource = {
+  auto: 'auto',
+  swap: 'swap',
+  manual: 'manual',
+} as const;
+
+export type MealDtoReasonsItem = typeof MealDtoReasonsItem[keyof typeof MealDtoReasonsItem];
+
+
+export const MealDtoReasonsItem = {
+  NOT_USED_7D: 'NOT_USED_7D',
+  DIFFERENT_PROTEIN: 'DIFFERENT_PROTEIN',
+  LIKED: 'LIKED',
+  FOUR_GROUPS: 'FOUR_GROUPS',
+  LEAST_USED_PROTEIN: 'LEAST_USED_PROTEIN',
+  NEW_INGREDIENT: 'NEW_INGREDIENT',
+} as const;
+
+/**
+ * Thực đơn tự đổi bữa này vì đâu (BR-94)
+ * @nullable
+ */
+export type MealDtoReplanCause = typeof MealDtoReplanCause[keyof typeof MealDtoReplanCause] | null;
+
+
+export const MealDtoReplanCause = {
+  profile: 'profile',
+  health: 'health',
+  food_paused: 'food_paused',
+  food_resumed: 'food_resumed',
+  dish_changed: 'dish_changed',
+} as const;
+
 export interface MealDto {
   id: string;
   slot: MealDtoSlot;
@@ -656,6 +695,15 @@ export interface MealDto {
      * @nullable
      */
   loggedBy: LoggedByDto | null;
+  /** manual = phụ huynh lấp bữa trống */
+  source: MealDtoSource;
+  /** Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93) */
+  reasons: MealDtoReasonsItem[];
+  /**
+     * Thực đơn tự đổi bữa này vì đâu (BR-94)
+     * @nullable
+     */
+  replanCause: MealDtoReplanCause;
 }
 
 export type SlotDtoSlot = typeof SlotDtoSlot[keyof typeof SlotDtoSlot];

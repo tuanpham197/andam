@@ -410,9 +410,9 @@ gantt
 - [ ] FE: bữa trống trên S01 / G09 có *Dùng món bé đã ăn gần đây* và *Tạo món cho bữa này*; G15 nhận `?mealType=&fillDate=&fillSlot=` → sau khi lưu đặt món vào bữa và về trang trước.
 
 **2. Lý do món & báo khi thực đơn tự đổi (FR-142/143, BR-93/94)**
-- [ ] Migration: `planned_meals.reasons text[]`, `planned_meals.replan_cause` (enum mới).
-- [ ] Engine lưu lý do; sinh lại nhận nguyên nhân từ nơi gọi (hồ sơ, sức khỏe, tạm dừng, dùng lại, món của bạn) và chỉ gắn khi món / kết cấu / khẩu phần thật sự khác; đổi món / lấp bữa xóa nguyên nhân.
-- [ ] `MealDto` thêm `reasons`, `source`, `replanCause`. S01: 1–2 lý do dưới thẻ “Bữa tiếp theo” (“Bạn đã chọn món này” cho món tự chọn); nhãn “Đã đổi vì …” trên bữa và thẻ.
+- [x] Migration: `planned_meals.reasons text[]`, `planned_meals.replan_cause` (enum mới).
+- [x] Engine lưu lý do; sinh lại nhận nguyên nhân từ nơi gọi (hồ sơ, sức khỏe, tạm dừng, dùng lại, món của bạn) và chỉ gắn khi món / kết cấu / khẩu phần thật sự khác; đổi món / lấp bữa xóa nguyên nhân.
+- [x] `MealDto` thêm `reasons`, `source`, `replanCause`. S01: 1–2 lý do dưới thẻ “Bữa tiếp theo” (“Bạn đã chọn món này” cho món tự chọn); nhãn “Đã đổi vì …” trên bữa và thẻ.
 
 **3. Ghi nhận nhanh (UC-25, FR-144, BR-95)**
 - [ ] Migration: `meal_logs.liking` cho phép trống; domain `MealLog` nhận mức thích trống; engine / nhật ký xử lý mức thích trống.

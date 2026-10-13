@@ -529,4 +529,61 @@ describe('Today (S01)', () => {
       '/health',
     );
   });
+
+  describe('why this dish, and what the plan changed (FR-142/143, TC-UX-017)', () => {
+    it('gives two reasons for the next meal, naming the other mains’ proteins', async () => {
+      serveDay();
+      renderApp('/');
+      const why = within(await screen.findByRole('list', { name: 'Vì sao món này' }));
+      expect(why.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+        'Chưa dùng trong 7 ngày qua',
+        'Đạm cá — khác nguồn đạm bữa tối (gà)',
+      ]);
+    });
+
+    it('says a dish the parent picked was their choice', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID ? { ...m, source: 'swap' as const, reasons: [] } : m,
+        ),
+      });
+      renderApp('/');
+      const why = within(await screen.findByRole('list', { name: 'Vì sao món này' }));
+      expect(why.getByText('Bạn đã chọn món này')).toBeInTheDocument();
+    });
+
+    it('shows no reasons when the engine left none', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) => (m.id === LUNCH_ID ? { ...m, reasons: [] } : m)),
+      });
+      renderApp('/');
+      await nextMeal();
+      expect(screen.queryByRole('list', { name: 'Vì sao món này' })).toBeNull();
+    });
+
+    it('tells which meals the plan changed by itself, on the card and in the list', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID || m.slot === 'dinner'
+            ? {
+                ...m,
+                replanCause: m.slot === 'dinner' ? ('food_paused' as const) : ('health' as const),
+              }
+            : m,
+        ),
+      });
+      renderApp('/');
+      const card = within(await nextMeal());
+      expect(card.getByText('Đã đổi theo tình trạng sức khỏe')).toBeInTheDocument();
+      expect(
+        within(mealList()).getByText('Đã đổi vì có thực phẩm đang tạm dừng'),
+      ).toBeInTheDocument();
+    });
+  });
 });

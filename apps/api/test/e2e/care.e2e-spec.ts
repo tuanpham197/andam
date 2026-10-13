@@ -498,8 +498,10 @@ describe('"Món của bạn" (UC-23)', () => {
       .set('Authorization', owner)
       .send(dish({ mealType: 'snack' }))
       .expect(200);
-    const tomorrow = await day(TOMORROW);
-    expect(tomorrow.find((m) => m.slot === 'dinner')!.dish.id).not.toBe(body.id);
+    const tomorrow = (await day(TOMORROW)) as (Meal & { replanCause: string | null })[];
+    const dinner = tomorrow.find((m) => m.slot === 'dinner')!;
+    expect(dinner.dish.id).not.toBe(body.id);
+    expect(dinner.replanCause).toBe('dish_changed'); // TC-UX-009
   });
 
   it('TC-CUS-019 adding a food the child has not tried replaces the dish on sick days', async () => {

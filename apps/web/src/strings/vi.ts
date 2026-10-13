@@ -268,6 +268,15 @@ export const vi = {
       skipped: 'Đã bỏ qua',
     },
     snack: 'Bữa phụ',
+    whyTitle: 'Vì sao món này',
+    chosenByYou: 'Bạn đã chọn món này',
+    replanned: {
+      profile: 'Đã đổi theo hồ sơ mới của bé',
+      health: 'Đã đổi theo tình trạng sức khỏe',
+      food_paused: 'Đã đổi vì có thực phẩm đang tạm dừng',
+      food_resumed: 'Đã cập nhật vì thực phẩm được dùng lại',
+      dish_changed: 'Đã đổi vì món của bạn vừa sửa hoặc xóa',
+    },
     unfilled: 'Chưa có món phù hợp',
     unfilledAlert:
       'Chưa tìm được món an toàn cho một số bữa. Thực phẩm bé cần tránh luôn được loại trừ, kể cả khi kho món ít.',

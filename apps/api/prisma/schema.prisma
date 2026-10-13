@@ -99,6 +99,17 @@ enum PlanSource {
   @@map("plan_source")
 }
 
+/// Why the plan changed a meal by itself (BR-94, P8a).
+enum ReplanCause {
+  profile
+  health
+  food_paused
+  food_resumed
+  dish_changed
+
+  @@map("replan_cause")
+}
+
 enum SwapReason {
   missing_ingredient
   disliked
@@ -517,6 +528,9 @@ model PlannedMeal {
   status           MealStatus @default(planned)
   newIngredientIds String[]   @map("new_ingredient_ids")
   source           PlanSource
+  /// Engine reason codes, at most 3 in display order (BR-93).
+  reasons          String[]     @default([])
+  replanCause      ReplanCause? @map("replan_cause")
   generatedAt      DateTime   @map("generated_at") @db.Timestamptz
   updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamptz
 

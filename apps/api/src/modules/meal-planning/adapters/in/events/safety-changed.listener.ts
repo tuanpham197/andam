@@ -28,11 +28,12 @@ export class SafetyChangedListener implements OnModuleInit {
         userId,
         scope: 'unsafe',
         keepMealId: sourceMealId,
+        cause: 'food_paused',
       });
     });
     this.events.subscribe('IngredientResumed', (event) => {
       const { childId, userId } = event as ChildEvent;
-      return this.regenerate.execute({ childId, userId, scope: 'all' });
+      return this.regenerate.execute({ childId, userId, scope: 'all', cause: 'food_resumed' });
     });
   }
 }

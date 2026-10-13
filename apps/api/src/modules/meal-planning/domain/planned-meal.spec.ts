@@ -176,4 +176,51 @@ describe('PlannedMeal.updateNewIngredients (BR-86)', () => {
       MealAlreadyLoggedError,
     );
   });
+
+  describe('reasons and replan cause (BR-93/94)', () => {
+    const draft = {
+      slot: 'dinner' as const,
+      time: '18:00',
+      dishId: 'dish_ga',
+      texture: 'lumpy' as const,
+      portionText: '120–150 ml',
+      newIngredientIds: [],
+      newAllergenIds: [],
+      reasons: ['NEW_INGREDIENT', 'FOUR_GROUPS', 'LIKED', 'NOT_USED_7D'] as const,
+    };
+    const planned = (replanCause?: 'health') =>
+      PlannedMeal.plan({
+        id: 'm-3',
+        childId: 'c-1',
+        date: '2026-09-24',
+        stageId: 2,
+        generatedAt: new Date('2026-09-24T01:00:00Z'),
+        draft: { ...draft, reasons: [...draft.reasons] },
+        replanCause,
+      });
+
+    it('TC-UX-007 keeps 3 engine reasons in display order', () => {
+      expect(planned().reasons).toEqual(['NOT_USED_7D', 'LIKED', 'FOUR_GROUPS']);
+      expect(planned().replanCause).toBeNull();
+      expect(planned('health').replanCause).toBe('health');
+    });
+
+    it('reads rows written before P8a as no reasons and no cause', () => {
+      expect([meal().reasons, meal().replanCause]).toEqual([[], null]);
+    });
+
+    it('TC-UX-010 a swap is the parent’s choice: no reasons, no notice', () => {
+      const m = planned('health');
+      m.swapTo({ dishId: 'dish_bo', texture: 'lumpy', portionText: 'x', newIngredientIds: [] });
+      expect([m.reasons, m.replanCause]).toEqual([[], null]);
+    });
+
+    it('a re-served meal takes the cause given, and keeps its own without one', () => {
+      const m = planned();
+      m.reserve({ texture: 'mashed', portionText: 'y' });
+      expect(m.replanCause).toBeNull();
+      m.reserve({ texture: 'mashed', portionText: 'y' }, 'health');
+      expect(m.replanCause).toBe('health');
+    });
+  });
 });

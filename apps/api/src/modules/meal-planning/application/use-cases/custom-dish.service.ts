@@ -180,7 +180,12 @@ export class CustomDishService {
     dishId: string,
   ): Promise<void> {
     if (child.stage === null) return;
-    await this.regenerate.execute({ childId: child.childId, userId, scope: 'unsafe' });
+    await this.regenerate.execute({
+      childId: child.childId,
+      userId,
+      scope: 'unsafe',
+      cause: 'dish_changed',
+    });
     const today = toLocalDate(this.clock.now(), APP_TIMEZONE);
     const upcoming = (
       await this.plans.findBetween(child.childId, today, addDays(today, PLAN_AHEAD_DAYS))
@@ -206,7 +211,7 @@ export class CustomDishService {
     await this.existing(childId, dishId);
     await this.uow.run(async () => {
       await this.customs.archive(dishId, this.clock.now());
-      await this.regenerate.execute({ childId, userId, scope: 'unsafe' });
+      await this.regenerate.execute({ childId, userId, scope: 'unsafe', cause: 'dish_changed' });
     });
   }
 }

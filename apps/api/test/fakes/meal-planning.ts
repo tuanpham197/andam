@@ -47,6 +47,8 @@ const copy = (m: PlannedMeal) =>
     status: m.status,
     newIngredientIds: [...m.newIngredientIds],
     source: m.source,
+    reasons: [...m.reasons],
+    replanCause: m.replanCause,
     generatedAt: m.generatedAt,
   });
 
@@ -339,6 +341,8 @@ export function snapshot(m: PlannedMeal) {
     status: m.status,
     newIngredientIds: [...m.newIngredientIds],
     source: m.source,
+    reasons: [...m.reasons],
+    replanCause: m.replanCause,
     generatedAt: m.generatedAt,
   };
 }

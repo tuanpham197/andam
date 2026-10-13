@@ -26,6 +26,8 @@ function rowFor(meal: MealDto, nextMealId: string | null): { note: string; state
   if (meal.status === 'refused' || meal.status === 'skipped')
     return { note: loggedNote(t.status[meal.status], meal), state: 'closed' };
   if (meal.status === 'prepared') return { note: t.status.prepared, state: 'pending' };
+  // BR-94: a meal the plan changed by itself says so until the parent acts on it.
+  if (meal.replanCause) return { note: t.replanned[meal.replanCause], state: 'pending' };
   const minutes = vi.minutes(meal.dish.prepMin + meal.dish.cookMin);
   const protein = meal.dish.mainProtein;
   const lead = isSnackSlot(meal.slot)

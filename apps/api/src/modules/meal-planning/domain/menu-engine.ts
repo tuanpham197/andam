@@ -51,6 +51,22 @@ export type ReasonCode =
   | 'NOT_USED_7D'
   | 'NEW_INGREDIENT';
 
+/** What a parent reads first (design S02); S01 shows the same codes in the same order. */
+export const REASON_ORDER: readonly ReasonCode[] = [
+  'NOT_USED_7D',
+  'DIFFERENT_PROTEIN',
+  'LIKED',
+  'FOUR_GROUPS',
+  'LEAST_USED_PROTEIN',
+  'NEW_INGREDIENT',
+];
+export const MAX_SHOWN_REASONS = 3;
+
+/** The reasons kept with a planned meal: at most 3, in display order (BR-93). */
+export function topReasons(codes: readonly ReasonCode[]): ReasonCode[] {
+  return REASON_ORDER.filter((code) => codes.includes(code)).slice(0, MAX_SHOWN_REASONS);
+}
+
 export interface PlannedDraft {
   slot: MealSlot;
   time: string;

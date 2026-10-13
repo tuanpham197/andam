@@ -17,7 +17,10 @@ export class ProfileChangedListener implements OnModuleInit {
   onModuleInit(): void {
     // The payload shape is the child-profile module's ProfileChangedEvent (not importable here).
     this.events.subscribe('ProfileChanged', (event) =>
-      this.regenerate.execute(event as DomainEvent & { childId: string; userId: string }),
+      this.regenerate.execute({
+        ...(event as DomainEvent & { childId: string; userId: string }),
+        cause: 'profile',
+      }),
     );
   }
 }

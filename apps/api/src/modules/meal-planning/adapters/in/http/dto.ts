@@ -17,6 +17,8 @@ import {
 } from 'class-validator';
 import { LIBRARY_CHIPS, type LibraryChip } from '../../../domain/library.js';
 import { SWAP_REASONS, type SwapReason } from '../../../domain/swap.js';
+import { REASON_ORDER } from '../../../domain/menu-engine.js';
+import { REPLAN_CAUSES } from '../../../domain/planned-meal.js';
 
 const SLOTS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'extra_snack'];
 const STATUSES = ['planned', 'prepared', 'eaten', 'refused', 'skipped'];
@@ -96,6 +98,25 @@ export class MealDto {
   @ApiProperty({ type: [NamedIngredientDto] }) newIngredients: NamedIngredientDto[];
   @ApiProperty({ type: LoggedByDto, nullable: true, description: 'Ai đã ghi nhận (FR-118)' })
   loggedBy: LoggedByDto | null;
+  @ApiProperty({
+    enum: ['auto', 'swap', 'manual'],
+    description: 'manual = phụ huynh lấp bữa trống',
+  })
+  source: string;
+  @ApiProperty({
+    enum: REASON_ORDER,
+    isArray: true,
+    description:
+      'Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93)',
+  })
+  reasons: string[];
+  @ApiProperty({
+    enum: REPLAN_CAUSES,
+    nullable: true,
+    type: String,
+    description: 'Thực đơn tự đổi bữa này vì đâu (BR-94)',
+  })
+  replanCause: string | null;
 }
 
 class SlotDto {

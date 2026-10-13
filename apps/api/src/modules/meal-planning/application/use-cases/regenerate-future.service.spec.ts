@@ -148,4 +148,42 @@ describe('RegenerateFutureService (BR-31, TC-PLN-003)', () => {
       expect(mealsOn(t, '2026-09-25').filter((m) => m.slot.endsWith('snack'))).toHaveLength(1);
     });
   });
+
+  describe('replan cause (BR-94, TC-UX-008/009)', () => {
+    it('marks the meals that changed with the cause, and leaves identical ones unmarked', async () => {
+      const t = await planToday();
+      // Nothing about the child changed: the plan comes back the same, with no notice.
+      await t.regenerate.execute({ childId: CHILD, userId: USER, cause: 'profile' });
+      expect([...t.plans.rows.values()].every((m) => m.replanCause === null)).toBe(true);
+
+      t.history.healthState = 'sick';
+      await t.regenerate.execute({ childId: CHILD, userId: USER, cause: 'health' });
+      const dinner = mealsOn(t, TODAY).find((m) => m.slot === 'dinner')!;
+      expect(dinner.replanCause).toBe('health');
+      // 07:30 is past at 09:00: untouched, no notice.
+      expect(mealsOn(t, TODAY).find((m) => m.slot === 'breakfast')!.replanCause).toBeNull();
+    });
+
+    it('marks a swapped meal served softer, and keeps a notice when re-planned the same', async () => {
+      const t = await planToday();
+      const lunch = mealsOn(t, '2026-09-25').find((m) => m.slot === 'lunch')!;
+      t.plans.put(PlannedMeal.restore({ ...snapshot(lunch), source: 'swap' }));
+      t.history.healthState = 'sick';
+      await t.regenerate.execute({ childId: CHILD, userId: USER, cause: 'health' });
+      expect(t.plans.rows.get(lunch.id)!.replanCause).toBe('health');
+
+      const dinner = mealsOn(t, '2026-09-25').find((m) => m.slot === 'dinner')!;
+      await t.regenerate.execute({ childId: CHILD, userId: USER, cause: 'profile' });
+      const again = mealsOn(t, '2026-09-25').find((m) => m.slot === 'dinner')!;
+      expect(again.dishId).toBe(dinner.dishId);
+      expect(again.replanCause).toBe('health');
+    });
+
+    it('re-plans without a notice when no cause is given', async () => {
+      const t = await planToday();
+      t.history.healthState = 'sick';
+      await t.regenerate.execute({ childId: CHILD, userId: USER });
+      expect([...t.plans.rows.values()].every((m) => m.replanCause === null)).toBe(true);
+    });
+  });
 });

@@ -113,6 +113,9 @@ export interface MealView {
   newIngredients: { id: string; name: string }[];
   /** FR-118: who logged the meal, for the other members (null while not logged). */
   loggedBy: { name: string | null; at: Date } | null;
+  source: PlannedMeal['source'];
+  reasons: PlannedMeal['reasons'];
+  replanCause: PlannedMeal['replanCause'];
 }
 
 /** A dish as the meal screens show it: timing, protein and the food groups it covers. */
@@ -147,5 +150,8 @@ export function toMealView(
     dish: dishSummary(dishes.get(meal.dishId)!, ingredients),
     newIngredients: namedIngredients(meal.newIngredientIds, ingredients),
     loggedBy,
+    source: meal.source,
+    reasons: meal.reasons,
+    replanCause: meal.replanCause,
   };
 }

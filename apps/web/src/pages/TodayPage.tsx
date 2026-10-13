@@ -13,7 +13,13 @@ import { formatAge, textureLabel } from '../features/child/format';
 import { ChildSwitcher } from '../features/child/ChildSwitcher';
 import { useActiveChild } from '../features/child/guards';
 import { DayMealList } from '../features/meals/DayMealList';
-import { avoidSummary, dayHeading, shortDate, todayInVietnam } from '../features/meals/format';
+import {
+  avoidSummary,
+  dayHeading,
+  isSnackSlot,
+  shortDate,
+  todayInVietnam,
+} from '../features/meals/format';
 import { NextMealCard } from '../features/meals/NextMealCard';
 import { useNow } from '../features/meals/use-now';
 import { usePrepareMeal } from '../features/meals/use-prepare-meal';
@@ -121,6 +127,9 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
           onPrepare={() => preparing.prepare(next.id)}
           preparing={preparing.isPending}
           error={preparing.error}
+          otherMains={meals
+            .filter((m) => m.id !== next.id && !isSnackSlot(m.slot) && m.dish.mainProtein)
+            .map((m) => ({ slot: m.slot, protein: m.dish.mainProtein! }))}
         />
       ) : (
         meals.length > 0 && (
