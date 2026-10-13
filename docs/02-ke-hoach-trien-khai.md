@@ -396,6 +396,35 @@ gantt
 
 ## 6. Sau MVP (định hướng)
 
+### P8a — Trải nghiệm hằng ngày (BE ~4 · FE ~5) — F19
+
+**Phạm vi:** S01, G09, G15, G16 · UC-24..26 · FR-140..146 · BR-90..96. Rút ra khi chạy thật P6 (nhiều bữa “Chưa có món phù hợp” với kho món ít) và từ phân tích trải nghiệm ngày 13/10/2026. Kèm sửa lỗi sửa món của bạn (BR-86).
+
+**0. Sửa món của bạn (kiểm tra trước khi làm phase)**
+- [x] Kiểm tra: sửa tên / nguyên liệu / thời gian chạy đúng trên trình duyệt thật (API `PUT custom-dishes/:id`, màn `/dishes/:id/edit`).
+- [x] Lỗi tìm thấy và đã sửa: sửa món chính thành bữa phụ → bữa chính tương lai vẫn giữ món; thêm nguyên liệu bé chưa thử vào món đang ở ngày bé ốm → món vẫn ở lại (vi phạm BR-52). Sửa: sửa món chạy sinh lại phạm vi `unsafe` trong cùng transaction; sinh lại coi món sai loại bữa là không hợp (TC-CUS-018/019).
+
+**1. Bữa trống có lối ra (UC-24, FR-140/141, BR-90..92)**
+- [ ] Domain: `rankSlot` nhận tùy chọn bỏ cửa sổ chống lặp (chỉ loại món đã có trong ngày); use case `FillSlot` (có / không `dishId`), nguồn `manual`.
+- [ ] Endpoint `POST /children/:id/days/:date/slots/:slot/fill`; thêm vào ma trận truy cập TC-FAM-011.
+- [ ] FE: bữa trống trên S01 / G09 có *Dùng món bé đã ăn gần đây* và *Tạo món cho bữa này*; G15 nhận `?mealType=&fillDate=&fillSlot=` → sau khi lưu đặt món vào bữa và về trang trước.
+
+**2. Lý do món & báo khi thực đơn tự đổi (FR-142/143, BR-93/94)**
+- [ ] Migration: `planned_meals.reasons text[]`, `planned_meals.replan_cause` (enum mới).
+- [ ] Engine lưu lý do; sinh lại nhận nguyên nhân từ nơi gọi (hồ sơ, sức khỏe, tạm dừng, dùng lại, món của bạn) và chỉ gắn khi món / kết cấu / khẩu phần thật sự khác; đổi món / lấp bữa xóa nguyên nhân.
+- [ ] `MealDto` thêm `reasons`, `source`, `replanCause`. S01: 1–2 lý do dưới thẻ “Bữa tiếp theo” (“Bạn đã chọn món này” cho món tự chọn); nhãn “Đã đổi vì …” trên bữa và thẻ.
+
+**3. Ghi nhận nhanh (UC-25, FR-144, BR-95)**
+- [ ] Migration: `meal_logs.liking` cho phép trống; domain `MealLog` nhận mức thích trống; engine / nhật ký xử lý mức thích trống.
+- [ ] `POST /meals/:id/log` cho phép bỏ `liking`.
+- [ ] FE: 3 nút trên thẻ “Bữa tiếp theo” (chỉ khi bữa hôm nay đã tới giờ hoặc đã chuẩn bị), khóa khi đang gửi, báo lỗi, thông báo “Đã ghi …”; nhật ký hiện bản ghi không mức thích.
+
+**4. Hành trình thử thực phẩm (UC-26, FR-145/146, BR-96)**
+- [ ] Domain `foodProgress` + use case + endpoint `GET /children/:id/foods`; thêm vào ma trận truy cập.
+- [ ] FE **G16** `/foods`: tiến độ, 3 nhóm, nhãn trạng thái, “Sắp thử: Thứ Ba 14/10”; lối vào từ Hồ sơ bé và S04.
+
+**Nghiệm thu:** Bé ốm với kho 12 món → bữa trống → *Dùng món bé đã ăn gần đây* lấp được bằng món an toàn, không bao giờ có món chứa thực phẩm cần tránh / chưa thử; tạo món từ bữa trống → món nằm ngay trong bữa đó. Chuyển “Đang ốm” → bữa tối hiện “Đã đổi theo tình trạng sức khỏe”. Ghi nhanh “Ăn hết” → thẻ chuyển sang bữa kế, nhật ký có bản ghi. G16 khớp số thực phẩm đã thử / tạm dừng.
+
 ### P8 — MVP+ tiện ích (BE ~4 · FE ~6)
 - Danh sách đi chợ (G05, FR-096): use case gộp nguyên liệu tuần theo đơn vị, tick đã mua, chia sẻ dạng text.
 - Chế độ nấu (G07, FR-031): từng bước toàn màn hình, Wake Lock, hẹn giờ.
