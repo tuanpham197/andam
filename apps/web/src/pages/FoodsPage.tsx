@@ -90,8 +90,11 @@ function FoodsView({ data }: { data: FoodProgressDto }) {
           <ul className={styles.list}>
             {upcoming.map((item) => (
               <li key={item.id} className={styles.row}>
-                <Link to={`/week/${item.upcomingOn}`} className={styles.rowLink}>
-                  <span>{item.name}</span>
+                <Link
+                  to={`/week/${item.upcomingOn}`}
+                  className={`${styles.rowLink} ${styles.upcomingLink}`}
+                >
+                  <span className={styles.upcomingName}>{item.name}</span>
                   <span className={styles.muted}>{t.upcomingOn(dayHeading(item.upcomingOn!))}</span>
                 </Link>
               </li>

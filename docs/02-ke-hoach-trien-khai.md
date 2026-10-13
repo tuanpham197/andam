@@ -396,7 +396,7 @@ gantt
 
 ## 6. Sau MVP (định hướng)
 
-### P8a — Trải nghiệm hằng ngày (BE ~4 · FE ~5) — F19
+### P8a — Trải nghiệm hằng ngày (BE ~4 · FE ~5) — F19 — ✅ Hoàn thành 13/10/2026 (chờ review)
 
 **Phạm vi:** S01, G09, G15, G16 · UC-24..26 · FR-140..146 · BR-90..96. Rút ra khi chạy thật P6 (nhiều bữa “Chưa có món phù hợp” với kho món ít) và từ phân tích trải nghiệm ngày 13/10/2026. Kèm sửa lỗi sửa món của bạn (BR-86).
 
@@ -424,6 +424,13 @@ gantt
 - [x] FE **G16** `/foods`: tiến độ, 3 nhóm, nhãn trạng thái, “Sắp thử: Thứ Ba 14/10”; lối vào từ Hồ sơ bé và S04.
 
 **Nghiệm thu:** Bé ốm với kho 12 món → bữa trống → *Dùng món bé đã ăn gần đây* lấp được bằng món an toàn, không bao giờ có món chứa thực phẩm cần tránh / chưa thử; tạo món từ bữa trống → món nằm ngay trong bữa đó. Chuyển “Đang ốm” → bữa tối hiện “Đã đổi theo tình trạng sức khỏe”. Ghi nhanh “Ăn hết” → thẻ chuyển sang bữa kế, nhật ký có bản ghi. G16 khớp số thực phẩm đã thử / tạm dừng.
+
+**Kết quả kiểm chứng (13/10/2026):** API 1 167 test · web 451 test · api-client 19 test — 100% line cả 3 workspace; domain 100% line + branch; lint + Prettier + typecheck + build (kiểm kích thước bundle) sạch; OpenAPI và client sinh lại khớp; benchmark engine đạt. Playwright (5 luồng NFR-011 + 16 màn × 7 viewport + axe) qua trên Chromium — WebKit chạy trong CI. Chạy thật trên Chrome 390 px và 320 px: bé 8 tháng đổi sang “Đang ốm” → bữa tối hiện “Đã đổi theo tình trạng sức khỏe”, thẻ “Bữa tiếp theo” hiện “Chưa dùng trong 7 ngày qua · Đạm heo — khác nguồn đạm bữa trưa (cá) và bữa tối (bò)”; ngày 15/10 có 4 bữa trống (kho 12 món, bé ốm) → *Dùng món bé đã ăn gần đây* lấp bữa phụ sáng bằng “Lê hấp nghiền”; ghi nhanh “Ăn hết” → “Đã ghi bữa sáng: Ăn hết.” và thẻ chuyển sang bữa trưa; G16 “Đã thử 22 / 25 thực phẩm”, trứng “Cần tránh”, sữa bò “Từ 12 tháng”. Không cuộn ngang.
+
+**Lỗi thật được phát hiện và đã sửa trong P8a:**
+1. Sửa món của bạn từ bữa chính thành bữa phụ → bữa chính tương lai vẫn giữ món (TC-CUS-018).
+2. Thêm nguyên liệu bé chưa thử vào món đang nằm ở ngày bé ốm → món vẫn ở lại, vi phạm “không món mới khi ốm” (TC-CUS-019).
+3. Danh sách “Sắp thử lần đầu” ở 320 px: tên thực phẩm bị bẻ dòng từng chữ cạnh ngày — đổi thành 2 dòng (phát hiện khi chạy thật).
 
 ### P8 — MVP+ tiện ích (BE ~4 · FE ~6)
 - Danh sách đi chợ (G05, FR-096): use case gộp nguyên liệu tuần theo đơn vị, tick đã mua, chia sẻ dạng text.

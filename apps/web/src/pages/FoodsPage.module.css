@@ -85,3 +85,13 @@
   background: var(--warn-bg);
   color: var(--warn-text);
 }
+.upcomingLink {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 0;
+}
+.upcomingName {
+  font-weight: 500;
+}
