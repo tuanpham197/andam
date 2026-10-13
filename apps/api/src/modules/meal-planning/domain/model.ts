@@ -48,7 +48,8 @@ export interface ScheduledSlot {
 }
 
 export interface DishFeedback {
-  liking: number;
+  /** Null for a quick log, which only says how much was eaten (BR-95). */
+  liking: number | null;
   amount: EatAmount;
   date: LocalDate;
 }

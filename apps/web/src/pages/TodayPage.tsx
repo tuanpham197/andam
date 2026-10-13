@@ -18,11 +18,13 @@ import {
   dayHeading,
   isSnackSlot,
   shortDate,
+  slotLabel,
   todayInVietnam,
 } from '../features/meals/format';
 import { NextMealCard } from '../features/meals/NextMealCard';
 import { useNow } from '../features/meals/use-now';
 import { usePrepareMeal } from '../features/meals/use-prepare-meal';
+import { useQuickLog } from '../features/meals/use-quick-log';
 import { vi } from '../strings/vi';
 import styles from './TodayPage.module.css';
 
@@ -97,6 +99,7 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
   // FR-120: another member's log or swap shows up within a minute (and on returning to the tab).
   const day = useGetDayPlan(child.id, date, { query: { refetchInterval: 60_000 } });
   const preparing = usePrepareMeal(child.id, date);
+  const quick = useQuickLog(child.id);
 
   if (day.isPending)
     return (
@@ -109,6 +112,7 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
 
   const { meals, nextMealId, unfilledSlots } = day.data;
   const next = meals.find((m) => m.id === nextMealId);
+  const quickDone = quick.done && meals.find((m) => m.id === quick.done!.mealId);
   return (
     <>
       {unfilledSlots.length > 0 && (
@@ -119,6 +123,14 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
           </Link>
         </AlertBox>
       )}
+      {quickDone && (
+        <AlertBox tone="info">
+          {t.quickLogged(
+            slotLabel(quickDone.slot).toLocaleLowerCase('vi'),
+            t.quickAmounts[quick.done!.amount],
+          )}
+        </AlertBox>
+      )}
       {next ? (
         <NextMealCard
           meal={next}
@@ -127,6 +139,9 @@ function DayPlan({ child, date, now }: { child: ChildDto; date: string; now: Dat
           onPrepare={() => preparing.prepare(next.id)}
           preparing={preparing.isPending}
           error={preparing.error}
+          onQuickLog={(amount) => quick.log(next.id, amount)}
+          quickLogging={quick.isPending}
+          quickError={quick.error}
           otherMains={meals
             .filter((m) => m.id !== next.id && !isSnackSlot(m.slot) && m.dish.mainProtein)
             .map((m) => ({ slot: m.slot, protein: m.dish.mainProtein! }))}

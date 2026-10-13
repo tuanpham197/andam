@@ -44,9 +44,11 @@ function MealEntry({ entry }: { entry: JournalEntryDto }) {
         <span className={styles.meta}>
           {[
             vi.log.amounts[entry.amount as Amount],
-            t.liking(entry.liking!),
+            entry.liking !== null && t.liking(entry.liking),
             t.by(entry.actorName ?? vi.log.deletedUser),
-          ].join(' · ')}
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </span>
         {reaction && (
           <span className={styles.danger}>

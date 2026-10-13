@@ -11,6 +11,7 @@ import {
   dayFixture,
   healthFixture,
   logFormFixture,
+  loggedFixture,
   mealFixture,
 } from '../test/fixtures';
 import { server } from '../test/server';
@@ -642,6 +643,86 @@ describe('Today (S01)', () => {
       renderApp('/');
       await user.click(await screen.findByRole('button', { name: 'Dùng món bé đã ăn gần đây' }));
       expect(await screen.findByText(/Không còn món an toàn nào cho bữa này/)).toBeInTheDocument();
+    });
+  });
+
+  describe('quick log (FR-144, TC-UX-018)', () => {
+    const quickGroup = () =>
+      screen.queryByRole('group', { name: 'Ghi nhanh: bé ăn được bao nhiêu?' });
+
+    function serveQuickLog(reply: () => Response) {
+      const sent: unknown[] = [];
+      server.use(
+        http.post(`${API}/meals/:mealId/log`, async ({ params, request }) => {
+          sent.push({ mealId: params.mealId, body: await request.json() });
+          return reply();
+        }),
+      );
+      return sent;
+    }
+
+    it('waits until the meal is due or cooked', async () => {
+      serveDay();
+      renderApp('/');
+      await nextMeal();
+      expect(quickGroup()).toBeNull();
+    });
+
+    it('logs the amount in one tap, then says so as the card moves on', async () => {
+      vi.setSystemTime(new Date('2026-09-24T04:10:00Z')); // 11:10, lunch is due
+      let logged = false;
+      serveDay(() => {
+        const day = dayFixture();
+        return logged
+          ? {
+              ...day,
+              meals: day.meals.map((m) =>
+                m.id === LUNCH_ID ? { ...m, status: 'eaten' as const } : m,
+              ),
+              nextMealId: day.meals[2]!.id,
+            }
+          : day;
+      });
+      const sent = serveQuickLog(() => {
+        logged = true;
+        return HttpResponse.json(
+          loggedFixture({ log: { ...loggedFixture().log, amount: 'all', liking: null } }),
+          {
+            status: 201,
+          },
+        );
+      });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      await nextMeal();
+      const group = within(quickGroup()!);
+      expect(group.getAllByRole('button').map((b) => b.textContent)).toEqual([
+        'Ăn hết',
+        'Ăn một nửa',
+        'Không ăn',
+      ]);
+      await user.click(group.getByRole('button', { name: 'Ăn hết' }));
+      expect(await screen.findByText('Đã ghi bữa trưa: Ăn hết.')).toBeInTheDocument();
+      expect(sent).toEqual([
+        { mealId: LUNCH_ID, body: { loggedAt: '2026-09-24T04:10:00.000Z', amount: 'all' } },
+      ]);
+      expect(within(await nextMeal()).getByText('Bữa tiếp theo · Xế 15:00')).toBeInTheDocument();
+    });
+
+    it('offers it on a cooked meal, and shows a refusal from the server', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID ? { ...m, status: 'prepared' as const } : m,
+        ),
+      });
+      serveQuickLog(() => problem(409, 'MEAL_ALREADY_LOGGED'));
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      await nextMeal();
+      await user.click(within(quickGroup()!).getByRole('button', { name: 'Không ăn' }));
+      expect(await screen.findByText(/đã được ghi nhận/)).toBeInTheDocument();
     });
   });
 });

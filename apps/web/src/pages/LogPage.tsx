@@ -67,10 +67,12 @@ function Summary({ log }: { log: LogDto }) {
           <dt>{t.amountLegend}</dt>
           <dd>{t.amounts[log.amount as LogMealDtoAmount]}</dd>
         </div>
-        <div>
-          <dt>{t.likingLabel}</dt>
-          <dd>{t.liking(log.liking)}</dd>
-        </div>
+        {log.liking !== null && (
+          <div>
+            <dt>{t.likingLabel}</dt>
+            <dd>{t.liking(log.liking)}</dd>
+          </div>
+        )}
         {log.reaction && (
           <div>
             <dt>{t.reactionLabel}</dt>

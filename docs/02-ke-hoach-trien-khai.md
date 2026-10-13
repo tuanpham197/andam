@@ -415,9 +415,9 @@ gantt
 - [x] `MealDto` thêm `reasons`, `source`, `replanCause`. S01: 1–2 lý do dưới thẻ “Bữa tiếp theo” (“Bạn đã chọn món này” cho món tự chọn); nhãn “Đã đổi vì …” trên bữa và thẻ.
 
 **3. Ghi nhận nhanh (UC-25, FR-144, BR-95)**
-- [ ] Migration: `meal_logs.liking` cho phép trống; domain `MealLog` nhận mức thích trống; engine / nhật ký xử lý mức thích trống.
-- [ ] `POST /meals/:id/log` cho phép bỏ `liking`.
-- [ ] FE: 3 nút trên thẻ “Bữa tiếp theo” (chỉ khi bữa hôm nay đã tới giờ hoặc đã chuẩn bị), khóa khi đang gửi, báo lỗi, thông báo “Đã ghi …”; nhật ký hiện bản ghi không mức thích.
+- [x] Migration: `meal_logs.liking` cho phép trống; domain `MealLog` nhận mức thích trống; engine / nhật ký xử lý mức thích trống.
+- [x] `POST /meals/:id/log` cho phép bỏ `liking`.
+- [x] FE: 3 nút trên thẻ “Bữa tiếp theo” (chỉ khi bữa hôm nay đã tới giờ hoặc đã chuẩn bị), khóa khi đang gửi, báo lỗi, thông báo “Đã ghi …”; nhật ký hiện bản ghi không mức thích.
 
 **4. Hành trình thử thực phẩm (UC-26, FR-145/146, BR-96)**
 - [ ] Domain `foodProgress` + use case + endpoint `GET /children/:id/foods`; thêm vào ma trận truy cập.

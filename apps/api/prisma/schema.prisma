@@ -568,7 +568,8 @@ model MealLog {
   dishId   String    @map("dish_id")
   loggedAt DateTime  @map("logged_at") @db.Timestamptz
   amount   EatAmount
-  liking   Int       @db.SmallInt
+  /// Null for a quick log (BR-95).
+  liking   Int?      @db.SmallInt
   actorId  String?   @map("actor_id") @db.Uuid
 
   meal     PlannedMeal        @relation(fields: [mealId], references: [id], onDelete: Cascade)

@@ -4488,7 +4488,9 @@
             ]
           },
           "liking": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Trống khi ghi nhận nhanh"
           },
           "outcome": {
             "type": "string",
@@ -4615,7 +4617,9 @@
           "liking": {
             "type": "number",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 5,
+            "nullable": true,
+            "description": "Bỏ trống khi ghi nhận nhanh (FR-144)"
           },
           "reaction": {
             "nullable": true,
@@ -4629,8 +4633,7 @@
         },
         "required": [
           "loggedAt",
-          "amount",
-          "liking"
+          "amount"
         ]
       },
       "LoggedMealDto": {

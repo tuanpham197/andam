@@ -60,6 +60,12 @@ describe('MealLog.record (FR-060..063)', () => {
     });
   });
 
+  it('TC-UX-011 a quick log has no liking; a given liking must still be 1–5', () => {
+    expect(record({ liking: null, amount: 'all' }).liking).toBeNull();
+    expect(record({ liking: null, amount: 'none' }).outcome).toBe('refused');
+    for (const liking of [0, 6, 2.5]) expect(() => record({ liking })).toThrow(InvalidLikingError);
+  });
+
   it('TC-LOG-002 "Không ăn" marks the meal refused', () => {
     expect(record({ amount: 'none', liking: 1 }).outcome).toBe('refused');
   });

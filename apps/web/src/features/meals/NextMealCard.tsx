@@ -8,6 +8,7 @@ import { textureLabel } from '../child/format';
 import { reasonText } from './explain';
 import { countdown, firstTryNames, isSnackSlot, mealInstant, slotLabel } from './format';
 import { FoodGroupTags } from './FoodGroupTags';
+import { QUICK_AMOUNTS, type QuickAmount } from './use-quick-log';
 import styles from './NextMealCard.module.css';
 
 const t = vi.today;
@@ -45,8 +46,15 @@ export function NextMealCard({
   preparing,
   error,
   otherMains,
+  onQuickLog,
+  quickLogging = false,
+  quickError = null,
 }: {
   meal: MealDto;
+  /** FR-144: shown once the meal is due or cooked. */
+  onQuickLog?: (amount: QuickAmount) => void;
+  quickLogging?: boolean;
+  quickError?: unknown;
   /** The day's other main meals, to say "khác nguồn đạm bữa tối (gà)". */
   otherMains: DayProteinDto[];
   date: string;
@@ -56,6 +64,7 @@ export function NextMealCard({
   error: unknown;
 }) {
   const prepared = meal.status === 'prepared';
+  const due = prepared || mealInstant(date, meal.time).getTime() <= now.getTime();
   const logUrl = `/meals/${meal.id}/log`;
   const swap = (
     <Link to={`/meals/${meal.id}/swap`} className={styles.action}>
@@ -133,6 +142,26 @@ export function NextMealCard({
           </>
         )}
         {error != null && <AlertBox tone="danger">{messageFor(error)}</AlertBox>}
+        {due && onQuickLog && (
+          <div role="group" aria-label={t.quickLog} className={styles.quick}>
+            <span className={styles.quickLabel}>{t.quickLog}</span>
+            <div className={styles.grid}>
+              {QUICK_AMOUNTS.map((amount) => (
+                <button
+                  key={amount}
+                  type="button"
+                  className={styles.action}
+                  disabled={quickLogging}
+                  onClick={() => onQuickLog(amount)}
+                >
+                  {t.quickAmounts[amount]}
+                </button>
+              ))}
+            </div>
+            <span className={styles.quickHint}>{t.quickLogHint}</span>
+          </div>
+        )}
+        {quickError != null && <AlertBox tone="danger">{messageFor(quickError)}</AlertBox>}
       </div>
     </section>
   );

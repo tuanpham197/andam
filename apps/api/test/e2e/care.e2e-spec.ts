@@ -187,6 +187,31 @@ describe('GET/POST /meals/:id/log (UC-08/09)', () => {
       .expect(400);
   });
 
+  it('TC-UX-011/012 a quick log saves the amount alone; the meal closes and its foods count as tried', async () => {
+    const meal = await lunch();
+    for (const liking of [0, 6, 2.5]) {
+      await api()
+        .post(`/api/v1/meals/${meal.id}/log`)
+        .set('Authorization', owner)
+        .send(logBody({ liking }))
+        .expect(400);
+    }
+    const res = await api()
+      .post(`/api/v1/meals/${meal.id}/log`)
+      .set('Authorization', owner)
+      .send({ loggedAt: '2026-09-24T11:40:00+07:00', amount: 'all' })
+      .expect(201);
+    expect(res.body.log).toMatchObject({ amount: 'all', liking: null, outcome: 'eaten' });
+    expect((await lunch()).status).toBe('eaten');
+    const tried = await prisma.ingredientExposure.count({ where: { childId, status: 'tried' } });
+    expect(tried).toBeGreaterThan(0);
+    const journal = await api()
+      .get(`/api/v1/children/${childId}/journal`)
+      .set('Authorization', owner)
+      .expect(200);
+    expect(journal.body.entries[0]).toMatchObject({ amount: 'all', liking: null });
+  });
+
   it('TC-LOG-008 a 501-character note is refused by the domain (400 NOTE_TOO_LONG)', async () => {
     const meal = await lunch();
     const res = await api()

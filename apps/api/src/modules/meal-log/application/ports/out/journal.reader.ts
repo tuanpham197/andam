@@ -19,7 +19,7 @@ export type JournalEntry =
       slot: string;
       dish: JournalDish;
       amount: EatAmount;
-      liking: number;
+      liking: number | null;
       reaction: Reaction | null;
       pausedIngredients: { id: string; name: string }[];
       /** FR-118: who logged it (null: account deleted). */

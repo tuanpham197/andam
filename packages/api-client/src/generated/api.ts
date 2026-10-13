@@ -1504,7 +1504,11 @@ export interface LogDto {
      */
   loggedBy: string | null;
   amount: LogDtoAmount;
-  liking: number;
+  /**
+     * Trống khi ghi nhận nhanh
+     * @nullable
+     */
+  liking: number | null;
   outcome: LogDtoOutcome;
   /** @nullable */
   reaction: ReactionDto | null;
@@ -1569,10 +1573,12 @@ export interface LogMealDto {
   loggedAt: string;
   amount: LogMealDtoAmount;
   /**
+     * Bỏ trống khi ghi nhận nhanh (FR-144)
      * @minimum 1
      * @maximum 5
+     * @nullable
      */
-  liking: number;
+  liking?: number | null;
   /** @nullable */
   reaction?: ReactionInputDto | null;
 }

@@ -13,6 +13,7 @@ import {
   MaxLength,
   Min,
   ValidateNested,
+  ValidateIf,
 } from 'class-validator';
 import { EAT_AMOUNTS, SEVERITIES, SYMPTOMS } from '../../../domain/model.js';
 
@@ -50,11 +51,19 @@ export class LogMealDto {
   @IsIn(EAT_AMOUNTS)
   amount: (typeof EAT_AMOUNTS)[number];
 
-  @ApiProperty({ minimum: 1, maximum: 5 })
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 5,
+    nullable: true,
+    type: Number,
+    description: 'Bỏ trống khi ghi nhận nhanh (FR-144)',
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
   @IsInt()
   @Min(1)
   @Max(5)
-  liking: number;
+  liking?: number | null;
 
   @ApiPropertyOptional({ type: ReactionInputDto, nullable: true })
   @IsOptional()
@@ -95,7 +104,8 @@ export class LogDto {
   @ApiProperty({ nullable: true, type: String, description: 'Người ghi nhận (FR-118)' })
   loggedBy: string | null;
   @ApiProperty({ enum: EAT_AMOUNTS }) amount: string;
-  @ApiProperty() liking: number;
+  @ApiProperty({ nullable: true, type: Number, description: 'Trống khi ghi nhận nhanh' })
+  liking: number | null;
   @ApiProperty({ enum: ['eaten', 'refused'] }) outcome: string;
   @ApiProperty({ type: ReactionDto, nullable: true }) reaction: ReactionDto | null;
 }

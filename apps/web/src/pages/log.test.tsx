@@ -352,4 +352,13 @@ describe('Log a meal (S07)', () => {
     await user.click(screen.getByRole('button', { name: 'Đóng' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
   });
+
+  it('TC-UX-011 a quick log shows no liking in its summary', async () => {
+    serveForm(() =>
+      logFormFixture({ log: { ...loggedFixture().log, amount: 'all', liking: null } }),
+    );
+    renderApp(LOG_URL);
+    expect(await screen.findByText(/đã ghi nhận lúc/)).toBeInTheDocument();
+    expect(screen.queryByText('Bé có thích món này?')).toBeNull();
+  });
 });

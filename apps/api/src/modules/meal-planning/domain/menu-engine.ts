@@ -127,7 +127,7 @@ export function isLiked(ctx: PlanningContext, dishId: string): boolean {
   const feedback = ctx.feedback.get(dishId);
   return (
     feedback !== undefined &&
-    (feedback.liking >= 4 || feedback.amount === 'almost_all' || feedback.amount === 'all')
+    ((feedback.liking ?? 0) >= 4 || feedback.amount === 'almost_all' || feedback.amount === 'all')
   );
 }
 

@@ -29,7 +29,7 @@ export interface LogView {
   /** FR-118; null when the account behind it was deleted. */
   loggedBy: string | null;
   amount: EatAmount;
-  liking: number;
+  liking: number | null;
   outcome: MealOutcome;
   reaction: Reaction | null;
 }
@@ -45,7 +45,8 @@ export interface LogFormView {
 export interface LogMealInput {
   loggedAt: Date;
   amount: EatAmount;
-  liking: number;
+  /** Left out by a quick log (FR-144). */
+  liking?: number | null;
   reaction?: { symptoms: Symptom[]; severity: Severity; note?: string | null } | null;
 }
 
@@ -117,7 +118,7 @@ export class LogMealService {
       loggedAt: input.loggedAt,
       now: this.clock.now(),
       amount: input.amount,
-      liking: input.liking,
+      liking: input.liking ?? null,
       reaction: input.reaction,
       actorId: userId,
     });
