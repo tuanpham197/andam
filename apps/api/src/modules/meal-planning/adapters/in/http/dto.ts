@@ -437,3 +437,17 @@ export class WeekPlanDto {
   @ApiProperty({ type: [WeekDayDto] }) days: WeekDayDto[];
   @ApiProperty({ type: WeekStatsDto }) stats: WeekStatsDto;
 }
+
+export class FillSlotDto {
+  @ApiPropertyOptional({
+    description: 'Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90)',
+    example: 'custom_2f9b…',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  dishId?: string;
+}
+
+export const MEAL_SLOTS = SLOTS;

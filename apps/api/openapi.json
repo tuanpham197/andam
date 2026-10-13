@@ -1100,6 +1100,76 @@
         ]
       }
     },
+    "/api/v1/children/{childId}/days/{date}/slots/{slot}/fill": {
+      "post": {
+        "operationId": "fillSlot",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "breakfast",
+                "morning_snack",
+                "lunch",
+                "afternoon_snack",
+                "dinner",
+                "extra_snack"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillSlotDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
     "/api/v1/meals/{mealId}/swap": {
       "post": {
         "operationId": "swapMeal",
@@ -3374,6 +3444,16 @@
           "excluded",
           "relaxedWindowDays"
         ]
+      },
+      "FillSlotDto": {
+        "type": "object",
+        "properties": {
+          "dishId": {
+            "type": "string",
+            "description": "Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90)",
+            "example": "custom_2f9b…"
+          }
+        }
       },
       "SwapDto": {
         "type": "object",

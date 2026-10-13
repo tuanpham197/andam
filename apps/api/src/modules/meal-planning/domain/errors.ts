@@ -168,3 +168,35 @@ export class PlanExistsError extends DomainError {
     super('Tuần này đã có thực đơn');
   }
 }
+
+export class SlotTakenError extends DomainError {
+  readonly code = 'SLOT_TAKEN';
+  readonly kind = 'conflict';
+  constructor() {
+    super('Bữa này đã có món');
+  }
+}
+
+export class SlotNotInPlanError extends DomainError {
+  readonly code = 'SLOT_NOT_IN_PLAN';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Ngày này không có bữa đó trong thực đơn');
+  }
+}
+
+export class DateOutOfRangeError extends DomainError {
+  readonly code = 'DATE_OUT_OF_RANGE';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Chỉ lập được bữa từ hôm nay đến 13 ngày tới');
+  }
+}
+
+export class NoSafeDishError extends DomainError {
+  readonly code = 'NO_SAFE_DISH';
+  readonly kind = 'rule_violation';
+  constructor() {
+    super('Không còn món an toàn nào cho bữa này, kể cả món bé đã ăn gần đây');
+  }
+}

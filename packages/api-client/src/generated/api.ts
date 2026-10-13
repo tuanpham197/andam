@@ -902,6 +902,11 @@ export interface SwapSuggestionsDto {
   relaxedWindowDays: SwapSuggestionsDtoRelaxedWindowDays;
 }
 
+export interface FillSlotDto {
+  /** Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90) */
+  dishId?: string;
+}
+
 export type SwapDtoReason = typeof SwapDtoReason[keyof typeof SwapDtoReason];
 
 
@@ -4599,6 +4604,99 @@ export function useGetSwapSuggestions<TData = Awaited<ReturnType<typeof getSwapS
 
 
 
+
+export const getFillSlotUrl = (childId: string,
+    date: string,
+    slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack',) => {
+
+
+
+
+  return `/api/v1/children/${childId}/days/${date}/slots/${slot}/fill`
+}
+
+/**
+ * @summary Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)
+ */
+export const fillSlot = async (childId: string,
+    date: string,
+    slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack',
+    fillSlotDto: FillSlotDto, options?: Parameters<typeof apiFetch>[1]): Promise<MealDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<MealDto>(getFillSlotUrl(childId,date,slot),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fillSlotDto)
+  }
+);}
+
+
+
+
+
+export const getFillSlotMutationKey = () => ['fillSlot'] as const;
+
+export const getFillSlotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext> => {
+
+const mutationKey = getFillSlotMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fillSlot>>, FillSlotMutationVariables> = (props) => {
+          const {childId,date,slot,data} = props ?? {};
+
+          return  fillSlot(childId,date,slot,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FillSlotMutationResult = NonNullable<Awaited<ReturnType<typeof fillSlot>>>
+    export type FillSlotMutationBody = FillSlotDto
+    export type FillSlotMutationError = ErrorType<unknown>
+    export type FillSlotMutationVariables = {childId: string;date: string;slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack';data: FillSlotDto}
+
+    /**
+ * @summary Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)
+ */
+export const useFillSlot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fillSlot>>,
+        TError,
+        FillSlotMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFillSlotMutationOptions(options), queryClient);
+    }
 
 export const getSwapMealUrl = (mealId: string,) => {
 

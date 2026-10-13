@@ -85,6 +85,8 @@ export interface DayRequest {
   history: MealUse[];
   /** Days on which a new allergenic food was (or will be) introduced. */
   allergenIntroductions: LocalDate[];
+  /** BR-90: filling an empty slot on request drops the anti-repeat window. */
+  allowRepeats?: boolean;
 }
 
 export interface DayGeneration {
@@ -148,6 +150,8 @@ export interface SlotRequest {
   keep?: (dish: PlanDish) => boolean;
   /** Extra points, e.g. minutes saved when the parent asked for something faster. */
   bonus?: (dish: PlanDish) => number;
+  /** The parent asked to fill an empty slot: dishes from other days may repeat (BR-90). */
+  allowRepeats?: boolean;
 }
 
 export interface SlotRanking {
@@ -196,7 +200,10 @@ export function rankSlot(
 
   let candidates = fresh(WINDOW_DAYS);
   let relaxed = false;
-  if (candidates.length < MIN_CANDIDATES) {
+  if (request.allowRepeats) {
+    // Never the same dish twice in one day; the hard filter above is untouched.
+    candidates = fresh(0);
+  } else if (candidates.length < MIN_CANDIDATES) {
     const wider = fresh(RELAXED_WINDOW_DAYS);
     relaxed = wider.length > candidates.length;
     candidates = wider;
@@ -270,6 +277,7 @@ export function generateDay(ctx: PlanningContext, request: DayRequest): DayGener
       slot: slot.slot,
       uses,
       allergenIntroductions: request.allergenIntroductions,
+      allowRepeats: request.allowRepeats,
     });
     if (relaxed) relaxedWindowDays = RELAXED_WINDOW_DAYS;
     const best = ranked[0];

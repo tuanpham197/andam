@@ -203,3 +203,33 @@ describe('GET /api/v1/children/:childId/dishes/:dishId (UC-05)', () => {
     await recipe('?stage=9').expect(400);
   });
 });
+
+describe('POST /api/v1/children/:childId/days/:date/slots/:slot/fill (UC-24)', () => {
+  const fill = (date: string, slot: string, body: object = {}, auth = owner) =>
+    http()
+      .post(`/api/v1/children/${childId}/days/${date}/slots/${slot}/fill`)
+      .set('Authorization', auth)
+      .send(body);
+
+  it('TC-UX-001/003 fills an empty slot, then refuses it as taken', async () => {
+    const tomorrow = '2026-09-25';
+    const day = (await getDay(tomorrow).expect(200)).body;
+    const meal = day.meals.find((m: { slot: string }) => m.slot === 'afternoon_snack');
+    // Free the snack as if the engine had found nothing for it.
+    await app.get(PrismaService).plannedMeal.delete({ where: { id: meal.id } });
+
+    const filled = await fill(tomorrow, 'afternoon_snack').expect(201);
+    expect(filled.body).toMatchObject({ slot: 'afternoon_snack', source: 'manual' });
+    expect((await fill(tomorrow, 'afternoon_snack').expect(409)).body.code).toBe('SLOT_TAKEN');
+  });
+
+  it('TC-UX-003/004 answers precise errors', async () => {
+    expect((await fill('2026-09-25', 'morning_snack').expect(422)).body.code).toBe(
+      'SLOT_NOT_IN_PLAN',
+    );
+    expect((await fill('2026-09-23', 'lunch').expect(422)).body.code).toBe('DATE_OUT_OF_RANGE');
+    await fill('2026-09-25', 'brunch').expect(400);
+    await fill('2026-09-25', 'lunch', { dishId: '' }).expect(400);
+    await fill('2026-09-25', 'lunch', {}, stranger).expect(404);
+  });
+});

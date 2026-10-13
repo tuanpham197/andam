@@ -439,3 +439,21 @@ describe('deleted "Món của bạn" (BR-86)', () => {
     expect(new Set(result.meals.map((m) => m.dishId))).toEqual(keep);
   });
 });
+
+describe('generateDay with allowRepeats (BR-90)', () => {
+  it('TC-UX-001 reuses a dish from other days but never one already on the same day', () => {
+    const ctx = contextFixture({ dishes: [dishFixture()] });
+    const history: MealUse[] = [{ date: addDays(DATE, -1), slot: 'lunch', dishId: 'dish_chao' }];
+    const lunch = slotsForDay(GD1, 'normal').filter((s) => s.slot === 'lunch');
+    expect(generateDay(ctx, day({ slots: lunch, history })).meals).toEqual([]);
+    expect(
+      generateDay(ctx, day({ slots: lunch, history, allowRepeats: true })).meals.map(
+        (m) => m.dishId,
+      ),
+    ).toEqual(['dish_chao']);
+    const sameDay: MealUse[] = [{ date: DATE, slot: 'breakfast', dishId: 'dish_chao' }];
+    expect(
+      generateDay(ctx, day({ slots: lunch, history: sameDay, allowRepeats: true })).meals,
+    ).toEqual([]);
+  });
+});

@@ -67,6 +67,23 @@ export class PlannedMeal {
     });
   }
 
+  /**
+   * UC-24: a slot the plan left empty, filled because the parent asked — with the engine's pick
+   * (repeats allowed) or a dish they chose. `manual` meals survive a full re-plan (BR-92).
+   */
+  static fill(input: {
+    id: string;
+    childId: string;
+    date: LocalDate;
+    stageId: StageId;
+    generatedAt: Date;
+    draft: PlannedDraft;
+  }): PlannedMeal {
+    const meal = PlannedMeal.plan(input);
+    meal.state.source = 'manual';
+    return meal;
+  }
+
   /** Rows written before P8a carry neither reasons nor a cause. */
   static restore(
     state: Omit<PlannedMealState, 'reasons' | 'replanCause'> &

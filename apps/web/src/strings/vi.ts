@@ -278,6 +278,9 @@ export const vi = {
       dish_changed: 'Đã đổi vì món của bạn vừa sửa hoặc xóa',
     },
     unfilled: 'Chưa có món phù hợp',
+    fillRepeat: 'Dùng món bé đã ăn gần đây',
+    fillCreate: 'Tạo món cho bữa này',
+    fillActions: (slot: string) => `Lấp bữa ${slot}`,
     unfilledAlert:
       'Chưa tìm được món an toàn cho một số bữa. Thực phẩm bé cần tránh luôn được loại trừ, kể cả khi kho món ít.',
     reviewAvoid: 'Xem thực phẩm cần tránh',
@@ -655,6 +658,9 @@ export const vi = {
   customDish: {
     createTitle: 'Tạo món của bạn',
     editTitle: 'Sửa món',
+    forSlot: (slot: string, day: string) => `Sau khi lưu, món sẽ được đặt vào bữa ${slot} ${day}.`,
+    fillFailed: 'Đã lưu món, nhưng chưa đặt được vào bữa:',
+    openRecipe: 'Xem công thức món',
     intro: 'Món chỉ dùng cho bé, vẫn được kiểm tra bộ lọc an toàn theo hồ sơ.',
     name: 'Tên món',
     namePlaceholder: 'Ví dụ: Cháo gà bí đỏ nhà làm',
@@ -749,6 +755,11 @@ export const vi = {
     SAME_DISH: 'Bữa này đang dùng chính món đó.',
     DISH_NOT_SAFE_FOR_CHILD: 'Món này không còn an toàn cho bé. Danh sách gợi ý đã được cập nhật.',
     DISH_NOT_FOR_SLOT: 'Món này không dùng được cho bữa này.',
+    NO_SAFE_DISH:
+      'Không còn món an toàn nào cho bữa này, kể cả món bé đã ăn gần đây. Bạn có thể tạo món của mình.',
+    SLOT_TAKEN: 'Bữa này vừa có món rồi.',
+    SLOT_NOT_IN_PLAN: 'Ngày này không có bữa đó trong thực đơn.',
+    DATE_OUT_OF_RANGE: 'Chỉ lập được bữa từ hôm nay đến 13 ngày tới.',
     CHILD_NOT_PLANNABLE: 'Bé chưa ở độ tuổi được lập thực đơn (6–24 tháng).',
     MEAL_IN_FUTURE: 'Chưa tới ngày của bữa này.',
     LOGGED_AT_OUT_OF_RANGE: 'Giờ ghi nhận không hợp lý với bữa này.',

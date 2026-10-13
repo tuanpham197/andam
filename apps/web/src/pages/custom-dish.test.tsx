@@ -337,3 +337,81 @@ describe('Edit and delete a dish (FR-135/136)', () => {
     expect(router.state.location.pathname).toBe(`/dishes/${CUSTOM_ID}`);
   });
 });
+
+describe('A dish made for an empty slot (UC-24, FR-141, TC-UX-019)', () => {
+  const FILL = '/dishes/new?mealType=snack&fillDate=2026-09-24&fillSlot=afternoon_snack';
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-24T02:40:00Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  function serveFill(reply: () => Response = () => HttpResponse.json({}, { status: 201 })) {
+    const calls: unknown[] = [];
+    server.use(
+      http.post(
+        `${API}/children/:childId/days/:date/slots/:slot/fill`,
+        async ({ params, request }) => {
+          calls.push({ date: params.date, slot: params.slot, body: await request.json() });
+          return reply();
+        },
+      ),
+    );
+    return calls;
+  }
+
+  async function makeSnack(path: string) {
+    serveSearch();
+    serveSave('post', created);
+    const user = userEvent.setup();
+    const view = renderApp(path);
+    await user.type(await screen.findByLabelText('Tên món'), 'Chuối nghiền');
+    await addFood(user, 'chuối', 'Chuối');
+    return { user, ...view };
+  }
+
+  it('starts as a snack, says where it goes, and goes back to today once placed', async () => {
+    const calls = serveFill();
+    const { user, router } = await makeSnack(FILL);
+    expect(screen.getByRole('button', { name: 'Bữa phụ' })).toHaveAttribute('aria-pressed', 'true');
+    expect(
+      screen.getByText('Sau khi lưu, món sẽ được đặt vào bữa xế Thứ Năm, 24 tháng 9.'),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Lưu món' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+    expect(calls).toEqual([
+      { date: '2026-09-24', slot: 'afternoon_snack', body: { dishId: CUSTOM_ID } },
+    ]);
+  });
+
+  it('goes back to that day of the week for a later date', async () => {
+    serveFill();
+    const { user, router } = await makeSnack(FILL.replace('2026-09-24', '2026-09-26'));
+    await user.click(screen.getByRole('button', { name: 'Lưu món' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/week/2026-09-26'));
+  });
+
+  it('keeps the saved dish and says why it could not go into the meal', async () => {
+    serveFill(() => problem(422, 'DISH_NOT_SAFE_FOR_CHILD'));
+    const { user } = await makeSnack(FILL);
+    await user.click(screen.getByRole('button', { name: 'Lưu món' }));
+    expect(await screen.findByText('Đã lưu món, nhưng chưa đặt được vào bữa:')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Xem công thức món' })).toHaveAttribute(
+      'href',
+      `/dishes/${CUSTOM_ID}`,
+    );
+  });
+
+  it('ignores a malformed target and keeps the usual flow', async () => {
+    const calls = serveFill();
+    const { user, router } = await makeSnack('/dishes/new?fillDate=soon&fillSlot=brunch');
+    expect(screen.getByRole('button', { name: 'Bữa chính' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: 'Lưu món' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe(`/dishes/${CUSTOM_ID}`));
+    expect(calls).toEqual([]);
+  });
+});

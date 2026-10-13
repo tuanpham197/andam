@@ -405,9 +405,9 @@ gantt
 - [x] Lỗi tìm thấy và đã sửa: sửa món chính thành bữa phụ → bữa chính tương lai vẫn giữ món; thêm nguyên liệu bé chưa thử vào món đang ở ngày bé ốm → món vẫn ở lại (vi phạm BR-52). Sửa: sửa món chạy sinh lại phạm vi `unsafe` trong cùng transaction; sinh lại coi món sai loại bữa là không hợp (TC-CUS-018/019).
 
 **1. Bữa trống có lối ra (UC-24, FR-140/141, BR-90..92)**
-- [ ] Domain: `rankSlot` nhận tùy chọn bỏ cửa sổ chống lặp (chỉ loại món đã có trong ngày); use case `FillSlot` (có / không `dishId`), nguồn `manual`.
-- [ ] Endpoint `POST /children/:id/days/:date/slots/:slot/fill`; thêm vào ma trận truy cập TC-FAM-011.
-- [ ] FE: bữa trống trên S01 / G09 có *Dùng món bé đã ăn gần đây* và *Tạo món cho bữa này*; G15 nhận `?mealType=&fillDate=&fillSlot=` → sau khi lưu đặt món vào bữa và về trang trước.
+- [x] Domain: `rankSlot` nhận tùy chọn bỏ cửa sổ chống lặp (chỉ loại món đã có trong ngày); use case `FillSlot` (có / không `dishId`), nguồn `manual`.
+- [x] Endpoint `POST /children/:id/days/:date/slots/:slot/fill`; thêm vào ma trận truy cập TC-FAM-011.
+- [x] FE: bữa trống trên S01 / G09 có *Dùng món bé đã ăn gần đây* và *Tạo món cho bữa này*; G15 nhận `?mealType=&fillDate=&fillSlot=` → sau khi lưu đặt món vào bữa và về trang trước.
 
 **2. Lý do món & báo khi thực đơn tự đổi (FR-142/143, BR-93/94)**
 - [x] Migration: `planned_meals.reasons text[]`, `planned_meals.replan_cause` (enum mới).

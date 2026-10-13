@@ -6,6 +6,7 @@ import {
   HttpCode,
   Inject,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -18,12 +19,14 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
 import type { AuthenticatedUser } from '../../../../../shared/auth/authenticator.port.js';
 import { CurrentUser } from '../../../../../shared/auth/current-user.decorator.js';
 import { CustomDishService } from '../../../application/use-cases/custom-dish.service.js';
 import { DayPlanService } from '../../../application/use-cases/day-plan.service.js';
+import { FillSlotService } from '../../../application/use-cases/fill-slot.service.js';
 import { LibraryService } from '../../../application/use-cases/library.service.js';
 import { RecipeService } from '../../../application/use-cases/recipe.service.js';
 import { SwapService } from '../../../application/use-cases/swap.service.js';
@@ -32,11 +35,13 @@ import {
   CustomDishFormDto,
   CustomDishInputDto,
   DayPlanDto,
+  FillSlotDto,
   GenerateWeekDto,
   HealthPreviewDto,
   HealthPreviewQueryDto,
   LibraryDto,
   LibraryQueryDto,
+  MEAL_SLOTS,
   MealDto,
   MealStatusDto,
   RecipeDto,
@@ -49,6 +54,7 @@ import {
 } from './dto.js';
 
 const Uuid = (name: string) => Param(name, new ParseUUIDPipe({ version: '4' }));
+const SLOT_ENUM = Object.fromEntries(MEAL_SLOTS.map((s) => [s, s]));
 
 @ApiTags('meal-planning')
 @ApiBearerAuth()
@@ -56,6 +62,7 @@ const Uuid = (name: string) => Param(name, new ParseUUIDPipe({ version: '4' }));
 export class MealPlanningController {
   constructor(
     @Inject(DayPlanService) private readonly dayPlans: DayPlanService,
+    @Inject(FillSlotService) private readonly fills: FillSlotService,
     @Inject(RecipeService) private readonly recipes: RecipeService,
     @Inject(SwapService) private readonly swaps: SwapService,
     @Inject(LibraryService) private readonly library: LibraryService,
@@ -97,6 +104,29 @@ export class MealPlanningController {
     @Query() query: SwapQueryDto,
   ): Promise<SwapSuggestionsDto> {
     return this.swaps.suggestions(user.userId, mealId, query.reason ?? 'missing_ingredient');
+  }
+
+  @Post('children/:childId/days/:date/slots/:slot/fill')
+  @ApiOperation({
+    operationId: 'fillSlot',
+    summary: 'Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)',
+  })
+  @ApiParam({ name: 'slot', enum: MEAL_SLOTS })
+  @ApiCreatedResponse({ type: MealDto })
+  fillSlot(
+    @CurrentUser() user: AuthenticatedUser,
+    @Uuid('childId') childId: string,
+    @Param('date') date: string,
+    @Param('slot', new ParseEnumPipe(SLOT_ENUM)) slot: MealDto['slot'],
+    @Body() dto: FillSlotDto,
+  ): Promise<MealDto> {
+    return this.fills.fill(
+      user.userId,
+      childId,
+      date,
+      slot as Parameters<FillSlotService['fill']>[3],
+      dto.dishId,
+    );
   }
 
   @Post('meals/:mealId/swap')

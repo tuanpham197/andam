@@ -357,6 +357,17 @@ const MATRIX: [string, Call, number, number][] = [
     200,
   ],
   [
+    // GĐ2 on a normal day has no morning snack: reaching the rule proves the access passed.
+    'POST /api/v1/children/{childId}/days/{date}/slots/{slot}/fill',
+    (f) => ({
+      method: 'post',
+      url: `/api/v1/children/${f.childId}/days/2026-09-25/slots/morning_snack/fill`,
+      body: {},
+    }),
+    422,
+    422,
+  ],
+  [
     'GET /api/v1/children/{childId}/weeks/{weekStart}',
     (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/weeks/2026-09-21` }),
     200,
