@@ -19,6 +19,7 @@ import { PLANNING_CATALOG } from './application/ports/out/planning-catalog.port.
 import { CustomDishService } from './application/use-cases/custom-dish.service.js';
 import { DayPlanService } from './application/use-cases/day-plan.service.js';
 import { FillSlotService } from './application/use-cases/fill-slot.service.js';
+import { FoodProgressService } from './application/use-cases/food-progress.service.js';
 import { LibraryService } from './application/use-cases/library.service.js';
 import { MealAccessService } from './application/use-cases/meal-access.service.js';
 import { PlanningDishes } from './application/use-cases/planning-dishes.js';
@@ -43,6 +44,7 @@ const ports = [
     PlanningDishes,
     DayPlanService,
     FillSlotService,
+    FoodProgressService,
     RecipeService,
     RegenerateFutureService,
     SwapService,

@@ -615,3 +615,24 @@ describe('"Món của bạn" (UC-23)', () => {
       .expect(404);
   });
 });
+
+describe('GET /children/:id/foods (UC-26)', () => {
+  it('TC-UX-014 counts the foods a quick log marked as tried; egg is avoided', async () => {
+    const meal = await lunch();
+    await api()
+      .post(`/api/v1/meals/${meal.id}/log`)
+      .set('Authorization', owner)
+      .send({ loggedAt: '2026-09-24T11:40:00+07:00', amount: 'all' })
+      .expect(201);
+    const res = await api()
+      .get(`/api/v1/children/${childId}/foods`)
+      .set('Authorization', owner)
+      .expect(200);
+    expect(res.body.summary.tried).toBeGreaterThan(0);
+    const items = res.body.groups.flatMap(
+      (g: { items: { id: string; status: string }[] }) => g.items,
+    );
+    expect(items.find((i: { id: string }) => i.id === 'ing_trung_ga').status).toBe('avoided');
+    await api().get(`/api/v1/children/${childId}/foods`).set('Authorization', stranger).expect(404);
+  });
+});

@@ -1100,6 +1100,42 @@
         ]
       }
     },
+    "/api/v1/children/{childId}/foods": {
+      "get": {
+        "operationId": "getFoodProgress",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hành trình thử thực phẩm của bé (UC-26)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
     "/api/v1/children/{childId}/days/{date}/slots/{slot}/fill": {
       "post": {
         "operationId": "fillSlot",
@@ -3443,6 +3479,112 @@
           "otherMains",
           "excluded",
           "relaxedWindowDays"
+        ]
+      },
+      "FoodSummaryDto": {
+        "type": "object",
+        "properties": {
+          "tried": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number",
+            "description": "Không tính thực phẩm cần tránh và chưa hợp tuổi"
+          },
+          "paused": {
+            "type": "number"
+          },
+          "avoided": {
+            "type": "number"
+          },
+          "notYet": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tried",
+          "total",
+          "paused",
+          "avoided",
+          "notYet"
+        ]
+      },
+      "FoodItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "tried",
+              "new",
+              "paused",
+              "avoided",
+              "not_yet"
+            ]
+          },
+          "minAgeMonths": {
+            "type": "number"
+          },
+          "upcomingOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "minAgeMonths",
+          "upcomingOn"
+        ]
+      },
+      "FoodGroupProgressDto": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string",
+            "enum": [
+              "protein",
+              "veg",
+              "fruit"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodItemDto"
+            }
+          }
+        },
+        "required": [
+          "group",
+          "items"
+        ]
+      },
+      "FoodProgressDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/FoodSummaryDto"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodGroupProgressDto"
+            }
+          }
+        },
+        "required": [
+          "summary",
+          "groups"
         ]
       },
       "FillSlotDto": {

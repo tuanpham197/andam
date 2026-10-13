@@ -357,6 +357,12 @@ const MATRIX: [string, Call, number, number][] = [
     200,
   ],
   [
+    'GET /api/v1/children/{childId}/foods',
+    (f) => ({ method: 'get', url: `/api/v1/children/${f.childId}/foods` }),
+    200,
+    200,
+  ],
+  [
     // GĐ2 on a normal day has no morning snack: reaching the rule proves the access passed.
     'POST /api/v1/children/{childId}/days/{date}/slots/{slot}/fill',
     (f) => ({

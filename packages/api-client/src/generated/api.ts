@@ -902,6 +902,57 @@ export interface SwapSuggestionsDto {
   relaxedWindowDays: SwapSuggestionsDtoRelaxedWindowDays;
 }
 
+export interface FoodSummaryDto {
+  tried: number;
+  /** Không tính thực phẩm cần tránh và chưa hợp tuổi */
+  total: number;
+  paused: number;
+  avoided: number;
+  notYet: number;
+}
+
+export type FoodItemDtoStatus = typeof FoodItemDtoStatus[keyof typeof FoodItemDtoStatus];
+
+
+export const FoodItemDtoStatus = {
+  tried: 'tried',
+  new: 'new',
+  paused: 'paused',
+  avoided: 'avoided',
+  not_yet: 'not_yet',
+} as const;
+
+export interface FoodItemDto {
+  id: string;
+  name: string;
+  status: FoodItemDtoStatus;
+  minAgeMonths: number;
+  /**
+     * Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)
+     * @nullable
+     */
+  upcomingOn: string | null;
+}
+
+export type FoodGroupProgressDtoGroup = typeof FoodGroupProgressDtoGroup[keyof typeof FoodGroupProgressDtoGroup];
+
+
+export const FoodGroupProgressDtoGroup = {
+  protein: 'protein',
+  veg: 'veg',
+  fruit: 'fruit',
+} as const;
+
+export interface FoodGroupProgressDto {
+  group: FoodGroupProgressDtoGroup;
+  items: FoodItemDto[];
+}
+
+export interface FoodProgressDto {
+  summary: FoodSummaryDto;
+  groups: FoodGroupProgressDto[];
+}
+
 export interface FillSlotDto {
   /** Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90) */
   dishId?: string;
@@ -4599,6 +4650,107 @@ export function useGetSwapSuggestions<TData = Awaited<ReturnType<typeof getSwapS
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getGetSwapSuggestionsQueryOptions(mealId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFoodProgressUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/foods`
+}
+
+/**
+ * @summary Hành trình thử thực phẩm của bé (UC-26)
+ */
+export const getFoodProgress = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<FoodProgressDto> => {
+
+  return apiFetch<FoodProgressDto>(getGetFoodProgressUrl(childId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFoodProgressQueryKey = (childId: string,) => {
+    return [
+    `/api/v1/children/${childId}/foods`
+    ] as const;
+    }
+
+
+export const getGetFoodProgressQueryOptions = <TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFoodProgressQueryKey(childId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFoodProgress>>> = ({ signal }) => getFoodProgress(childId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFoodProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getFoodProgress>>>
+export type GetFoodProgressQueryError = ErrorType<unknown>
+
+
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFoodProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getFoodProgress>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFoodProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getFoodProgress>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Hành trình thử thực phẩm của bé (UC-26)
+ */
+
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFoodProgressQueryOptions(childId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

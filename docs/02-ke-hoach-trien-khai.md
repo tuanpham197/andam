@@ -420,8 +420,8 @@ gantt
 - [x] FE: 3 nút trên thẻ “Bữa tiếp theo” (chỉ khi bữa hôm nay đã tới giờ hoặc đã chuẩn bị), khóa khi đang gửi, báo lỗi, thông báo “Đã ghi …”; nhật ký hiện bản ghi không mức thích.
 
 **4. Hành trình thử thực phẩm (UC-26, FR-145/146, BR-96)**
-- [ ] Domain `foodProgress` + use case + endpoint `GET /children/:id/foods`; thêm vào ma trận truy cập.
-- [ ] FE **G16** `/foods`: tiến độ, 3 nhóm, nhãn trạng thái, “Sắp thử: Thứ Ba 14/10”; lối vào từ Hồ sơ bé và S04.
+- [x] Domain `foodProgress` + use case + endpoint `GET /children/:id/foods`; thêm vào ma trận truy cập.
+- [x] FE **G16** `/foods`: tiến độ, 3 nhóm, nhãn trạng thái, “Sắp thử: Thứ Ba 14/10”; lối vào từ Hồ sơ bé và S04.
 
 **Nghiệm thu:** Bé ốm với kho 12 món → bữa trống → *Dùng món bé đã ăn gần đây* lấp được bằng món an toàn, không bao giờ có món chứa thực phẩm cần tránh / chưa thử; tạo món từ bữa trống → món nằm ngay trong bữa đó. Chuyển “Đang ốm” → bữa tối hiện “Đã đổi theo tình trạng sức khỏe”. Ghi nhanh “Ăn hết” → thẻ chuyển sang bữa kế, nhật ký có bản ghi. G16 khớp số thực phẩm đã thử / tạm dừng.
 

@@ -1,15 +1,14 @@
 import type { PlanDish, PlanningContext } from './model.js';
 
 // Staples are not "first tries": only proteins, vegetables and fruit get the new-food caution.
-const TRACKED_GROUPS = new Set(['protein', 'veg', 'fruit']);
+export const TRACKED_GROUPS = ['protein', 'veg', 'fruit'] as const;
+const TRACKED = new Set<string>(TRACKED_GROUPS);
 
 /** Foods of the dish the child has not eaten yet (shown as "Lần đầu thử"). */
 export function newIngredientIds(dish: PlanDish, ctx: PlanningContext): string[] {
   return dish.ingredientIds.filter((id) => {
     const ingredient = ctx.ingredients.get(id);
-    return (
-      ingredient !== undefined && TRACKED_GROUPS.has(ingredient.foodGroup) && !ctx.tried.has(id)
-    );
+    return ingredient !== undefined && TRACKED.has(ingredient.foodGroup) && !ctx.tried.has(id);
   });
 }
 

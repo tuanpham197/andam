@@ -22,6 +22,7 @@ import type {
   Recipe,
 } from '../../src/modules/meal-planning/application/ports/out/planning-catalog.port.js';
 import { CustomDishService } from '../../src/modules/meal-planning/application/use-cases/custom-dish.service.js';
+import { FoodProgressService } from '../../src/modules/meal-planning/application/use-cases/food-progress.service.js';
 import { FillSlotService } from '../../src/modules/meal-planning/application/use-cases/fill-slot.service.js';
 import { DayPlanService } from '../../src/modules/meal-planning/application/use-cases/day-plan.service.js';
 import { LibraryService } from '../../src/modules/meal-planning/application/use-cases/library.service.js';
@@ -307,6 +308,7 @@ export function planningTestbed() {
     dishes,
     history,
     dayPlans,
+    foods: new FoodProgressService(children, dishes, history, plans, clock),
     fills: new FillSlotService(plans, children, dishes, history, dayPlans, ids, clock),
     weeks: new WeekPlanService(plans, children, dishes, history, dayPlans, clock, uow),
     recipes,

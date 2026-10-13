@@ -451,3 +451,37 @@ export class FillSlotDto {
 }
 
 export const MEAL_SLOTS = SLOTS;
+
+const FOOD_STATUSES = ['tried', 'new', 'paused', 'avoided', 'not_yet'];
+
+class FoodItemDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: FOOD_STATUSES }) status: string;
+  @ApiProperty() minAgeMonths: number;
+  @ApiProperty({
+    format: 'date',
+    nullable: true,
+    type: String,
+    description: 'Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)',
+  })
+  upcomingOn: string | null;
+}
+
+class FoodGroupProgressDto {
+  @ApiProperty({ enum: ['protein', 'veg', 'fruit'] }) group: string;
+  @ApiProperty({ type: [FoodItemDto] }) items: FoodItemDto[];
+}
+
+class FoodSummaryDto {
+  @ApiProperty() tried: number;
+  @ApiProperty({ description: 'Không tính thực phẩm cần tránh và chưa hợp tuổi' }) total: number;
+  @ApiProperty() paused: number;
+  @ApiProperty() avoided: number;
+  @ApiProperty() notYet: number;
+}
+
+export class FoodProgressDto {
+  @ApiProperty({ type: FoodSummaryDto }) summary: FoodSummaryDto;
+  @ApiProperty({ type: [FoodGroupProgressDto] }) groups: FoodGroupProgressDto[];
+}
