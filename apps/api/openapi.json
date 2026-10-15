@@ -1100,6 +1100,112 @@
         ]
       }
     },
+    "/api/v1/children/{childId}/foods": {
+      "get": {
+        "operationId": "getFoodProgress",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FoodProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hành trình thử thực phẩm của bé (UC-26)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
+    "/api/v1/children/{childId}/days/{date}/slots/{slot}/fill": {
+      "post": {
+        "operationId": "fillSlot",
+        "parameters": [
+          {
+            "name": "childId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "slot",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "enum": [
+                "breakfast",
+                "morning_snack",
+                "lunch",
+                "afternoon_snack",
+                "dinner",
+                "extra_snack"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillSlotDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)",
+        "tags": [
+          "meal-planning"
+        ]
+      }
+    },
     "/api/v1/meals/{mealId}/swap": {
       "post": {
         "operationId": "swapMeal",
@@ -2992,6 +3098,42 @@
                 "$ref": "#/components/schemas/LoggedByDto"
               }
             ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "auto",
+              "swap",
+              "manual"
+            ],
+            "description": "manual = phụ huynh lấp bữa trống"
+          },
+          "reasons": {
+            "type": "array",
+            "description": "Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93)",
+            "items": {
+              "type": "string",
+              "enum": [
+                "NOT_USED_7D",
+                "DIFFERENT_PROTEIN",
+                "LIKED",
+                "FOUR_GROUPS",
+                "LEAST_USED_PROTEIN",
+                "NEW_INGREDIENT"
+              ]
+            }
+          },
+          "replanCause": {
+            "type": "string",
+            "enum": [
+              "profile",
+              "health",
+              "food_paused",
+              "food_resumed",
+              "dish_changed"
+            ],
+            "nullable": true,
+            "description": "Thực đơn tự đổi bữa này vì đâu (BR-94)"
           }
         },
         "required": [
@@ -3003,7 +3145,10 @@
           "portionText",
           "dish",
           "newIngredients",
-          "loggedBy"
+          "loggedBy",
+          "source",
+          "reasons",
+          "replanCause"
         ]
       },
       "SlotDto": {
@@ -3335,6 +3480,122 @@
           "excluded",
           "relaxedWindowDays"
         ]
+      },
+      "FoodSummaryDto": {
+        "type": "object",
+        "properties": {
+          "tried": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number",
+            "description": "Không tính thực phẩm cần tránh và chưa hợp tuổi"
+          },
+          "paused": {
+            "type": "number"
+          },
+          "avoided": {
+            "type": "number"
+          },
+          "notYet": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tried",
+          "total",
+          "paused",
+          "avoided",
+          "notYet"
+        ]
+      },
+      "FoodItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "tried",
+              "new",
+              "paused",
+              "avoided",
+              "not_yet"
+            ]
+          },
+          "minAgeMonths": {
+            "type": "number"
+          },
+          "upcomingOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "status",
+          "minAgeMonths",
+          "upcomingOn"
+        ]
+      },
+      "FoodGroupProgressDto": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string",
+            "enum": [
+              "protein",
+              "veg",
+              "fruit"
+            ]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodItemDto"
+            }
+          }
+        },
+        "required": [
+          "group",
+          "items"
+        ]
+      },
+      "FoodProgressDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/FoodSummaryDto"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FoodGroupProgressDto"
+            }
+          }
+        },
+        "required": [
+          "summary",
+          "groups"
+        ]
+      },
+      "FillSlotDto": {
+        "type": "object",
+        "properties": {
+          "dishId": {
+            "type": "string",
+            "description": "Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90)",
+            "example": "custom_2f9b…"
+          }
+        }
       },
       "SwapDto": {
         "type": "object",
@@ -4369,7 +4630,9 @@
             ]
           },
           "liking": {
-            "type": "number"
+            "type": "number",
+            "nullable": true,
+            "description": "Trống khi ghi nhận nhanh"
           },
           "outcome": {
             "type": "string",
@@ -4496,7 +4759,9 @@
           "liking": {
             "type": "number",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 5,
+            "nullable": true,
+            "description": "Bỏ trống khi ghi nhận nhanh (FR-144)"
           },
           "reaction": {
             "nullable": true,
@@ -4510,8 +4775,7 @@
         },
         "required": [
           "loggedAt",
-          "amount",
-          "liking"
+          "amount"
         ]
       },
       "LoggedMealDto": {

@@ -642,6 +642,45 @@ export const MealDtoTexture = {
   family: 'family',
 } as const;
 
+/**
+ * manual = phụ huynh lấp bữa trống
+ */
+export type MealDtoSource = typeof MealDtoSource[keyof typeof MealDtoSource];
+
+
+export const MealDtoSource = {
+  auto: 'auto',
+  swap: 'swap',
+  manual: 'manual',
+} as const;
+
+export type MealDtoReasonsItem = typeof MealDtoReasonsItem[keyof typeof MealDtoReasonsItem];
+
+
+export const MealDtoReasonsItem = {
+  NOT_USED_7D: 'NOT_USED_7D',
+  DIFFERENT_PROTEIN: 'DIFFERENT_PROTEIN',
+  LIKED: 'LIKED',
+  FOUR_GROUPS: 'FOUR_GROUPS',
+  LEAST_USED_PROTEIN: 'LEAST_USED_PROTEIN',
+  NEW_INGREDIENT: 'NEW_INGREDIENT',
+} as const;
+
+/**
+ * Thực đơn tự đổi bữa này vì đâu (BR-94)
+ * @nullable
+ */
+export type MealDtoReplanCause = typeof MealDtoReplanCause[keyof typeof MealDtoReplanCause] | null;
+
+
+export const MealDtoReplanCause = {
+  profile: 'profile',
+  health: 'health',
+  food_paused: 'food_paused',
+  food_resumed: 'food_resumed',
+  dish_changed: 'dish_changed',
+} as const;
+
 export interface MealDto {
   id: string;
   slot: MealDtoSlot;
@@ -656,6 +695,15 @@ export interface MealDto {
      * @nullable
      */
   loggedBy: LoggedByDto | null;
+  /** manual = phụ huynh lấp bữa trống */
+  source: MealDtoSource;
+  /** Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93) */
+  reasons: MealDtoReasonsItem[];
+  /**
+     * Thực đơn tự đổi bữa này vì đâu (BR-94)
+     * @nullable
+     */
+  replanCause: MealDtoReplanCause;
 }
 
 export type SlotDtoSlot = typeof SlotDtoSlot[keyof typeof SlotDtoSlot];
@@ -852,6 +900,62 @@ export interface SwapSuggestionsDto {
   excluded: ExclusionSummaryDto;
   /** @nullable */
   relaxedWindowDays: SwapSuggestionsDtoRelaxedWindowDays;
+}
+
+export interface FoodSummaryDto {
+  tried: number;
+  /** Không tính thực phẩm cần tránh và chưa hợp tuổi */
+  total: number;
+  paused: number;
+  avoided: number;
+  notYet: number;
+}
+
+export type FoodItemDtoStatus = typeof FoodItemDtoStatus[keyof typeof FoodItemDtoStatus];
+
+
+export const FoodItemDtoStatus = {
+  tried: 'tried',
+  new: 'new',
+  paused: 'paused',
+  avoided: 'avoided',
+  not_yet: 'not_yet',
+} as const;
+
+export interface FoodItemDto {
+  id: string;
+  name: string;
+  status: FoodItemDtoStatus;
+  minAgeMonths: number;
+  /**
+     * Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)
+     * @nullable
+     */
+  upcomingOn: string | null;
+}
+
+export type FoodGroupProgressDtoGroup = typeof FoodGroupProgressDtoGroup[keyof typeof FoodGroupProgressDtoGroup];
+
+
+export const FoodGroupProgressDtoGroup = {
+  protein: 'protein',
+  veg: 'veg',
+  fruit: 'fruit',
+} as const;
+
+export interface FoodGroupProgressDto {
+  group: FoodGroupProgressDtoGroup;
+  items: FoodItemDto[];
+}
+
+export interface FoodProgressDto {
+  summary: FoodSummaryDto;
+  groups: FoodGroupProgressDto[];
+}
+
+export interface FillSlotDto {
+  /** Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90) */
+  dishId?: string;
 }
 
 export type SwapDtoReason = typeof SwapDtoReason[keyof typeof SwapDtoReason];
@@ -1451,7 +1555,11 @@ export interface LogDto {
      */
   loggedBy: string | null;
   amount: LogDtoAmount;
-  liking: number;
+  /**
+     * Trống khi ghi nhận nhanh
+     * @nullable
+     */
+  liking: number | null;
   outcome: LogDtoOutcome;
   /** @nullable */
   reaction: ReactionDto | null;
@@ -1516,10 +1624,12 @@ export interface LogMealDto {
   loggedAt: string;
   amount: LogMealDtoAmount;
   /**
+     * Bỏ trống khi ghi nhận nhanh (FR-144)
      * @minimum 1
      * @maximum 5
+     * @nullable
      */
-  liking: number;
+  liking?: number | null;
   /** @nullable */
   reaction?: ReactionInputDto | null;
 }
@@ -4551,6 +4661,200 @@ export function useGetSwapSuggestions<TData = Awaited<ReturnType<typeof getSwapS
 
 
 
+
+export const getGetFoodProgressUrl = (childId: string,) => {
+
+
+
+
+  return `/api/v1/children/${childId}/foods`
+}
+
+/**
+ * @summary Hành trình thử thực phẩm của bé (UC-26)
+ */
+export const getFoodProgress = async (childId: string, options?: Parameters<typeof apiFetch>[1]): Promise<FoodProgressDto> => {
+
+  return apiFetch<FoodProgressDto>(getGetFoodProgressUrl(childId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFoodProgressQueryKey = (childId: string,) => {
+    return [
+    `/api/v1/children/${childId}/foods`
+    ] as const;
+    }
+
+
+export const getGetFoodProgressQueryOptions = <TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFoodProgressQueryKey(childId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFoodProgress>>> = ({ signal }) => getFoodProgress(childId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: childId !== null && childId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetFoodProgressQueryResult = NonNullable<Awaited<ReturnType<typeof getFoodProgress>>>
+export type GetFoodProgressQueryError = ErrorType<unknown>
+
+
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFoodProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getFoodProgress>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFoodProgress>>,
+          TError,
+          Awaited<ReturnType<typeof getFoodProgress>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Hành trình thử thực phẩm của bé (UC-26)
+ */
+
+export function useGetFoodProgress<TData = Awaited<ReturnType<typeof getFoodProgress>>, TError = ErrorType<unknown>>(
+ childId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getFoodProgress>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetFoodProgressQueryOptions(childId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getFillSlotUrl = (childId: string,
+    date: string,
+    slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack',) => {
+
+
+
+
+  return `/api/v1/children/${childId}/days/${date}/slots/${slot}/fill`
+}
+
+/**
+ * @summary Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)
+ */
+export const fillSlot = async (childId: string,
+    date: string,
+    slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack',
+    fillSlotDto: FillSlotDto, options?: Parameters<typeof apiFetch>[1]): Promise<MealDto> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<MealDto>(getFillSlotUrl(childId,date,slot),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(fillSlotDto)
+  }
+);}
+
+
+
+
+
+export const getFillSlotMutationKey = () => ['fillSlot'] as const;
+
+export const getFillSlotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext> => {
+
+const mutationKey = getFillSlotMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof fillSlot>>, FillSlotMutationVariables> = (props) => {
+          const {childId,date,slot,data} = props ?? {};
+
+          return  fillSlot(childId,date,slot,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FillSlotMutationResult = NonNullable<Awaited<ReturnType<typeof fillSlot>>>
+    export type FillSlotMutationBody = FillSlotDto
+    export type FillSlotMutationError = ErrorType<unknown>
+    export type FillSlotMutationVariables = {childId: string;date: string;slot: 'breakfast' | 'morning_snack' | 'lunch' | 'afternoon_snack' | 'dinner' | 'extra_snack';data: FillSlotDto}
+
+    /**
+ * @summary Lấp bữa trống: app chọn món (cho lặp) hoặc món phụ huynh chọn (UC-24)
+ */
+export const useFillSlot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof fillSlot>>, TError,FillSlotMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof fillSlot>>,
+        TError,
+        FillSlotMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFillSlotMutationOptions(options), queryClient);
+    }
 
 export const getSwapMealUrl = (mealId: string,) => {
 

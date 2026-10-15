@@ -1,6 +1,13 @@
 import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.js';
 import { servingFor } from './health-adjustment.js';
-import { rankSlot, totalMinutes, WINDOW_DAYS, type ReasonCode } from './menu-engine.js';
+import {
+  MAX_SHOWN_REASONS,
+  REASON_ORDER,
+  rankSlot,
+  totalMinutes,
+  WINDOW_DAYS,
+  type ReasonCode,
+} from './menu-engine.js';
 import type { MealSlot, MealUse, PlanningContext, Texture } from './model.js';
 import { offered } from './model.js';
 import { exclusionReason, summarizeExclusions, type ExclusionSummary } from './safety-filter.js';
@@ -23,18 +30,9 @@ export interface SwapEvent {
 }
 
 export const MAX_SUGGESTIONS = 5;
-const MAX_REASONS = 3;
 
 /** What a parent reads first on the "Phù hợp nhất" card (design S02). */
-const DISPLAY_ORDER: SwapReasonCode[] = [
-  'FASTER',
-  'NOT_USED_7D',
-  'DIFFERENT_PROTEIN',
-  'LIKED',
-  'FOUR_GROUPS',
-  'LEAST_USED_PROTEIN',
-  'NEW_INGREDIENT',
-];
+const DISPLAY_ORDER: SwapReasonCode[] = ['FASTER', ...REASON_ORDER];
 
 export interface SwapRequest {
   date: LocalDate;
@@ -108,7 +106,7 @@ export function suggestSwaps(ctx: PlanningContext, request: SwapRequest): SwapSu
         dishId: dish.id,
         ...servingFor(dish, ctx),
         newIngredientIds: firstTries,
-        reasons: DISPLAY_ORDER.filter((code) => all.includes(code)).slice(0, MAX_REASONS),
+        reasons: DISPLAY_ORDER.filter((code) => all.includes(code)).slice(0, MAX_SHOWN_REASONS),
         fasterByMin: Math.max(0, currentMinutes - totalMinutes(dish)),
         repeatInDays: nearestUse(dish.id),
       };

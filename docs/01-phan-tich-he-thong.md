@@ -3,7 +3,7 @@
 | Mục | Nội dung |
 |---|---|
 | Nguồn phân tích | `App thực đơn ăn dặm.html` (bản export thiết kế, 10 màn hình mobile 390px) |
-| Phiên bản tài liệu | v0.4 — 07/10/2026 |
+| Phiên bản tài liệu | v0.5 — 13/10/2026 |
 | Phạm vi | Toàn bộ tính năng suy ra từ UI + các giả định cần thiết để hệ thống chạy được |
 | Stack đã chốt | Frontend **ReactJS** · Backend **NestJS** · Database **PostgreSQL** |
 | Tài liệu liên quan | [02-ke-hoach-trien-khai.md](02-ke-hoach-trien-khai.md) |
@@ -16,6 +16,7 @@
 | v0.2 | Chốt stack React + NestJS + PostgreSQL → kiến trúc client–server; thêm tài khoản/đăng nhập & đồng ý xử lý dữ liệu vào MVP; menu engine chuyển về backend; thêm đặc tả API, schema PostgreSQL, bảo mật; cập nhật NFR và ràng buộc. |
 | v0.4 | P6: module sức khỏe tên `child-health` (tránh trùng health check); BR-53 hồi phục **không** thêm bữa phụ; khẩu phần ml làm tròn 10 ml, khẩu phần bằng thìa ghi “ít hơn bình thường”; sức khỏe áp dụng theo từng ngày (sau ngày dự kiến kết thúc lập như bình thường, S01 chỉ gợi ý cập nhật); `health/preview` trả bảng điều chỉnh do meal-planning phục vụ; lên tuần với `overwrite` giữ bữa đã chuẩn bị/đã ghi nhận; mã lỗi `HEALTH_END_BEFORE_START`, `HEALTH_START_TOO_FAR`, `INVALID_WEEK_START`, `PLAN_EXISTS`, `WEEK_OUT_OF_RANGE`. |
 | v0.3 | P4: BR-28/29 dùng nguyên liệu chính (`isMain`) của món; tìm món ưu tiên từ nguyên vẹn và dấu tiếng Việt; chốt dạng response đổi món/thư viện và mã lỗi mới. Chốt Q3 khi làm P3: “nguyên liệu mới” chỉ tính đạm/rau củ/trái cây chưa ăn; BR-24/25 chỉ ràng buộc nguyên liệu mới **có tag dị ứng**. |
+| v0.5 | Thêm F19 **Trải nghiệm hằng ngày** (phase P8a): lấp bữa trống (UC-24), lý do chọn món + báo khi thực đơn tự đổi, ghi nhận nhanh một chạm (UC-25), hành trình thử thực phẩm (UC-26, màn G16). Thêm FR-140..146, BR-90..96, cột `planned_meals.reasons` / `replan_cause`, `meal_logs.liking` cho phép trống, API `slots/:slot/fill` và `foods`, Q21–Q23. BR-86 làm rõ: sửa món kiểm tra lại cả loại bữa và “không món mới khi ốm”. |
 | v0.4 | Đưa F17 **Nhiều người chăm** vào MVP (phase P5b, ngay sau P5): vai trò chủ hồ sơ / người chăm, lời mời qua link, quản lý thành viên, chuyển bé tối giản (G04). Thêm UC-20..22, FR-110..120, BR-70..79, màn G13/G14, bảng `child_members`/`child_invites`, cột `actor_id`, API thành viên & lời mời, mã lỗi mới, Q14–Q18. Thêm F18 **Món của bạn** (phụ huynh tự tạo món, làm trong P5): UC-23, FR-130..137, BR-80..87, màn G15, cột `dishes.owner_child_id`/`archived_at`, API `custom-dishes`, Q19–Q20. |
 
 > Các mục đánh dấu **[Giả định]** là suy luận không có trực tiếp trên UI, cần xác nhận (tổng hợp ở mục 10).
@@ -105,6 +106,7 @@ flowchart LR
 | G11 | Đồng ý xử lý dữ liệu | Lưu dữ liệu sức khỏe trẻ em trên server (NĐ 13/2023) | Hiển thị khi đăng ký: tóm tắt dữ liệu thu thập, mục đích, checkbox đồng ý bắt buộc, link chính sách. |
 | G12 | Cài đặt tài khoản | Đăng xuất, đổi mật khẩu, xóa tài khoản | Truy cập từ trang Hồ sơ bé. Thêm “Tên hiển thị” (FR-119). |
 | G15 | Tạo / sửa món của bạn | F18 — thiết kế chưa có | Mở từ S05 (*+ Tạo món*) và S03 của món tự tạo (*Sửa món*): tên, bữa chính / bữa phụ, tìm & thêm nguyên liệu (tái dùng ô tìm của onboarding), định lượng (không bắt buộc), thời gian sơ chế / nấu, các bước; hiển thị nhóm chất đạt được; *Xóa món* (xác nhận). |
+| G16 | Hành trình thử thực phẩm | F19 — thiết kế chưa có | Mở từ Hồ sơ bé và S04: tiến độ “đã thử x/y”, danh sách theo nhóm (đạm, rau củ, trái cây) với trạng thái đã thử / đang tạm dừng / cần tránh / chưa hợp tuổi / chưa thử, thực phẩm sắp thử trong 14 ngày tới. |
 | G13 | Thành viên chăm bé | F17 — thiết kế chưa có | Mục trong Hồ sơ bé: danh sách thành viên (tên hiển thị, vai trò, ngày tham gia), lời mời đang chờ (chủ), nút Mời người chăm (share sheet / sao chép link), Gỡ, Chuyển quyền chủ, Rời hồ sơ. |
 | G14 | Nhận lời mời | Mở link mời | Màn công khai `/invite/:token`: ai mời, tên bé, quyền sẽ có, cảnh báo dữ liệu sức khỏe; Đăng nhập/Đăng ký → quay lại → Tham gia; trạng thái hết hạn / đã dùng / bị thu hồi. |
 
@@ -131,6 +133,7 @@ flowchart LR
 | F15 | Tài khoản & dữ liệu cá nhân | Đăng ký, đăng nhập, đồng ý xử lý dữ liệu, xóa tài khoản; dữ liệu tự có trên mọi thiết bị | G10, G11, G12 | ✅ |
 | F16 | Quản trị nội dung (CMS) | Biên soạn, duyệt, version công thức | — | ❌ sau MVP |
 | F18 | Món của bạn | Phụ huynh tự tạo món nhà hay nấu từ nguyên liệu trong danh mục; vẫn qua lọc an toàn; dùng trong thực đơn, đổi món, thư viện | S05, S03, G15 | ✅ (P5) |
+| F19 | Trải nghiệm hằng ngày | Bữa trống có lối ra, lý do món & báo khi thực đơn tự đổi, ghi nhận nhanh, hành trình thử thực phẩm | S01, S04, G15, G16 | ✅ (P8a) |
 | F17 | Nhiều người chăm | Mời ba/mẹ, ông bà, người giúp việc cùng xem & ghi nhận cho 1 bé; vai trò chủ / người chăm; chuyển bé tối giản | G04, G13, G14 | ✅ (P5b) |
 
 ---
@@ -213,6 +216,9 @@ flowchart LR
 | UC-21 | Nhận lời mời | Người chăm | G14 | ✅ (P5b) |
 | UC-22 | Quản lý thành viên (gỡ, rời, chuyển quyền chủ) | Chủ hồ sơ, Người chăm | G13 | ✅ (P5b) |
 | UC-23 | Tạo / sửa / xóa món của bạn | Phụ huynh | S05, S03, G15 | ✅ (P5) |
+| UC-24 | Lấp bữa trống | Phụ huynh | S01, G09, G15 | ✅ (P8a) |
+| UC-25 | Ghi nhận nhanh | Phụ huynh | S01 | ✅ (P8a) |
+| UC-26 | Xem hành trình thử thực phẩm | Phụ huynh | G16 | ✅ (P8a) |
 
 ### 4.3 Đặc tả use case chính
 
@@ -235,6 +241,18 @@ flowchart LR
 - **Sửa:** S03 của món tự tạo → *Sửa món* → như luồng tạo → bữa tương lai đang dùng món được kiểm tra lại (BR-86).
 - **Xóa:** *Xóa món* (xác nhận) → món ngừng xuất hiện ở thư viện, gợi ý, thực đơn; bữa tương lai đang dùng món được sinh lại; bữa đã qua và nhật ký vẫn hiện tên món.
 - **Quy tắc:** BR-80..87.
+
+#### UC-24 Lấp bữa trống
+- **Bối cảnh:** kho món ít, bé ốm (không thử món mới) hoặc danh sách tránh dài làm một số bữa “Chưa có món phù hợp”.
+- **Luồng chính:** bữa trống trên S01 / G09 → *Dùng món bé đã ăn gần đây* → hệ thống chọn món an toàn tốt nhất, cho phép lặp món (BR-90) → bữa hiện ngay.
+- **Luồng thay thế:** *Tạo món cho bữa này* → G15 với loại bữa điền sẵn → lưu → món mới được đặt vào đúng bữa đó (BR-91) → về S01. Không còn món an toàn nào kể cả khi cho lặp → báo rõ và gợi ý tạo món / xem thực phẩm cần tránh.
+
+#### UC-25 Ghi nhận nhanh
+- **Luồng chính:** thẻ “Bữa tiếp theo” trên S01 → *Ăn hết* / *Ăn một nửa* / *Không ăn* → lưu ngay (giờ = bây giờ, không mức thích, không phản ứng — BR-94) → thẻ chuyển sang bữa kế.
+- **Luồng thay thế:** bé có biểu hiện lạ → *Phản ứng* (S07 đầy đủ). Muốn ghi mức thích / lượng khác → *Bé đã ăn* (S07).
+
+#### UC-26 Xem hành trình thử thực phẩm
+- **Luồng chính:** Hồ sơ bé hoặc S04 → G16: tiến độ, danh sách theo nhóm, thực phẩm sắp thử (BR-95, BR-96). Chạm thực phẩm đang tạm dừng → G08.
 
 #### UC-20 Mời người chăm
 - **Tiền điều kiện:** Chủ hồ sơ đã đăng nhập; bé chưa đủ 6 thành viên.
@@ -423,6 +441,18 @@ flowchart LR
 | FR-136 | Xóa món | Là PH, tôi muốn xóa món không còn nấu mà lịch sử ăn vẫn còn nguyên. | Medium | Open |
 | FR-137 | Phân biệt món chưa duyệt | Là PH, tôi muốn thấy rõ món nào do tôi tạo, chưa qua chuyên gia duyệt. | High | Open |
 
+### 5.4c Trải nghiệm hằng ngày (F19)
+
+| ID | Tiêu đề | User story | Ưu tiên | Trạng thái |
+|---|---|---|---|---|
+| FR-140 | Lấp bữa trống | Là PH, khi một bữa chưa có món phù hợp, tôi muốn chọn dùng lại món bé đã ăn gần đây để không phải tự nghĩ món. | High | Implemented |
+| FR-141 | Tạo món cho bữa trống | Là PH, tôi muốn tạo món của mình ngay từ bữa trống và thấy món đó vào luôn bữa ấy. | Medium | Implemented |
+| FR-142 | Vì sao món này | Là PH, tôi muốn thấy vì sao app chọn món cho bữa tiếp theo để tin thực đơn hơn. | Medium | Implemented |
+| FR-143 | Báo khi thực đơn tự đổi | Là PH, tôi muốn biết bữa nào vừa được app đổi và vì sao (hồ sơ, sức khỏe, tạm dừng thực phẩm, món của bạn đổi) để không bất ngờ khi nấu. | High | Implemented |
+| FR-144 | Ghi nhận nhanh | Là PH đang bế bé, tôi muốn ghi lượng ăn bằng một chạm và để chi tiết sau. | High | Implemented |
+| FR-145 | Hành trình thử thực phẩm | Là PH, tôi muốn thấy bé đã thử những thực phẩm nào, cái nào đang tạm dừng, còn bao nhiêu chưa thử. | Medium | Implemented |
+| FR-146 | Thực phẩm sắp thử | Là PH, tôi muốn biết thực phẩm nào bé sẽ thử lần đầu trong 2 tuần tới và vào ngày nào để chuẩn bị theo dõi. | Medium | Implemented |
+
 ### 5.5 Sức khỏe (F09)
 
 | ID | Tiêu đề | User story | Ưu tiên | Trạng thái |
@@ -568,8 +598,20 @@ flowchart LR
 | BR-83 | Món dùng được ở mọi giai đoạn (trừ khi nguyên liệu có tuổi tối thiểu cao hơn — BR-05); kết cấu và khẩu phần lấy theo thông số giai đoạn đang áp dụng. |
 | BR-84 | Suy ra từ nguyên liệu: nhóm chất (FR-023); nguyên liệu chính (BR-28/29) = nguyên liệu nhóm đạm, không có thì rau củ / trái cây, không có thì tất cả; nguồn đạm chính = nguồn đạm của nguyên liệu đạm đầu tiên. |
 | BR-85 | Món của bạn tham gia lập thực đơn tự động, đổi món, thư viện với cùng quy tắc và điểm như món catalog; luôn có nhãn “Món của bạn”; công thức ghi “Chưa qua chuyên gia duyệt” và lưu ý an toàn chung theo tuổi (dưới 12 tháng: không muối, nước mắm, đường). |
-| BR-86 | Xóa = lưu trữ (`archived_at`), không xóa cứng: bữa đã qua, nhật ký vẫn hiện món; bữa tương lai chưa ghi nhận đang dùng món được sinh lại. Sửa món: bữa tương lai đang dùng món được kiểm tra lại lọc cứng và cập nhật nguyên liệu lần đầu; vi phạm → sinh lại (BR-31). |
+| BR-86 | Xóa = lưu trữ (`archived_at`), không xóa cứng: bữa đã qua, nhật ký vẫn hiện món; bữa tương lai chưa ghi nhận đang dùng món được sinh lại. Sửa món: bữa tương lai đang dùng món được kiểm tra lại theo **đúng ngày của bữa** — lọc cứng, kể cả “không món mới khi ốm” (BR-52), và **loại bữa** (món sửa thành bữa phụ rời bữa chính và ngược lại) — rồi cập nhật nguyên liệu lần đầu; vi phạm → sinh lại (BR-31). |
 | BR-87 | Tối đa 50 món (đang dùng) mỗi bé **[Giả định]**; tên 2–60 ký tự, không trùng (không phân biệt hoa thường, dấu) với món của bạn khác của bé; sơ chế 0–180 phút, nấu 0–240 phút, tổng ≥ 1; tối đa 15 bước, mỗi bước 1–300 ký tự. |
+
+### 6.9 Trải nghiệm hằng ngày
+
+| ID | Quy tắc |
+|---|---|
+| BR-90 | **Lấp bữa trống** (không chỉ định món): chỉ cho ngày từ hôm nay đến +13 ngày, bữa thuộc lịch của ngày (theo giai đoạn và sức khỏe ngày đó) và đang trống. Dùng đúng pipeline lập bữa (lọc cứng, loại bữa, BR-24/25, chấm điểm) nhưng **bỏ cửa sổ chống lặp** (BR-20/21) — chỉ không trùng món đã có trong cùng ngày. Bộ lọc an toàn không bao giờ nới. Hết ứng viên → `NO_SAFE_DISH`. |
+| BR-91 | **Lấp bằng món chỉ định** (từ G15 sau khi tạo món, hoặc chọn món): kiểm tra như đổi món — lọc cứng theo ngày của bữa + đúng loại bữa; không kiểm BR-24/25 (phụ huynh chủ động chọn, như P4). |
+| BR-92 | Bữa lấp tay có nguồn `manual`: giữ lại khi thực đơn sinh lại toàn bộ (như bữa tự đổi), vẫn bị thay khi không còn an toàn (BR-31). |
+| BR-93 | **Lý do món**: khi engine chọn món, các mã lý do (tối đa 3, cùng thứ tự hiển thị S02) được lưu với bữa. Bữa phụ huynh tự đổi / lấp có món chỉ định không có lý do engine; S01 ghi “Bạn đã chọn món này”. |
+| BR-94 | **Thực đơn tự đổi**: bữa được sinh lại vì hồ sơ, sức khỏe, tạm dừng / dùng lại thực phẩm, món của bạn sửa / xóa mang `replanCause` **chỉ khi** món, kết cấu hoặc khẩu phần khác bữa cũ ở cùng ngày + bữa; bữa lập lần đầu không mang. Phụ huynh đổi món / lấp bữa → xóa `replanCause`. |
+| BR-95 | **Ghi nhận nhanh**: 3 mức lượng (*Ăn hết* = `all`, *Ăn một nửa* = `half`, *Không ăn* = `none`), giờ = hiện tại, không mức thích (`liking = null`), không phản ứng. Mức thích trống: “Bé thích” chỉ còn dựa vào lượng (BR-26); không tính “đã từ chối” (BR-06 dựa vào mức thích 1). Nguyên liệu vẫn được tính “đã thử” theo BR-44. |
+| BR-96 | **Hành trình thử thực phẩm**: tính trên nguyên liệu nhóm đạm, rau củ, trái cây (như “nguyên liệu mới” — BR-24). Trạng thái theo thứ tự ưu tiên: *cần tránh* (dị ứng / danh sách tránh) → *đang tạm dừng* → *chưa hợp tuổi* (tuổi tối thiểu > tuổi bé, hiện “Từ N tháng”) → *đã thử* (BR-44) → *chưa thử*. Tiến độ = đã thử / (tổng − cần tránh − chưa hợp tuổi). *Sắp thử* = nguyên liệu chưa thử có trong bữa chưa ghi nhận từ hôm nay đến +13 ngày (ngày gần nhất). |
 
 ### 6.7 Nhiều người chăm
 
@@ -851,7 +893,7 @@ Kiểm tra bằng `eslint-plugin-boundaries` (hoặc `dependency-cruiser`) chạ
 
 **Quy ước:** tên bảng/cột `snake_case` (Prisma `@@map`/`@map`), model `PascalCase`; khóa chính dữ liệu người dùng là UUID; khóa chính catalog là slug `text` (VD `ing_ca_hoi`, `dish_chao_ca_hoi_rau_ngot`); thời điểm dùng `timestamptz`, ngày dùng `date`; giờ bữa lưu `varchar(5)` `HH:mm`; mọi bảng có `created_at`, bảng sửa được có `updated_at`.
 
-**Enum PostgreSQL:** `allergen` (egg, cow_milk, peanut, shellfish, fish, wheat, soy, sesame, tree_nut) · `food_group` (carb, protein, fat, veg, fruit) · `protein_source` (fish, chicken, beef, pork, legume, egg) · `texture` (puree_smooth, mashed, lumpy, minced_soft, family) · `meal_type` (main, snack) · `meal_slot` (breakfast, morning_snack, lunch, afternoon_snack, dinner, extra_snack) · `meal_status` (planned, prepared, eaten, refused, skipped) · `plan_source` (auto, swap, manual) · `swap_reason` (missing_ingredient, disliked, faster, other) · `eat_amount` (none, few_spoons, quarter, half, almost_all, all) · `symptom` (rash, vomit, diarrhea, swelling, breathing, fussy) · `severity` (unknown, mild, moderate, severe) · `health_status` (normal, sick, recovering) · `health_symptom` (fever, poor_appetite, cough, diarrhea, vomit, teething) · `avoid_reason` (not_eat, dislike) · `prior_reaction` (never, yes, unsure) · `exposure_status` (new, tried, paused) · `pause_reason` (reaction, urgent) · `content_status` (draft, published) · `member_role` (owner, caregiver).
+**Enum PostgreSQL:** `allergen` (egg, cow_milk, peanut, shellfish, fish, wheat, soy, sesame, tree_nut) · `food_group` (carb, protein, fat, veg, fruit) · `protein_source` (fish, chicken, beef, pork, legume, egg) · `texture` (puree_smooth, mashed, lumpy, minced_soft, family) · `meal_type` (main, snack) · `meal_slot` (breakfast, morning_snack, lunch, afternoon_snack, dinner, extra_snack) · `meal_status` (planned, prepared, eaten, refused, skipped) · `plan_source` (auto, swap, manual) · `swap_reason` (missing_ingredient, disliked, faster, other) · `eat_amount` (none, few_spoons, quarter, half, almost_all, all) · `symptom` (rash, vomit, diarrhea, swelling, breathing, fussy) · `severity` (unknown, mild, moderate, severe) · `health_status` (normal, sick, recovering) · `health_symptom` (fever, poor_appetite, cough, diarrhea, vomit, teething) · `avoid_reason` (not_eat, dislike) · `prior_reaction` (never, yes, unsure) · `exposure_status` (new, tried, paused) · `pause_reason` (reaction, urgent) · `content_status` (draft, published) · `member_role` (owner, caregiver) · `replan_cause` (profile, health, food_paused, food_resumed, dish_changed — P8a).
 
 ```mermaid
 erDiagram
@@ -915,9 +957,9 @@ erDiagram
 
 | Bảng | Cột chính | Ràng buộc / index |
 |---|---|---|
-| `planned_meals` | `id uuid`, `child_id`, `date date`, `slot meal_slot`, `time varchar(5)`, `dish_id`, `stage_id`, `texture`, `portion_text`, `status`, `new_ingredient_ids text[]`, `source plan_source`, `generated_at`, `updated_at` | `UNIQUE(child_id, date, slot)`, `INDEX(child_id, date)` |
+| `planned_meals` | `id uuid`, `child_id`, `date date`, `slot meal_slot`, `time varchar(5)`, `dish_id`, `stage_id`, `texture`, `portion_text`, `status`, `new_ingredient_ids text[]`, `source plan_source`, `reasons text[]` (P8a), `replan_cause replan_cause?` (P8a), `generated_at`, `updated_at` | `UNIQUE(child_id, date, slot)`, `INDEX(child_id, date)` |
 | `swap_events` | `id`, `meal_id`, `from_dish_id`, `to_dish_id`, `reason`, `created_at` | `INDEX(meal_id)` |
-| `meal_logs` | `id uuid`, `meal_id`, `child_id`, `dish_id`, `logged_at timestamptz`, `amount eat_amount`, `liking smallint` | `UNIQUE(meal_id)`, `CHECK(liking BETWEEN 1 AND 5)`, `INDEX(child_id, logged_at DESC)` |
+| `meal_logs` | `id uuid`, `meal_id`, `child_id`, `dish_id`, `logged_at timestamptz`, `amount eat_amount`, `liking smallint?` (trống khi ghi nhận nhanh — P8a) | `UNIQUE(meal_id)`, `CHECK(liking BETWEEN 1 AND 5)`, `INDEX(child_id, logged_at DESC)` |
 | `reactions` | `id`, `log_id`, `symptoms symptom[]`, `severity`, `note varchar(500)?` | `UNIQUE(log_id)` |
 | `ingredient_exposures` | `child_id`, `ingredient_id`, `first_tried_at?`, `last_eaten_at?`, `status exposure_status` | `PK(child_id, ingredient_id)` |
 | `paused_ingredients` | `id`, `child_id`, `ingredient_id`, `reason pause_reason`, `source_log_id?`, `source_urgent_id?`, `paused_at`, `resumed_at?` | **Partial unique** `(child_id, ingredient_id) WHERE resumed_at IS NULL` — viết bằng SQL trong migration (Prisma schema chưa khai báo được partial index) |
@@ -965,6 +1007,8 @@ erDiagram
 | meal-planning | `GET /children/:childId/custom-dishes/:dishId` | Dữ liệu để sửa (đúng như đã nhập) | FR-135 |
 | meal-planning | `PUT /children/:childId/custom-dishes/:dishId` | Sửa (cùng payload) → kiểm tra lại bữa tương lai (BR-86) | FR-135 |
 | meal-planning | `DELETE /children/:childId/custom-dishes/:dishId` | Lưu trữ → `204`; sinh lại bữa tương lai dùng món | FR-136 |
+| meal-planning | `POST /children/:childId/days/:date/slots/:slot/fill` | `{dishId?}` → `201 MealDto`; không có `dishId` → chọn món, bỏ chống lặp (BR-90); có `dishId` → kiểm như đổi món (BR-91). Lỗi `SLOT_TAKEN` (409), `SLOT_NOT_IN_PLAN`, `DATE_OUT_OF_RANGE`, `NO_SAFE_DISH`, `DISH_NOT_SAFE_FOR_CHILD`, `DISH_NOT_FOR_SLOT` (422) | UC-24, FR-140/141 |
+| meal-planning | `GET /children/:childId/foods` | `{summary: {tried, total, paused, avoided, notYet}, groups[{group, items[{id, name, status, minAgeMonths, upcomingOn}]}]}` | UC-26, FR-145/146 |
 | meal-log | `GET /meals/:mealId/log` | Dữ liệu S07: `{meal, firstTryIngredients[], suspectIngredients[] (sẽ tạm dừng nếu có phản ứng — BR-40), log | null}` | UC-08 |
 | meal-log | `POST /meals/:mealId/log` | `{loggedAt (ISO có offset), amount, liking, reaction?: {symptoms[], severity, note}}` → `201 {log, pausedIngredients[]}`; log + exposure + trạng thái bữa + tạm dừng + sinh lại bữa tương lai trong **một transaction** | UC-08/09, FR-060..064 |
 | meal-log | `GET /children/:childId/journal?cursor=` | `{entries[] (kind meal / urgent, mới nhất trước), nextCursor}` — 20 dòng/trang, cursor mờ (thời điểm + id) | FR-069 |
@@ -1175,3 +1219,6 @@ MenuEngine.weekStats(input, weekStart): WeekStats
 | Q18 | Có cần cập nhật thời gian thực giữa các thành viên? | Không ở MVP: làm mới khi quay lại app và mỗi 60 giây trên S01 (FR-120). |
 | Q19 | Món của bạn có tự vào thực đơn tự động không, hay chỉ khi phụ huynh tự chọn? | Có, cùng quy tắc với món catalog (BR-85). |
 | Q20 | Món tự tạo không qua chuyên gia — có cần cảnh báo thêm, giới hạn số món? | Nhãn “Chưa qua chuyên gia duyệt” + lưu ý an toàn theo tuổi; tối đa 50 món mỗi bé (BR-85, BR-87). |
+| Q21 | Lấp bữa trống có nên cho lặp cả món bé ăn hôm qua? | Có — chỉ không trùng món trong cùng ngày (BR-90); phụ huynh chủ động bấm nên chấp nhận lặp. **[Giả định]** |
+| Q22 | “Không ăn” khi ghi nhận nhanh có tính là bé từ chối món (ẩn 30 ngày — BR-06)? | Không: chỉ mức thích 1 ở S07 mới tính từ chối, tránh ẩn món chỉ vì bé không đói (BR-95). **[Giả định]** |
+| Q23 | Có cho phụ huynh tự chọn thực phẩm muốn thử tiếp theo không? | Chưa ở P8a — G16 chỉ hiển thị; để phase sau (engine ưu tiên thực phẩm được chọn). |

@@ -187,6 +187,31 @@ describe('GET/POST /meals/:id/log (UC-08/09)', () => {
       .expect(400);
   });
 
+  it('TC-UX-011/012 a quick log saves the amount alone; the meal closes and its foods count as tried', async () => {
+    const meal = await lunch();
+    for (const liking of [0, 6, 2.5]) {
+      await api()
+        .post(`/api/v1/meals/${meal.id}/log`)
+        .set('Authorization', owner)
+        .send(logBody({ liking }))
+        .expect(400);
+    }
+    const res = await api()
+      .post(`/api/v1/meals/${meal.id}/log`)
+      .set('Authorization', owner)
+      .send({ loggedAt: '2026-09-24T11:40:00+07:00', amount: 'all' })
+      .expect(201);
+    expect(res.body.log).toMatchObject({ amount: 'all', liking: null, outcome: 'eaten' });
+    expect((await lunch()).status).toBe('eaten');
+    const tried = await prisma.ingredientExposure.count({ where: { childId, status: 'tried' } });
+    expect(tried).toBeGreaterThan(0);
+    const journal = await api()
+      .get(`/api/v1/children/${childId}/journal`)
+      .set('Authorization', owner)
+      .expect(200);
+    expect(journal.body.entries[0]).toMatchObject({ amount: 'all', liking: null });
+  });
+
   it('TC-LOG-008 a 501-character note is refused by the domain (400 NOTE_TOO_LONG)', async () => {
     const meal = await lunch();
     const res = await api()
@@ -474,6 +499,62 @@ describe('"Món của bạn" (UC-23)', () => {
     });
   });
 
+  async function swapTomorrowDinnerTo(dishId: string): Promise<string> {
+    const dinner = (await day(TOMORROW)).find((m) => m.slot === 'dinner')!;
+    // On a sick day with few safe dishes the engine may already have picked it.
+    if (dinner.dish.id !== dishId)
+      await api()
+        .post(`/api/v1/meals/${dinner.id}/swap`)
+        .set('Authorization', owner)
+        .send({ dishId, reason: 'other' })
+        .expect(200);
+    return dinner.id;
+  }
+
+  it('TC-CUS-018 a dish edited into a snack leaves the main meals it was planned for', async () => {
+    const { body } = await api()
+      .post(`/api/v1/children/${childId}/custom-dishes`)
+      .set('Authorization', owner)
+      .send(dish())
+      .expect(201);
+    await swapTomorrowDinnerTo(body.id);
+    await api()
+      .put(`/api/v1/children/${childId}/custom-dishes/${body.id}`)
+      .set('Authorization', owner)
+      .send(dish({ mealType: 'snack' }))
+      .expect(200);
+    const tomorrow = (await day(TOMORROW)) as (Meal & { replanCause: string | null })[];
+    const dinner = tomorrow.find((m) => m.slot === 'dinner')!;
+    expect(dinner.dish.id).not.toBe(body.id);
+    expect(dinner.replanCause).toBe('dish_changed'); // TC-UX-009
+  });
+
+  it('TC-CUS-019 adding a food the child has not tried replaces the dish on sick days', async () => {
+    const tried = ['ing_gao_te', 'ing_thit_ga', 'ing_bi_do'];
+    await prisma.ingredientExposure.createMany({
+      data: tried.map((ingredientId) => ({ childId, ingredientId, status: 'tried' as const })),
+    });
+    const { body } = await api()
+      .post(`/api/v1/children/${childId}/custom-dishes`)
+      .set('Authorization', owner)
+      .send(dish())
+      .expect(201);
+    await api()
+      .post(`/api/v1/children/${childId}/health`)
+      .set('Authorization', owner)
+      .send({ status: 'sick', symptoms: ['fever'] })
+      .expect(200);
+    await swapTomorrowDinnerTo(body.id);
+
+    await api()
+      .put(`/api/v1/children/${childId}/custom-dishes/${body.id}`)
+      .set('Authorization', owner)
+      .send(dish({ ingredients: [...dish().ingredients, { id: 'ing_ca_rot' }] }))
+      .expect(200);
+    const dinner = (await day(TOMORROW)).find((m) => m.slot === 'dinner');
+    expect(dinner?.dish.id).not.toBe(body.id);
+  });
+
   it('TC-CUS-002 refuses an egg dish for a child avoiding eggs, naming the food', async () => {
     const res = await api()
       .post(`/api/v1/children/${childId}/custom-dishes`)
@@ -532,5 +613,26 @@ describe('"Món của bạn" (UC-23)', () => {
       .set('Authorization', stranger)
       .send(dish())
       .expect(404);
+  });
+});
+
+describe('GET /children/:id/foods (UC-26)', () => {
+  it('TC-UX-014 counts the foods a quick log marked as tried; egg is avoided', async () => {
+    const meal = await lunch();
+    await api()
+      .post(`/api/v1/meals/${meal.id}/log`)
+      .set('Authorization', owner)
+      .send({ loggedAt: '2026-09-24T11:40:00+07:00', amount: 'all' })
+      .expect(201);
+    const res = await api()
+      .get(`/api/v1/children/${childId}/foods`)
+      .set('Authorization', owner)
+      .expect(200);
+    expect(res.body.summary.tried).toBeGreaterThan(0);
+    const items = res.body.groups.flatMap(
+      (g: { items: { id: string; status: string }[] }) => g.items,
+    );
+    expect(items.find((i: { id: string }) => i.id === 'ing_trung_ga').status).toBe('avoided');
+    await api().get(`/api/v1/children/${childId}/foods`).set('Authorization', stranger).expect(404);
   });
 });

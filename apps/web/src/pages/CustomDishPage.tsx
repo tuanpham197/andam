@@ -2,6 +2,7 @@ import {
   ApiError,
   useDeleteCustomDish,
   useCreateCustomDish,
+  useFillSlot,
   useGetCustomDish,
   useSearchIngredients,
   useUpdateCustomDish,
@@ -10,7 +11,7 @@ import {
 } from '@appandam/api-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useState } from 'react';
-import { useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { AlertBox } from '../components/AlertBox';
 import { Button } from '../components/Button';
 import { Icon } from '../components/Icon';
@@ -19,7 +20,9 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { TextField } from '../components/TextField';
 import { useActiveChild } from '../features/child/guards';
 import { invalidateChildData } from '../features/child/invalidate';
+import { readFillTarget, type FillTarget } from '../features/meals/fill-target';
 import { FoodGroupTags } from '../features/meals/FoodGroupTags';
+import { dayHeading, slotLabel, todayInVietnam } from '../features/meals/format';
 import { messageFor } from '../lib/errors';
 import { clearDraft, loadDraft, saveDraft } from '../lib/session-draft';
 import { useDebouncedValue } from '../lib/use-debounced-value';
@@ -58,7 +61,11 @@ const EMPTY: DishDraft = {
   steps: [''],
 };
 
-const draftKey = (dishId: string | undefined) => `custom-dish-draft:${dishId ?? 'new'}`;
+const draftKey = (dishId: string | undefined, fill?: FillTarget | null) =>
+  `custom-dish-draft:${dishId ?? 'new'}${fill ? `:${fill.date}.${fill.slot}` : ''}`;
+
+/** Where the parent came from: today's list, or that day of the week (G09). */
+const dayPage = (date: string) => (date === todayInVietnam(new Date()) ? '/' : `/week/${date}`);
 
 /** The four groups the dish covers, fruit counting as vegetables (FR-023, FR-132). */
 function groupsOf(ingredients: DraftIngredient[]): MealDishDtoFoodGroupsItem[] {
@@ -196,17 +203,29 @@ function DeleteDish({ dishId, name }: { dishId: string; name: string }) {
   );
 }
 
-function DishForm({ initial, dishId }: { initial: DishDraft; dishId?: string }) {
+function DishForm({
+  initial,
+  dishId,
+  fill = null,
+}: {
+  initial: DishDraft;
+  dishId?: string;
+  /** UC-24: a new dish made for an empty slot goes straight into it (FR-141). */
+  fill?: FillTarget | null;
+}) {
   const child = useActiveChild();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const create = useCreateCustomDish();
   const update = useUpdateCustomDish();
+  const place = useFillSlot();
   const save = dishId ? update : create;
-  const [draft, setDraft] = useState<DishDraft>(() => loadDraft(draftKey(dishId)) ?? initial);
+  const key = draftKey(dishId, fill);
+  const [draft, setDraft] = useState<DishDraft>(() => loadDraft(key) ?? initial);
+  const [unplaced, setUnplaced] = useState<{ dishId: string; error: unknown } | null>(null);
   const typeId = useId();
 
-  useEffect(() => saveDraft(draftKey(dishId), draft), [draft, dishId]);
+  useEffect(() => saveDraft(key, draft), [draft, key]);
 
   const change = (changes: Partial<DishDraft>) => setDraft((d) => ({ ...d, ...changes }));
   const setIngredient = (index: number, changes: Partial<DraftIngredient>) =>
@@ -223,9 +242,39 @@ function DishForm({ initial, dishId }: { initial: DishDraft; dishId?: string }) 
         : create.mutateAsync({ childId: child.id, data })
     ).catch(() => null);
     if (!recipe) return;
-    clearDraft(draftKey(dishId));
+    clearDraft(key);
+    if (fill) {
+      const error = await place
+        .mutateAsync({
+          childId: child.id,
+          date: fill.date,
+          slot: fill.slot,
+          data: { dishId: recipe.id },
+        })
+        .then(
+          () => null,
+          (e: unknown) => e,
+        );
+      void invalidateChildData(queryClient, child.id);
+      // The dish is saved either way; say why it could not go into the meal (e.g. a sick day).
+      if (error) return setUnplaced({ dishId: recipe.id, error });
+      return void navigate(dayPage(fill.date), { replace: true });
+    }
     void invalidateChildData(queryClient, child.id);
     void navigate(`/dishes/${recipe.id}`, { replace: true });
+  }
+
+  if (unplaced) {
+    return (
+      <div className={styles.form}>
+        <AlertBox tone="warn" title={t.fillFailed}>
+          {messageFor(unplaced.error)}
+        </AlertBox>
+        <Link to={`/dishes/${unplaced.dishId}`} replace className={styles.textLink}>
+          {t.openRecipe}
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -370,8 +419,13 @@ function DishForm({ initial, dishId }: { initial: DishDraft; dishId?: string }) 
         )}
       </section>
 
+      {fill && (
+        <AlertBox tone="info">
+          {t.forSlot(slotLabel(fill.slot).toLocaleLowerCase('vi'), dayHeading(fill.date))}
+        </AlertBox>
+      )}
       {save.error != null && <SaveError error={save.error} />}
-      <Button type="submit" fullWidth loading={save.isPending}>
+      <Button type="submit" fullWidth loading={save.isPending || place.isPending}>
         {save.isPending ? t.saving : t.save}
       </Button>
       {dishId && <DeleteDish dishId={dishId} name={initial.name} />}
@@ -415,15 +469,22 @@ function EditDish({ dishId }: { dishId: string }) {
 /** G15: a parent's own dish ("Món của bạn"), checked against the child's hard filter (UC-23). */
 export function CustomDishPage() {
   const { dishId } = useParams() as { dishId?: string };
+  const [params] = useSearchParams();
+  const fill = dishId ? null : readFillTarget(params);
+  const mealType: MealType = params.get('mealType') === 'snack' ? 'snack' : 'main';
   return (
     <>
       <ScreenHeader
         title={dishId ? t.editTitle : t.createTitle}
-        back={dishId ? `/dishes/${dishId}` : '/dishes'}
+        back={dishId ? `/dishes/${dishId}` : fill ? dayPage(fill.date) : '/dishes'}
         level={1}
       />
       <p className={styles.muted}>{t.intro}</p>
-      {dishId ? <EditDish dishId={dishId} /> : <DishForm initial={EMPTY} />}
+      {dishId ? (
+        <EditDish dishId={dishId} />
+      ) : (
+        <DishForm initial={{ ...EMPTY, mealType }} fill={fill} />
+      )}
     </>
   );
 }

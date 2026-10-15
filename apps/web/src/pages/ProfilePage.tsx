@@ -194,6 +194,7 @@ export function ProfilePage() {
 
       <nav aria-label={t.settings} className={styles.card} style={{ padding: 0 }}>
         {[
+          { to: '/foods', label: t.foodsLink },
           { to: '/settings/age', label: t.ageLink },
           { to: '/account', label: t.accountLink },
         ].map((link) => (

@@ -1,4 +1,5 @@
 import type {
+  FoodProgressDto,
   ChildDto,
   CustomDishFormDto,
   DayPlanDto,
@@ -120,6 +121,9 @@ export function mealFixture(overrides: Partial<MealDto> = {}): MealDto {
       custom: false,
     },
     newIngredients: [{ id: 'ing_rau_ngot', name: 'Rau ngót' }],
+    source: 'auto',
+    reasons: ['NOT_USED_7D', 'DIFFERENT_PROTEIN', 'FOUR_GROUPS'],
+    replanCause: null,
     ...overrides,
   };
 }
@@ -161,6 +165,8 @@ export function dayFixture(overrides: Partial<DayPlanDto> = {}): DayPlanDto {
           custom: false,
         },
         newIngredients: [],
+        // Snacks never get protein or food-group reasons from the engine.
+        reasons: ['LIKED', 'NOT_USED_7D'],
       }),
       mealFixture({
         id: '20000000-0000-4000-8000-000000000004',
@@ -582,6 +588,74 @@ export function weekFixture(overrides: Partial<WeekPlanDto> = {}): WeekPlanDto {
         { protein: 'egg', meals: 0, avoided: true },
       ],
     },
+    ...overrides,
+  };
+}
+
+/** Bé Na: chicken and pumpkin tried, sweet potato leaves paused, salmon planned for Saturday. */
+export function foodProgressFixture(overrides: Partial<FoodProgressDto> = {}): FoodProgressDto {
+  return {
+    summary: { tried: 2, total: 5, paused: 1, avoided: 1, notYet: 1 },
+    groups: [
+      {
+        group: 'protein',
+        items: [
+          {
+            id: 'ing_ca_hoi',
+            name: 'Cá hồi',
+            status: 'new',
+            minAgeMonths: 6,
+            upcomingOn: '2026-09-26',
+          },
+          {
+            id: 'ing_thit_ga',
+            name: 'Thịt gà',
+            status: 'tried',
+            minAgeMonths: 6,
+            upcomingOn: null,
+          },
+          {
+            id: 'ing_trung_ga',
+            name: 'Trứng gà',
+            status: 'avoided',
+            minAgeMonths: 6,
+            upcomingOn: null,
+          },
+        ],
+      },
+      {
+        group: 'veg',
+        items: [
+          { id: 'ing_bi_do', name: 'Bí đỏ', status: 'tried', minAgeMonths: 6, upcomingOn: null },
+          {
+            id: 'ing_rau_ngot',
+            name: 'Rau ngót',
+            status: 'paused',
+            minAgeMonths: 6,
+            upcomingOn: null,
+          },
+          {
+            id: 'ing_ca_rot',
+            name: 'Cà rốt',
+            status: 'new',
+            minAgeMonths: 6,
+            upcomingOn: '2026-09-25',
+          },
+        ],
+      },
+      {
+        group: 'fruit',
+        items: [
+          {
+            id: 'ing_mat_ong',
+            name: 'Mật ong',
+            status: 'not_yet',
+            minAgeMonths: 12,
+            upcomingOn: null,
+          },
+        ],
+      },
+    ],
     ...overrides,
   };
 }

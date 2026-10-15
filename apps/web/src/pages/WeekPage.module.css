@@ -187,3 +187,10 @@
   flex-direction: column;
   gap: 10px;
 }
+.foodsLink {
+  min-height: var(--touch);
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}

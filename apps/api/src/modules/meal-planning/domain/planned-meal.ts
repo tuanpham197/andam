@@ -1,10 +1,20 @@
 import type { LocalDate } from '../../../shared/kernel/local-date.js';
 import { MealAlreadyLoggedError, SameDishError } from './errors.js';
-import type { PlannedDraft } from './menu-engine.js';
+import { topReasons, type PlannedDraft, type ReasonCode } from './menu-engine.js';
 import type { MealSlot, StageId, Texture } from './model.js';
 
 export type MealStatus = 'planned' | 'prepared' | 'eaten' | 'refused' | 'skipped';
 export type PlanSource = 'auto' | 'swap' | 'manual';
+
+/** Why the plan changed this meal by itself (BR-94). */
+export const REPLAN_CAUSES = [
+  'profile',
+  'health',
+  'food_paused',
+  'food_resumed',
+  'dish_changed',
+] as const;
+export type ReplanCause = (typeof REPLAN_CAUSES)[number];
 
 interface PlannedMealState {
   id: string;
@@ -19,6 +29,9 @@ interface PlannedMealState {
   status: MealStatus;
   newIngredientIds: string[];
   source: PlanSource;
+  /** Why the engine chose the dish (BR-93); empty when the parent chose it. */
+  reasons: ReasonCode[];
+  replanCause: ReplanCause | null;
   generatedAt: Date;
 }
 
@@ -32,6 +45,7 @@ export class PlannedMeal {
     stageId: StageId;
     generatedAt: Date;
     draft: PlannedDraft;
+    replanCause?: ReplanCause | null;
   }): PlannedMeal {
     const { draft } = input;
     return new PlannedMeal({
@@ -47,12 +61,39 @@ export class PlannedMeal {
       status: 'planned',
       newIngredientIds: draft.newIngredientIds,
       source: 'auto',
+      reasons: topReasons(draft.reasons),
+      replanCause: input.replanCause ?? null,
       generatedAt: input.generatedAt,
     });
   }
 
-  static restore(state: PlannedMealState): PlannedMeal {
-    return new PlannedMeal({ ...state });
+  /**
+   * UC-24: a slot the plan left empty, filled because the parent asked — with the engine's pick
+   * (repeats allowed) or a dish they chose. `manual` meals survive a full re-plan (BR-92).
+   */
+  static fill(input: {
+    id: string;
+    childId: string;
+    date: LocalDate;
+    stageId: StageId;
+    generatedAt: Date;
+    draft: PlannedDraft;
+  }): PlannedMeal {
+    const meal = PlannedMeal.plan(input);
+    meal.state.source = 'manual';
+    return meal;
+  }
+
+  /** Rows written before P8a carry neither reasons nor a cause. */
+  static restore(
+    state: Omit<PlannedMealState, 'reasons' | 'replanCause'> &
+      Partial<Pick<PlannedMealState, 'reasons' | 'replanCause'>>,
+  ): PlannedMeal {
+    return new PlannedMeal({
+      ...state,
+      reasons: [...(state.reasons ?? [])],
+      replanCause: state.replanCause ?? null,
+    });
   }
 
   get id() {
@@ -91,6 +132,12 @@ export class PlannedMeal {
   get source() {
     return this.state.source;
   }
+  get reasons() {
+    return this.state.reasons;
+  }
+  get replanCause() {
+    return this.state.replanCause;
+  }
   get generatedAt() {
     return this.state.generatedAt;
   }
@@ -119,9 +166,13 @@ export class PlannedMeal {
   }
 
   /** Same dish, served for the child's current stage and health (BR-50..53). */
-  reserve(serving: { texture: Texture; portionText: string }): void {
+  reserve(
+    serving: { texture: Texture; portionText: string },
+    cause: ReplanCause | null = null,
+  ): void {
     if (this.isLogged) throw new MealAlreadyLoggedError();
     Object.assign(this.state, serving);
+    if (cause) this.state.replanCause = cause;
   }
 
   /** FR-045: the caller has checked the dish is safe and fits the slot. */
@@ -133,6 +184,12 @@ export class PlannedMeal {
   }): void {
     if (this.isLogged) throw new MealAlreadyLoggedError();
     if (target.dishId === this.state.dishId) throw new SameDishError();
-    Object.assign(this.state, target, { source: 'swap', status: 'planned' });
+    // The parent's own choice: no engine reasons, no pending notice (BR-93/94).
+    Object.assign(this.state, target, {
+      source: 'swap',
+      status: 'planned',
+      reasons: [],
+      replanCause: null,
+    });
   }
 }

@@ -1,8 +1,15 @@
-import type { DayPlanDto, MealDto, MealDtoSlot } from '@appandam/api-client';
+import { useFillSlot, type DayPlanDto, type MealDto, type MealDtoSlot } from '@appandam/api-client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router';
+import { AlertBox } from '../../components/AlertBox';
 import { Disclaimer } from '../../components/Disclaimer';
+import { messageFor } from '../../lib/errors';
+import { useActiveChild } from '../child/guards';
+import { invalidateChildData } from '../child/invalidate';
 import styles from '../../pages/TodayPage.module.css';
 import { vi } from '../../strings/vi';
-import { daySummary, isSnackSlot, timeInVietnam } from './format';
+import { fillLink } from './fill-target';
+import { daySummary, isSnackSlot, slotLabel, timeInVietnam } from './format';
 import { MealRow, type MealRowState } from './MealRow';
 
 const t = vi.today;
@@ -26,12 +33,46 @@ function rowFor(meal: MealDto, nextMealId: string | null): { note: string; state
   if (meal.status === 'refused' || meal.status === 'skipped')
     return { note: loggedNote(t.status[meal.status], meal), state: 'closed' };
   if (meal.status === 'prepared') return { note: t.status.prepared, state: 'pending' };
+  // BR-94: a meal the plan changed by itself says so until the parent acts on it.
+  if (meal.replanCause) return { note: t.replanned[meal.replanCause], state: 'pending' };
   const minutes = vi.minutes(meal.dish.prepMin + meal.dish.cookMin);
   const protein = meal.dish.mainProtein;
   const lead = isSnackSlot(meal.slot)
     ? t.snack
     : protein && `${vi.foodGroups.protein} · ${vi.proteins[protein]}`;
   return { note: [lead, minutes].filter(Boolean).join(' · '), state: 'pending' };
+}
+
+/** UC-24: an empty slot offers a way out instead of a dead end (FR-140/141). */
+function EmptySlot({ date, time, slot }: { date: string; time: string; slot: MealDtoSlot }) {
+  const child = useActiveChild();
+  const queryClient = useQueryClient();
+  const fill = useFillSlot({
+    mutation: { onSuccess: () => invalidateChildData(queryClient, child.id) },
+  });
+  return (
+    <div className={styles.emptySlot}>
+      <MealRow time={time} slot={slot} name={t.unfilled} note="" state="empty" />
+      <div
+        role="group"
+        aria-label={t.fillActions(slotLabel(slot).toLocaleLowerCase('vi'))}
+        className={styles.fillActions}
+      >
+        <button
+          type="button"
+          className={styles.fillButton}
+          disabled={fill.isPending}
+          onClick={() => fill.mutate({ childId: child.id, date, slot, data: {} })}
+        >
+          {t.fillRepeat}
+        </button>
+        <Link to={fillLink({ date, slot })} className={styles.fillLink}>
+          {t.fillCreate}
+        </Link>
+      </div>
+      {fill.error != null && <AlertBox tone="warn">{messageFor(fill.error)}</AlertBox>}
+    </div>
+  );
 }
 
 /** The meals of one day in time order, slots without a safe dish included (S01, G09). */
@@ -67,7 +108,7 @@ export function DayMealList({
               {...rowFor(meal, day.nextMealId)}
             />
           ) : (
-            <MealRow key={slot} time={time} slot={slot} name={t.unfilled} note="" state="empty" />
+            <EmptySlot key={slot} date={day.date} time={time} slot={slot} />
           ),
         )}
       </div>

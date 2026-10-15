@@ -17,7 +17,10 @@ export class HealthChangedListener implements OnModuleInit {
   onModuleInit(): void {
     // The payload shape is the child-health module's HealthChangedEvent.
     this.events.subscribe('HealthChanged', (event) =>
-      this.regenerate.execute(event as DomainEvent & { childId: string; userId: string }),
+      this.regenerate.execute({
+        ...(event as DomainEvent & { childId: string; userId: string }),
+        cause: 'health',
+      }),
     );
   }
 }

@@ -1,3 +1,4 @@
+import { isLiked } from './menu-engine.js';
 import fc from 'fast-check';
 import { exclusionReason, summarizeExclusions, type ExclusionReason } from './safety-filter.js';
 import {
@@ -172,5 +173,22 @@ describe('summarizeExclusions', () => {
       total: 4,
       byReason: { allergen: 2, avoid: 0, paused: 0, age: 1, refused: 1, sick_new: 0 },
     });
+  });
+});
+
+describe('quick logs (BR-95, TC-UX-013)', () => {
+  it('a quick "Không ăn" is not a refusal, and not a like', () => {
+    const ctx = contextFixture({
+      feedback: new Map([['dish_chao', { liking: null, amount: 'none', date: TODAY }]]),
+    });
+    expect(exclusionReason(dishFixture(), ctx, TODAY)).toBeNull();
+    expect(isLiked(ctx, 'dish_chao')).toBe(false);
+  });
+
+  it('a quick "Ăn hết" counts as liked through the amount', () => {
+    const ctx = contextFixture({
+      feedback: new Map([['dish_chao', { liking: null, amount: 'all', date: TODAY }]]),
+    });
+    expect(isLiked(ctx, 'dish_chao')).toBe(true);
   });
 });

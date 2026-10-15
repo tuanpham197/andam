@@ -231,6 +231,9 @@ export function WeekPage() {
         <>
           <Stats stats={week.data.stats} days={week.data.days.length} />
           <Rotation rotation={week.data.stats.proteinRotation} />
+          <Link to="/foods" className={styles.foodsLink}>
+            {t.foodsLink}
+          </Link>
           <nav aria-label={t.daysLabel} className={styles.days}>
             {week.data.days.map((day) => (
               <DayRow key={day.date} day={day} today={today} />

@@ -88,6 +88,23 @@ describe('child health (UC-11, FR-080..084)', () => {
     });
   });
 
+  it('TC-UX-007/008 meals say why they were chosen, and which ones the health change replaced', async () => {
+    const before = (await getDay(TOMORROW)).body.meals as (Meal & {
+      reasons: string[];
+      replanCause: string | null;
+      source: string;
+    })[];
+    expect(before.every((m) => m.reasons.length > 0 && m.reasons.length <= 3)).toBe(true);
+    expect(before.every((m) => m.replanCause === null && m.source === 'auto')).toBe(true);
+
+    await setHealth({ status: 'sick', symptoms: [] }).expect(200);
+    const after = (await getDay(TOMORROW)).body.meals as (Meal & { replanCause: string | null })[];
+    const mains = after.filter((m) => !m.slot.endsWith('snack'));
+    expect(mains.length).toBeGreaterThan(0);
+    // Sick days serve mains one texture softer, so every main meal changed.
+    expect(mains.every((m) => m.replanCause === 'health')).toBe(true);
+  });
+
   it('TC-HLT-008/010 sick → recovering → normal re-plans upcoming meals, the prepared one stays', async () => {
     const today = (await getDay(TODAY)).body.meals as Meal[];
     await getDay(TOMORROW);

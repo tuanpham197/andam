@@ -11,6 +11,7 @@ import {
   dayFixture,
   healthFixture,
   logFormFixture,
+  loggedFixture,
   mealFixture,
 } from '../test/fixtures';
 import { server } from '../test/server';
@@ -343,8 +344,10 @@ describe('Today (S01)', () => {
     const list = within(mealList());
     expect(list.getByText('3 bữa chính · 1 bữa phụ')).toBeInTheDocument();
     expect(list.getByText('Chưa có món phù hợp')).toBeInTheDocument();
-    // Not a link: there is no recipe to open.
-    expect(list.getAllByRole('link')).toHaveLength(3);
+    // Not a recipe link: there is no recipe to open, only a way to fill the slot.
+    expect(list.getAllByRole('link').map((a) => a.textContent)).not.toContain(
+      'Chưa có món phù hợp',
+    );
   });
 
   it('shows only the alert when no slot of the day has a safe dish', async () => {
@@ -528,5 +531,198 @@ describe('Today (S01)', () => {
       'href',
       '/health',
     );
+  });
+
+  describe('why this dish, and what the plan changed (FR-142/143, TC-UX-017)', () => {
+    it('gives two reasons for the next meal, naming the other mains’ proteins', async () => {
+      serveDay();
+      renderApp('/');
+      const why = within(await screen.findByRole('list', { name: 'Vì sao món này' }));
+      expect(why.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+        'Chưa dùng trong 7 ngày qua',
+        'Đạm cá — khác nguồn đạm bữa tối (gà)',
+      ]);
+    });
+
+    it('says a dish the parent picked was their choice', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID ? { ...m, source: 'swap' as const, reasons: [] } : m,
+        ),
+      });
+      renderApp('/');
+      const why = within(await screen.findByRole('list', { name: 'Vì sao món này' }));
+      expect(why.getByText('Bạn đã chọn món này')).toBeInTheDocument();
+    });
+
+    it('shows no reasons when the engine left none', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) => (m.id === LUNCH_ID ? { ...m, reasons: [] } : m)),
+      });
+      renderApp('/');
+      await nextMeal();
+      expect(screen.queryByRole('list', { name: 'Vì sao món này' })).toBeNull();
+    });
+
+    it('tells which meals the plan changed by itself, on the card and in the list', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID || m.slot === 'dinner'
+            ? {
+                ...m,
+                replanCause: m.slot === 'dinner' ? ('food_paused' as const) : ('health' as const),
+              }
+            : m,
+        ),
+      });
+      renderApp('/');
+      const card = within(await nextMeal());
+      expect(card.getByText('Đã đổi theo tình trạng sức khỏe')).toBeInTheDocument();
+      expect(
+        within(mealList()).getByText('Đã đổi vì có thực phẩm đang tạm dừng'),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('an empty slot has a way out (UC-24, TC-UX-016)', () => {
+    const withEmptyDinner = () => {
+      const day = dayFixture();
+      return {
+        ...day,
+        meals: day.meals.filter((m) => m.slot !== 'dinner'),
+        unfilledSlots: [{ slot: 'dinner' as const, time: '18:00' }],
+      };
+    };
+
+    it('fills it with a dish the child ate recently, then shows it', async () => {
+      let filled = false;
+      serveDay(() => (filled ? dayFixture() : withEmptyDinner()));
+      const calls: unknown[] = [];
+      server.use(
+        http.post(
+          `${API}/children/:childId/days/:date/slots/:slot/fill`,
+          async ({ params, request }) => {
+            calls.push({ ...params, body: await request.json() });
+            filled = true;
+            return HttpResponse.json(mealFixture({ slot: 'dinner' }), { status: 201 });
+          },
+        ),
+      );
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      const actions = within(await screen.findByRole('group', { name: 'Lấp bữa tối' }));
+      expect(actions.getByRole('link', { name: 'Tạo món cho bữa này' })).toHaveAttribute(
+        'href',
+        '/dishes/new?mealType=main&fillDate=2026-09-24&fillSlot=dinner',
+      );
+      await user.click(actions.getByRole('button', { name: 'Dùng món bé đã ăn gần đây' }));
+      await waitFor(() => expect(screen.queryByRole('group', { name: 'Lấp bữa tối' })).toBeNull());
+      expect(calls).toHaveLength(1);
+      expect(calls[0]).toMatchObject({
+        childId: NA_ID,
+        date: '2026-09-24',
+        slot: 'dinner',
+        body: {},
+      });
+    });
+
+    it('says when nothing safe is left, even with repeats', async () => {
+      serveDay(withEmptyDinner());
+      server.use(
+        http.post(`${API}/children/:childId/days/:date/slots/:slot/fill`, () =>
+          problem(422, 'NO_SAFE_DISH'),
+        ),
+      );
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      await user.click(await screen.findByRole('button', { name: 'Dùng món bé đã ăn gần đây' }));
+      expect(await screen.findByText(/Không còn món an toàn nào cho bữa này/)).toBeInTheDocument();
+    });
+  });
+
+  describe('quick log (FR-144, TC-UX-018)', () => {
+    const quickGroup = () =>
+      screen.queryByRole('group', { name: 'Ghi nhanh: bé ăn được bao nhiêu?' });
+
+    function serveQuickLog(reply: () => Response) {
+      const sent: unknown[] = [];
+      server.use(
+        http.post(`${API}/meals/:mealId/log`, async ({ params, request }) => {
+          sent.push({ mealId: params.mealId, body: await request.json() });
+          return reply();
+        }),
+      );
+      return sent;
+    }
+
+    it('waits until the meal is due or cooked', async () => {
+      serveDay();
+      renderApp('/');
+      await nextMeal();
+      expect(quickGroup()).toBeNull();
+    });
+
+    it('logs the amount in one tap, then says so as the card moves on', async () => {
+      vi.setSystemTime(new Date('2026-09-24T04:10:00Z')); // 11:10, lunch is due
+      let logged = false;
+      serveDay(() => {
+        const day = dayFixture();
+        return logged
+          ? {
+              ...day,
+              meals: day.meals.map((m) =>
+                m.id === LUNCH_ID ? { ...m, status: 'eaten' as const } : m,
+              ),
+              nextMealId: day.meals[2]!.id,
+            }
+          : day;
+      });
+      const sent = serveQuickLog(() => {
+        logged = true;
+        return HttpResponse.json(
+          loggedFixture({ log: { ...loggedFixture().log, amount: 'all', liking: null } }),
+          {
+            status: 201,
+          },
+        );
+      });
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      await nextMeal();
+      const group = within(quickGroup()!);
+      expect(group.getAllByRole('button').map((b) => b.textContent)).toEqual([
+        'Ăn hết',
+        'Ăn một nửa',
+        'Không ăn',
+      ]);
+      await user.click(group.getByRole('button', { name: 'Ăn hết' }));
+      expect(await screen.findByText('Đã ghi bữa trưa: Ăn hết.')).toBeInTheDocument();
+      expect(sent).toEqual([
+        { mealId: LUNCH_ID, body: { loggedAt: '2026-09-24T04:10:00.000Z', amount: 'all' } },
+      ]);
+      expect(within(await nextMeal()).getByText('Bữa tiếp theo · Xế 15:00')).toBeInTheDocument();
+    });
+
+    it('offers it on a cooked meal, and shows a refusal from the server', async () => {
+      const day = dayFixture();
+      serveDay({
+        ...day,
+        meals: day.meals.map((m) =>
+          m.id === LUNCH_ID ? { ...m, status: 'prepared' as const } : m,
+        ),
+      });
+      serveQuickLog(() => problem(409, 'MEAL_ALREADY_LOGGED'));
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      renderApp('/');
+      await nextMeal();
+      await user.click(within(quickGroup()!).getByRole('button', { name: 'Không ăn' }));
+      expect(await screen.findByText(/đã được ghi nhận/)).toBeInTheDocument();
+    });
   });
 });

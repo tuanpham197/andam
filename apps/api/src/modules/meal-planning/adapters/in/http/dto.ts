@@ -17,6 +17,8 @@ import {
 } from 'class-validator';
 import { LIBRARY_CHIPS, type LibraryChip } from '../../../domain/library.js';
 import { SWAP_REASONS, type SwapReason } from '../../../domain/swap.js';
+import { REASON_ORDER } from '../../../domain/menu-engine.js';
+import { REPLAN_CAUSES } from '../../../domain/planned-meal.js';
 
 const SLOTS = ['breakfast', 'morning_snack', 'lunch', 'afternoon_snack', 'dinner', 'extra_snack'];
 const STATUSES = ['planned', 'prepared', 'eaten', 'refused', 'skipped'];
@@ -96,6 +98,25 @@ export class MealDto {
   @ApiProperty({ type: [NamedIngredientDto] }) newIngredients: NamedIngredientDto[];
   @ApiProperty({ type: LoggedByDto, nullable: true, description: 'Ai đã ghi nhận (FR-118)' })
   loggedBy: LoggedByDto | null;
+  @ApiProperty({
+    enum: ['auto', 'swap', 'manual'],
+    description: 'manual = phụ huynh lấp bữa trống',
+  })
+  source: string;
+  @ApiProperty({
+    enum: REASON_ORDER,
+    isArray: true,
+    description:
+      'Vì sao engine chọn món, tối đa 3 theo thứ tự hiển thị; trống nếu phụ huynh chọn (BR-93)',
+  })
+  reasons: string[];
+  @ApiProperty({
+    enum: REPLAN_CAUSES,
+    nullable: true,
+    type: String,
+    description: 'Thực đơn tự đổi bữa này vì đâu (BR-94)',
+  })
+  replanCause: string | null;
 }
 
 class SlotDto {
@@ -415,4 +436,52 @@ export class WeekPlanDto {
   @ApiProperty() plannable: boolean;
   @ApiProperty({ type: [WeekDayDto] }) days: WeekDayDto[];
   @ApiProperty({ type: WeekStatsDto }) stats: WeekStatsDto;
+}
+
+export class FillSlotDto {
+  @ApiPropertyOptional({
+    description: 'Món phụ huynh chọn; bỏ trống để app chọn món an toàn, cho phép lặp món (BR-90)',
+    example: 'custom_2f9b…',
+  })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  dishId?: string;
+}
+
+export const MEAL_SLOTS = SLOTS;
+
+const FOOD_STATUSES = ['tried', 'new', 'paused', 'avoided', 'not_yet'];
+
+class FoodItemDto {
+  @ApiProperty() id: string;
+  @ApiProperty() name: string;
+  @ApiProperty({ enum: FOOD_STATUSES }) status: string;
+  @ApiProperty() minAgeMonths: number;
+  @ApiProperty({
+    format: 'date',
+    nullable: true,
+    type: String,
+    description: 'Ngày gần nhất bé sẽ thử lần đầu (trong 14 ngày tới)',
+  })
+  upcomingOn: string | null;
+}
+
+class FoodGroupProgressDto {
+  @ApiProperty({ enum: ['protein', 'veg', 'fruit'] }) group: string;
+  @ApiProperty({ type: [FoodItemDto] }) items: FoodItemDto[];
+}
+
+class FoodSummaryDto {
+  @ApiProperty() tried: number;
+  @ApiProperty({ description: 'Không tính thực phẩm cần tránh và chưa hợp tuổi' }) total: number;
+  @ApiProperty() paused: number;
+  @ApiProperty() avoided: number;
+  @ApiProperty() notYet: number;
+}
+
+export class FoodProgressDto {
+  @ApiProperty({ type: FoodSummaryDto }) summary: FoodSummaryDto;
+  @ApiProperty({ type: [FoodGroupProgressDto] }) groups: FoodGroupProgressDto[];
 }

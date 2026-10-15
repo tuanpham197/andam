@@ -94,6 +94,22 @@ beforeEach(async () => {
 afterAll(() => moduleRef.close());
 
 describe('PrismaMealPlanRepository', () => {
+  it('keeps the engine reasons and the replan cause of a meal (BR-93/94)', async () => {
+    const stored = meal({ reasons: ['NOT_USED_7D', 'LIKED'], replanCause: 'health' });
+    await plans.addMany([stored]);
+    const [read] = await plans.findBetween(childId, '2026-09-24', '2026-09-24');
+    expect([read!.reasons, read!.replanCause]).toEqual([['NOT_USED_7D', 'LIKED'], 'health']);
+    read!.swapTo({
+      dishId: 'dish_chao_ga_bi_do',
+      texture: 'lumpy',
+      portionText: 'x',
+      newIngredientIds: [],
+    });
+    await plans.save(read!);
+    const [saved] = await plans.findBetween(childId, '2026-09-24', '2026-09-24');
+    expect([saved!.reasons, saved!.replanCause]).toEqual([[], null]);
+  });
+
   it('stores meals and reads them back by date range in time order', async () => {
     const dinner = meal({ slot: 'dinner', time: '18:00', newIngredientIds: [] });
     const lunch = meal();

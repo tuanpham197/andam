@@ -9,9 +9,9 @@ import {
   type LocalDate,
 } from '../../../../shared/kernel/local-date.js';
 import { servingFor } from '../../domain/health-adjustment.js';
-import { generateDay, slotsForDay } from '../../domain/menu-engine.js';
+import { generateDay, mealTypeOf, slotsForDay } from '../../domain/menu-engine.js';
 import type { PlanningContext } from '../../domain/model.js';
-import { PlannedMeal } from '../../domain/planned-meal.js';
+import { PlannedMeal, type ReplanCause } from '../../domain/planned-meal.js';
 import { exclusionReason } from '../../domain/safety-filter.js';
 import {
   CHILD_PLANNING_READER,
@@ -33,7 +33,8 @@ import {
 
 /**
  * - `all`: after a profile, health or resumed-food change, automatic meals are planned again.
- * - `unsafe`: after a food is paused or a dish deleted, only meals that became unsafe change.
+ * - `unsafe`: after a food is paused or a dish edited or deleted, only meals that became unsafe
+ *   (or no longer fit their slot) change.
  */
 export type RegenerateScope = 'all' | 'unsafe';
 
@@ -59,7 +60,10 @@ export class RegenerateFutureService {
     scope?: RegenerateScope;
     /** A meal being eaten right now (the one the child reacted to) stays as it is. */
     keepMealId?: string | null;
+    /** Shown on meals that really changed, so the parent is not surprised (BR-94). */
+    cause?: ReplanCause;
   }): Promise<void> {
+    const cause = input.cause ?? null;
     const scope = input.scope ?? 'all';
     const child = await this.children.find(input.childId, input.userId);
     if (!child) return;
@@ -100,6 +104,8 @@ export class RegenerateFutureService {
       return (
         m.stageId !== stage ||
         dish.archived === true ||
+        // A parent's own dish may have been edited into the other kind (main ↔ snack).
+        dish.mealType !== mealTypeOf(m.slot) ||
         exclusionReason(dish, contexts.get(m.date)!, m.date) !== null
       );
     };
@@ -107,6 +113,7 @@ export class RegenerateFutureService {
       (m) => unsafe(m) || (scope === 'all' && m.status === 'planned' && m.source === 'auto'),
     );
     await this.plans.remove(replaced.map((m) => m.id));
+    const before = new Map(replaced.map((m) => [`${m.date}|${m.slot}`, m]));
 
     // A dish the parent chose stays, served for the day's health (texture, portion); a meal
     // already prepared is served as it was cooked.
@@ -114,7 +121,7 @@ export class RegenerateFutureService {
     for (const meal of future.filter((m) => m.status === 'planned' && !removed.has(m.id))) {
       const serving = servingFor(byId.get(meal.dishId)!, contexts.get(meal.date)!);
       if (serving.texture === meal.texture && serving.portionText === meal.portionText) continue;
-      meal.reserve(serving);
+      meal.reserve(serving, cause);
       await this.plans.save(meal);
     }
 
@@ -136,16 +143,24 @@ export class RegenerateFutureService {
         allergenIntroductions: await allergenIntroductionsBefore(this.history, ctx, date, around),
       });
       await this.plans.addMany(
-        generation.meals.map((draft) =>
-          PlannedMeal.plan({
+        generation.meals.map((draft) => {
+          const old = before.get(`${date}|${draft.slot}`);
+          const changed =
+            old !== undefined &&
+            (old.dishId !== draft.dishId ||
+              old.texture !== draft.texture ||
+              old.portionText !== draft.portionText);
+          return PlannedMeal.plan({
             id: this.ids.next(),
             childId: child.childId,
             date,
             stageId: stage,
             generatedAt: now,
             draft,
-          }),
-        ),
+            // The same dish served the same way keeps whatever notice it already had.
+            replanCause: changed ? cause : (old?.replanCause ?? null),
+          });
+        }),
       );
     }
   }

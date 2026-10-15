@@ -13,6 +13,7 @@ import { CustomDishPage } from '../pages/CustomDishPage';
 import { DayDetailPage } from '../pages/DayDetailPage';
 import { DishesPage } from '../pages/DishesPage';
 import { ErrorPage } from '../pages/ErrorPage';
+import { FoodsPage } from '../pages/FoodsPage';
 import { HealthPage } from '../pages/HealthPage';
 import { InvitePage } from '../pages/InvitePage';
 import { JournalPage } from '../pages/JournalPage';
@@ -74,6 +75,7 @@ export const routes: RouteObject[] = [
                   { path: '/dishes/new', element: <CustomDishPage /> },
                   { path: '/dishes/:dishId/edit', element: <CustomDishPage /> },
                   { path: '/health', element: <HealthPage /> },
+                  { path: '/foods', element: <FoodsPage /> },
                   { path: '/week/:date', element: <DayDetailPage /> },
                 ],
               },

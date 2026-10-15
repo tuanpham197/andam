@@ -2,6 +2,7 @@ import { daysBetween, type LocalDate } from '../../../shared/kernel/local-date.j
 import type {
   HealthState,
   MealSlot,
+  MealType,
   MealUse,
   PlanDish,
   PlanningContext,
@@ -21,6 +22,9 @@ export interface StageSchedule {
 }
 
 const isSnack = (slot: MealSlot) => slot.endsWith('snack');
+
+/** The kind of dish a slot takes: snacks in snack slots, main dishes elsewhere. */
+export const mealTypeOf = (slot: MealSlot): MealType => (isSnack(slot) ? 'snack' : 'main');
 
 // When a stage schedule lacks a snack slot that is needed (sick GĐ1), these times are used.
 const SNACK_PREFERENCE: { slot: MealSlot; time: string }[] = [
@@ -47,6 +51,22 @@ export type ReasonCode =
   | 'NOT_USED_7D'
   | 'NEW_INGREDIENT';
 
+/** What a parent reads first (design S02); S01 shows the same codes in the same order. */
+export const REASON_ORDER: readonly ReasonCode[] = [
+  'NOT_USED_7D',
+  'DIFFERENT_PROTEIN',
+  'LIKED',
+  'FOUR_GROUPS',
+  'LEAST_USED_PROTEIN',
+  'NEW_INGREDIENT',
+];
+export const MAX_SHOWN_REASONS = 3;
+
+/** The reasons kept with a planned meal: at most 3, in display order (BR-93). */
+export function topReasons(codes: readonly ReasonCode[]): ReasonCode[] {
+  return REASON_ORDER.filter((code) => codes.includes(code)).slice(0, MAX_SHOWN_REASONS);
+}
+
 export interface PlannedDraft {
   slot: MealSlot;
   time: string;
@@ -65,6 +85,8 @@ export interface DayRequest {
   history: MealUse[];
   /** Days on which a new allergenic food was (or will be) introduced. */
   allergenIntroductions: LocalDate[];
+  /** BR-90: filling an empty slot on request drops the anti-repeat window. */
+  allowRepeats?: boolean;
 }
 
 export interface DayGeneration {
@@ -105,7 +127,7 @@ export function isLiked(ctx: PlanningContext, dishId: string): boolean {
   const feedback = ctx.feedback.get(dishId);
   return (
     feedback !== undefined &&
-    (feedback.liking >= 4 || feedback.amount === 'almost_all' || feedback.amount === 'all')
+    ((feedback.liking ?? 0) >= 4 || feedback.amount === 'almost_all' || feedback.amount === 'all')
   );
 }
 
@@ -128,6 +150,8 @@ export interface SlotRequest {
   keep?: (dish: PlanDish) => boolean;
   /** Extra points, e.g. minutes saved when the parent asked for something faster. */
   bonus?: (dish: PlanDish) => number;
+  /** The parent asked to fill an empty slot: dishes from other days may repeat (BR-90). */
+  allowRepeats?: boolean;
 }
 
 export interface SlotRanking {
@@ -176,7 +200,10 @@ export function rankSlot(
 
   let candidates = fresh(WINDOW_DAYS);
   let relaxed = false;
-  if (candidates.length < MIN_CANDIDATES) {
+  if (request.allowRepeats) {
+    // Never the same dish twice in one day; the hard filter above is untouched.
+    candidates = fresh(0);
+  } else if (candidates.length < MIN_CANDIDATES) {
     const wider = fresh(RELAXED_WINDOW_DAYS);
     relaxed = wider.length > candidates.length;
     candidates = wider;
@@ -250,6 +277,7 @@ export function generateDay(ctx: PlanningContext, request: DayRequest): DayGener
       slot: slot.slot,
       uses,
       allergenIntroductions: request.allergenIntroductions,
+      allowRepeats: request.allowRepeats,
     });
     if (relaxed) relaxedWindowDays = RELAXED_WINDOW_DAYS;
     const best = ranked[0];

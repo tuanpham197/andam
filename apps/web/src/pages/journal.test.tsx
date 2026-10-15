@@ -158,4 +158,12 @@ describe('Journal (G02)', () => {
     await user.click(await screen.findByRole('button', { name: 'Thử lại' }));
     await vi.waitFor(() => expect(next).toBe(2));
   });
+
+  it('TC-UX-011 shows a quick log without a liking', async () => {
+    serveJournal(() =>
+      journalFixture({ entries: [journalEntry({ amount: 'all', liking: null })] }),
+    );
+    renderApp('/journal');
+    expect(await screen.findByText('Hết · bởi Mẹ Na')).toBeInTheDocument();
+  });
 });

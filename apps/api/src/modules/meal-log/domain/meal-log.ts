@@ -26,7 +26,8 @@ interface MealLogState {
   dishId: string;
   loggedAt: Date;
   amount: EatAmount;
-  liking: number;
+  /** 1–5, or null for a quick log that only says how much was eaten (BR-95). */
+  liking: number | null;
   reaction: Reaction | null;
   actorId: string | null;
 }
@@ -47,7 +48,7 @@ export class MealLog {
     loggedAt: Date;
     now: Date;
     amount: EatAmount;
-    liking: number;
+    liking: number | null;
     reaction?: { symptoms: Symptom[]; severity: Severity; note?: string | null } | null;
     actorId: string;
   }): MealLog {
@@ -62,7 +63,10 @@ export class MealLog {
     ) {
       throw new LoggedAtOutOfRangeError();
     }
-    if (!Number.isInteger(input.liking) || input.liking < 1 || input.liking > 5) {
+    if (
+      input.liking !== null &&
+      (!Number.isInteger(input.liking) || input.liking < 1 || input.liking > 5)
+    ) {
       throw new InvalidLikingError();
     }
     let reaction: Reaction | null = null;

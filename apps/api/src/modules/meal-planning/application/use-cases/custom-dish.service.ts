@@ -152,7 +152,11 @@ export class CustomDishService {
     };
   }
 
-  /** BR-86: upcoming meals with this dish get their first tries worked out again. */
+  /**
+   * BR-86: upcoming meals with this dish are checked again for the day they are on (the hard
+   * filter, a sick day's "no new food", the kind of slot) and replaced when they no longer fit;
+   * the others get their first tries worked out again.
+   */
   async update(
     userId: string,
     childId: string,
@@ -165,13 +169,23 @@ export class CustomDishService {
     const draft = await this.draft(child, input, others);
     await this.uow.run(async () => {
       await this.customs.update({ ...current, ...draft });
-      await this.refreshUpcoming(child, dishId);
+      await this.refreshUpcoming(child, userId, dishId);
     });
     return this.recipes.get(userId, childId, dishId);
   }
 
-  private async refreshUpcoming(child: ChildPlanningInfo, dishId: string): Promise<void> {
+  private async refreshUpcoming(
+    child: ChildPlanningInfo,
+    userId: string,
+    dishId: string,
+  ): Promise<void> {
     if (child.stage === null) return;
+    await this.regenerate.execute({
+      childId: child.childId,
+      userId,
+      scope: 'unsafe',
+      cause: 'dish_changed',
+    });
     const today = toLocalDate(this.clock.now(), APP_TIMEZONE);
     const upcoming = (
       await this.plans.findBetween(child.childId, today, addDays(today, PLAN_AHEAD_DAYS))
@@ -197,7 +211,7 @@ export class CustomDishService {
     await this.existing(childId, dishId);
     await this.uow.run(async () => {
       await this.customs.archive(dishId, this.clock.now());
-      await this.regenerate.execute({ childId, userId, scope: 'unsafe' });
+      await this.regenerate.execute({ childId, userId, scope: 'unsafe', cause: 'dish_changed' });
     });
   }
 }

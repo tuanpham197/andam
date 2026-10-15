@@ -413,6 +413,32 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | TC-CUS-016 | Công thức món của bạn | nhãn “Món của bạn · chưa qua chuyên gia duyệt”, lưu ý theo tuổi, không có “Công thức vN” | N | C |
 | TC-CUS-017 | G15: thêm nguyên liệu → nhóm chất cập nhật; lỗi lọc cứng chỉ rõ nguyên liệu; rời trang rồi quay lại | đúng; nháp còn nguyên | N | C |
 
+### 5.12c Trải nghiệm hằng ngày — FR-140..146, BR-90..96 (P8a)
+
+| ID | Kịch bản | Kết quả mong đợi | Loại | Tầng |
+|---|---|---|---|---|
+| TC-UX-001 | Bữa trống vì mọi món an toàn đều dùng trong 3 ngày → lấp không chỉ định món | `201`, món an toàn tốt nhất (cho lặp), không trùng món khác trong cùng ngày, nguồn `manual` | N | U, A |
+| TC-UX-002 | Lấp bữa khi mọi món đều vi phạm lọc cứng (tránh hết) | `422 NO_SAFE_DISH`, không lưu gì | S | U, A |
+| TC-UX-003 | Lấp bữa đang có món; bữa không thuộc lịch ngày (bữa phụ thêm khi không ốm); ngày quá khứ / quá +13 ngày; slot không hợp lệ | `409 SLOT_TAKEN`; `422 SLOT_NOT_IN_PLAN`; `422 DATE_OUT_OF_RANGE`; `400` | B, L | A, E |
+| TC-UX-004 | Lấp bằng món chỉ định: món an toàn / món chứa thực phẩm cần tránh / món phụ cho bữa chính / món không tồn tại | `201`; `422 DISH_NOT_SAFE_FOR_CHILD`; `422 DISH_NOT_FOR_SLOT`; `404 DISH_NOT_FOUND` | N, S | U, A |
+| TC-UX-005 | Bữa lấp tay rồi hồ sơ đổi (không ảnh hưởng món) / làm món vi phạm | giữ nguyên / được thay | B | U |
+| TC-UX-006 | Ngày bé ốm: lấp bữa không chỉ định | không món có thực phẩm chưa thử (BR-52 vẫn áp dụng) | S | U |
+| TC-UX-007 | Engine lập ngày | mỗi bữa có `reasons` (≤ 3, đúng thứ tự S02); bữa tự đổi / lấp chỉ định có `reasons = []` | N | U, A |
+| TC-UX-008 | Đổi sức khỏe → bữa tương lai đổi món / kết cấu; bữa sinh lại ra đúng món cũ | `replanCause = health` / không có nguyên nhân | N, B | U, A |
+| TC-UX-009 | Tạm dừng thực phẩm, dùng lại, đổi hồ sơ, sửa / xóa món của bạn | nguyên nhân `food_paused` / `food_resumed` / `profile` / `dish_changed` | N | U |
+| TC-UX-010 | Phụ huynh đổi món một bữa đang mang nguyên nhân | nguyên nhân bị xóa | B | U |
+| TC-UX-011 | Ghi nhận không có `liking` | `201`, log `liking = null`, bữa `eaten` / `refused` theo lượng, nguyên liệu tính đã thử (BR-44) | N | U, A |
+| TC-UX-012 | `liking` = 0 / 6 / 2.5 / `null` | `400` / `400` / `400` / hợp lệ | B | E |
+| TC-UX-013 | Ghi nhanh “Không ăn” rồi lập lại thực đơn | món không bị coi là “bé từ chối” (BR-06), không phải “bé thích” | B | U |
+| TC-UX-014 | Hành trình thử: bé tránh trứng, 1 thực phẩm tạm dừng, mật ong (12 tháng) với bé 8 tháng, 2 thực phẩm đã thử | trứng `avoided`, tạm dừng `paused`, mật ong `not_yet` + `minAgeMonths = 12`, tiến độ đúng mẫu số | N | U |
+| TC-UX-015 | Thực phẩm chưa thử nằm trong bữa 3 ngày tới và 10 ngày tới | `upcomingOn` = ngày gần nhất; bữa đã ghi nhận không tính | N | U |
+| TC-UX-016 | S01: bữa trống → 2 lối ra; *Dùng món bé đã ăn gần đây* lỗi `NO_SAFE_DISH` | hiện bữa mới; thông báo + link tạo món | N | C |
+| TC-UX-017 | S01: thẻ bữa tiếp theo hiện lý do; món tự chọn; bữa có `replanCause` | 1–2 lý do; “Bạn đã chọn món này”; “Đã đổi theo …” | N | C |
+| TC-UX-018 | S01: ghi nhanh, đang gửi, lỗi `MEAL_ALREADY_LOGGED` | khóa 3 nút, thông báo; thẻ chuyển bữa kế | N | C |
+| TC-UX-019 | G15 mở từ bữa trống → lưu | món được đặt vào đúng bữa, quay lại trang trước | N | C |
+| TC-UX-020 | G16 hiển thị và lối vào | tiến độ, nhóm, “Sắp thử”, link G08 với thực phẩm tạm dừng | N | C |
+| TC-UX-021 | Người chăm (không phải chủ) lấp bữa, ghi nhanh, xem G16; người ngoài | được phép; `404` | S | E (ma trận TC-FAM-011) |
+
 ### 5.13 Nhiều người chăm — FR-110..120, BR-70..79 (P5b)
 
 | ID | Kịch bản | Kết quả mong đợi | Loại | Tầng |
@@ -464,3 +490,4 @@ Quy ước tính tháng: `months` = số tháng lớn nhất sao cho `addMonths(
 | P5b ✅ | TC-FAM-* (TC-FAM-011 tự kiểm mọi route mới trong `openapi.json` ở các phase sau) |
 | P6 ✅ | TC-HLT-*, TC-WK-* (TC-HLT-008 chạy ở tầng A với dữ liệu thật; TC-WK-004/005/006/007/008 ở tầng A) |
 | P7 🚧 | TC-UI-027/028, TC-FAM-029/030, TC-AUTH-032; Playwright 5 luồng (Chromium + WebKit) + 16 màn × 7 viewport + axe ✅. Còn: screenshot so sánh, mutation testing, thiết bị thật |
+| P8a | TC-UX-*, TC-CUS-018/019 |
